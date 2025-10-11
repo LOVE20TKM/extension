@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-interface ILOVE20ExtensionJoinable {
-    // Center required functions
+interface ILOVE20Extension {
+    // ------ Center required functions ------
     // join action as the only whitelist address
     function initialize() external;
     function requestRemove(address account) external returns (bool);
     function factory() external view returns (address);
 
-    // joined action
     function tokenAddress() external returns (address);
     function actionId() external returns (uint256);
     function initialized() external returns (bool);
 
-    // joined status
+    // ------ joined status ------
     function isJoined(address account) external view returns (bool);
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
+    // only counts the amount of tokenAddress token units directly participated
+    function joinedAmount() external view returns (uint256);
+    // calculated based on tokenAddress token units directly or indirectly participated
+    function joinedValue() external view returns (uint256);
 
-    // reward prepared
+    // ------ reward ------
     function rewardReserved() external view returns (uint256);
     function rewardClaimed() external view returns (uint256);
     function reward(uint256 round) external view returns (uint256);
 
-    // reward
     function rewardByAccount(
         uint256 round,
         address account

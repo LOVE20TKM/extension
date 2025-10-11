@@ -14,7 +14,9 @@ interface ILOVE20ExtensionCenter {
         uint256 actionId,
         address extension
     ) external;
+
     function exists(address extension) external view returns (bool);
+
     function extension(
         address tokenAddress,
         uint256 actionId
@@ -23,10 +25,12 @@ interface ILOVE20ExtensionCenter {
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256);
+
     function extensionsAtIndex(
         address tokenAddress,
         uint256 index
     ) external view returns (address);
+
     function extensionInfo(
         address extension
     )
@@ -34,26 +38,22 @@ interface ILOVE20ExtensionCenter {
         view
         returns (address manager, address tokenAddress, uint256 actionId);
 
-    // ------ the accounts that joined the actions by extension
-    // only extension can call
-    function actionAddAccount(
-        address tokenAddress,
-        uint256 actionId,
-        address account
-    ) external returns (bool);
-    function actionRemoveAccount(
+    // ------ only the corresponding action extension can call ------
+    function addAccount(
         address tokenAddress,
         uint256 actionId,
         address account
     ) external returns (bool);
 
-    // Users can remove themselves from an action or managed by the action's extension
-    function actionRequestRemove(
+    function removeAccount(
         address tokenAddress,
-        uint256 actionId
+        uint256 actionId,
+        address account
     ) external returns (bool);
+
+    // ------ the accounts that joined the actions by extension
     // only 1 of 3 status is true
-    function actionAccountStatus(
+    function accountStatus(
         address account
     ) external view returns (bool added, bool requestRemove, bool removed);
 
@@ -61,10 +61,12 @@ interface ILOVE20ExtensionCenter {
         address tokenAddress,
         address account
     ) external view returns (uint256[] memory);
+
     function actionIdsByAccountCount(
         address tokenAddress,
         address account
     ) external view returns (uint256);
+
     function actionIdsByAccountAtIndex(
         address tokenAddress,
         address account,
