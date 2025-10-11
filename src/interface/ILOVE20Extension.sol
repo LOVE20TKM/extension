@@ -2,15 +2,20 @@
 pragma solidity =0.8.17;
 
 interface ILOVE20Extension {
-    // ------ Center required functions ------
-    // join action as the only whitelist address
+    // ------ Center required functions to initialize extension in the center ------
+
+    // join action as the only whitelist address, only Center can call
     function initialize() external;
-    function requestRemove(address account) external returns (bool);
+
     function factory() external view returns (address);
 
     function tokenAddress() external returns (address);
     function actionId() external returns (uint256);
     function initialized() external returns (bool);
+
+    // ------ user operation ------
+    function requestRemove() external returns (bool);
+    function claimReward(uint256 round) external returns (uint256 reward);
 
     // ------ joined status ------
     function isJoined(address account) external view returns (bool);
@@ -30,7 +35,6 @@ interface ILOVE20Extension {
         uint256 round,
         address account
     ) external view returns (uint256 reward, bool isMinted);
-    function claimReward(uint256 round) external returns (uint256 reward);
 
     // ?? prepare reward
     // ?? function prepareRewardIfNeeded(uint256 round) external;
