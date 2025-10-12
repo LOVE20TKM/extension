@@ -21,8 +21,6 @@ interface ILOVE20Extension {
     function isJoined(address account) external view returns (bool);
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
-    // only counts the amount of tokenAddress token units directly participated
-    function joinedAmount() external view returns (uint256);
     // calculated based on tokenAddress token units directly or indirectly participated
     function joinedValue() external view returns (uint256);
 
