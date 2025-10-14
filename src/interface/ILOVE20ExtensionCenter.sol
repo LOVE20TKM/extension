@@ -20,6 +20,10 @@ interface ILOVE20ExtensionCenter {
         uint256 actionId
     ) external view returns (address);
 
+    function extensionInfo(
+        address extension
+    ) external view returns (address tokenAddress, uint256 actionId);
+
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256);
@@ -28,10 +32,6 @@ interface ILOVE20ExtensionCenter {
         address tokenAddress,
         uint256 index
     ) external view returns (address);
-
-    function extensionInfo(
-        address extension
-    ) external view returns (address tokenAddress, uint256 actionId);
 
     // ------ only the corresponding action extension can call ------
     function addAccount(
