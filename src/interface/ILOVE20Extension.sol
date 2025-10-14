@@ -18,7 +18,10 @@ interface ILOVE20Extension {
     function claimReward(uint256 round) external returns (uint256 reward);
 
     // ------ joined status ------
-    function isJoined(address account) external view returns (bool);
+    function accountStatus(
+        address account
+    ) external view returns (bool added, bool requestRemove, bool removed);
+
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
     // calculated based on tokenAddress token units directly or indirectly participated

@@ -54,6 +54,8 @@ interface ILOVE20ExtensionCenter {
     // ------ the accounts that joined the actions by extension
     // only 1 of 3 status is true
     function accountStatus(
+        address tokenAddress,
+        uint256 actionId,
         address account
     ) external view returns (bool added, bool requestRemove, bool removed);
 
