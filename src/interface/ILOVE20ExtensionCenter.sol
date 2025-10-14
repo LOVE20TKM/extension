@@ -36,7 +36,7 @@ interface ILOVE20ExtensionCenter {
     )
         external
         view
-        returns (address manager, address tokenAddress, uint256 actionId);
+        returns (address factory, address tokenAddress, uint256 actionId);
 
     // ------ only the corresponding action extension can call ------
     function addAccount(
