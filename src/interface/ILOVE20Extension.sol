@@ -12,35 +12,34 @@ interface ILOVE20Extension {
     function initialize() external;
 
     // ------ user operation ------
-    // join action shuold be implemented in the extension with different input params
-    // user request to remove from the action
-    function requestRemove() external returns (bool);
-    // user claim reward
-    function claimReward(uint256 round) external returns (uint256 reward);
+    // join&remove action shuold be implemented in the extension with different input params
 
-    // ------ joined status ------
-    function accountStatus(
-        address account
-    ) external view returns (bool added, bool requestRemove, bool removed);
-
-    function accountsCount() external view returns (uint256);
-    function accountAtIndex(uint256) external view returns (address);
-
+    // ------ joined value status ------
     // calculated based on tokenAddress token units directly or indirectly participated
     function joinedValue() external view returns (uint256, bool calculated);
     function joinedValueByAccount(
         address account
     ) external view returns (uint256, bool calculated);
 
-    // ------ reward ------
-    function rewardReserved() external view returns (uint256);
-    function rewardClaimed() external view returns (uint256);
-    function reward(uint256 round) external view returns (uint256);
+    // ------ account status ------
+    function accountsCount() external view returns (uint256);
+    function accountAtIndex(uint256) external view returns (address);
+    function accountStatus(
+        address account
+    ) external view returns (bool added, bool requestRemove, bool removed);
 
+    // ------ reward ------
     function rewardByAccount(
         uint256 round,
         address account
     ) external view returns (uint256 reward, bool isMinted);
+    // user claim reward
+    function claimReward(uint256 round) external returns (uint256 reward);
+
+    // ?? reward status
+    // ?? function rewardReserved() external view returns (uint256);
+    // ?? function rewardClaimed() external view returns (uint256);
+    // ?? function reward(uint256 round) external view returns (uint256);
 
     // ?? prepare reward
     // ?? function prepareRewardIfNeeded(uint256 round) external;
