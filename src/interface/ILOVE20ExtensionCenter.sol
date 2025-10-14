@@ -15,8 +15,6 @@ interface ILOVE20ExtensionCenter {
         address extension
     ) external;
 
-    function exists(address extension) external view returns (bool);
-
     function extension(
         address tokenAddress,
         uint256 actionId
@@ -33,10 +31,7 @@ interface ILOVE20ExtensionCenter {
 
     function extensionInfo(
         address extension
-    )
-        external
-        view
-        returns (address factory, address tokenAddress, uint256 actionId);
+    ) external view returns (address tokenAddress, uint256 actionId);
 
     // ------ only the corresponding action extension can call ------
     function addAccount(
