@@ -22,7 +22,10 @@ interface ILOVE20Extension {
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
     // calculated based on tokenAddress token units directly or indirectly participated
-    function joinedValue() external view returns (uint256);
+    function joinedValue() external view returns (uint256, bool calculated);
+    function joinedValueByAccount(
+        address account
+    ) external view returns (uint256, bool calculated);
 
     // ------ reward ------
     function rewardReserved() external view returns (uint256);
