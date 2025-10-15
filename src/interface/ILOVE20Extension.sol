@@ -16,10 +16,11 @@ interface ILOVE20Extension {
 
     // ------ joined value status ------
     // calculated based on tokenAddress token units directly or indirectly participated
-    function joinedValue() external view returns (uint256, bool calculated);
+    function isJoinedValueCalculated() external view returns (bool);
+    function joinedValue() external view returns (uint256);
     function joinedValueByAccount(
         address account
-    ) external view returns (uint256, bool calculated);
+    ) external view returns (uint256);
 
     // ------ account status ------
     function accountsCount() external view returns (uint256);
