@@ -25,9 +25,6 @@ interface ILOVE20Extension {
     // ------ account status ------
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
-    function accountStatus(
-        address account
-    ) external view returns (bool added, bool requestRemove, bool removed);
 
     // ------ reward ------
     function rewardByAccount(
