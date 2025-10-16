@@ -250,11 +250,27 @@ contract LOVE20ExtensionCenterTest is Test {
         // Setup: give govHolder permission to submit
         mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
 
+        assertEq(
+            extensionCenter.existsExtensionFactory(
+                tokenAddress,
+                address(mockFactory)
+            ),
+            false
+        );
+
         // Execute
         vm.prank(govHolder);
         vm.expectEmit(true, true, false, false);
         emit ExtensionFactoryAdded(tokenAddress, address(mockFactory));
         extensionCenter.addExtensionFactory(tokenAddress, address(mockFactory));
+
+        assertEq(
+            extensionCenter.existsExtensionFactory(
+                tokenAddress,
+                address(mockFactory)
+            ),
+            true
+        );
     }
 
     function testAddExtensionFactoryRevertsIfNotEnoughGovVotes() public {

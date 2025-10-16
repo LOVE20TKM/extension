@@ -63,6 +63,13 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         _extensionFactories[tokenAddress][factory] = true;
     }
 
+    function existsExtensionFactory(
+        address tokenAddress,
+        address factory
+    ) external view returns (bool) {
+        return _extensionFactories[tokenAddress][factory];
+    }
+
     // ------ extensions management ------
     function initializeExtension(address extensionAddress) external {
         ILOVE20Extension ext = ILOVE20Extension(extensionAddress);

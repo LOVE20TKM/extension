@@ -56,6 +56,11 @@ interface ILOVE20ExtensionCenter {
         address factory
     ) external;
 
+    function existsExtensionFactory(
+        address tokenAddress,
+        address factory
+    ) external view returns (bool);
+
     // ------ all the extensions that successfully joined actions ------
 
     // will call extension's initialize() to  join the action, sucess: add extension to Center
