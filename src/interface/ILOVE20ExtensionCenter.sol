@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 interface ILOVE20ExtensionCenter {
+    // ------ constructor ------
+    function joinAddress() external view returns (address);
+
     // ------ register extension factory ------
 
     // only 0.3% gov votes holder can call once per round
