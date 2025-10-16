@@ -33,6 +33,14 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // tokenAddress => factory => bool
     mapping(address => mapping(address => bool)) internal _extensionFactories;
 
+    // ------ modifiers ------
+    modifier onlyExtension(address tokenAddress, uint256 actionId) {
+        if (_extension[tokenAddress][actionId] != msg.sender) {
+            revert OnlyExtensionCanCall();
+        }
+        _;
+    }
+
     // ------ constructor ------
     constructor(address submitAddress_, address joinAddress_) {
         if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
@@ -143,12 +151,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) external {
-        // verify caller is the corresponding extension
-        if (_extension[tokenAddress][actionId] != msg.sender) {
-            revert OnlyExtensionCanCall();
-        }
-
+    ) external onlyExtension(tokenAddress, actionId) {
         if (_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountAlreadyJoined();
         }
@@ -166,12 +169,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) external {
-        // verify caller is the corresponding extension
-        if (_extension[tokenAddress][actionId] != msg.sender) {
-            revert OnlyExtensionCanCall();
-        }
-
+    ) external onlyExtension(tokenAddress, actionId) {
         if (!_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountNotJoined();
         }
