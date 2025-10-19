@@ -186,6 +186,14 @@ contract LOVE20ExtensionCenterTest is Test {
     MockJoin public mockJoin;
     MockExtensionFactory public mockFactory;
 
+    address public mockUniswapV2Factory = address(0x2000);
+    address public mockLaunch = address(0x2001);
+    address public mockStake = address(0x2002);
+    address public mockVote = address(0x2003);
+    address public mockVerify = address(0x2004);
+    address public mockMint = address(0x2005);
+    address public mockRandom = address(0x2006);
+
     address public tokenAddress = address(0x1000);
     address public user1 = address(0x1001);
     address public user2 = address(0x1002);
@@ -219,10 +227,17 @@ contract LOVE20ExtensionCenterTest is Test {
         mockSubmit = new MockSubmit();
         mockJoin = new MockJoin();
 
-        // Deploy extension center
+        // Deploy extension center with all required addresses
         extensionCenter = new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
             address(mockSubmit),
-            address(mockJoin)
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
         );
 
         // Deploy mock factory
@@ -231,18 +246,155 @@ contract LOVE20ExtensionCenterTest is Test {
 
     // ------ Constructor tests ------
     function testConstructor() public view {
+        assertEq(
+            extensionCenter.uniswapV2FactoryAddress(),
+            mockUniswapV2Factory
+        );
+        assertEq(extensionCenter.launchAddress(), mockLaunch);
+        assertEq(extensionCenter.stakeAddress(), mockStake);
         assertEq(extensionCenter.submitAddress(), address(mockSubmit));
+        assertEq(extensionCenter.voteAddress(), mockVote);
         assertEq(extensionCenter.joinAddress(), address(mockJoin));
+        assertEq(extensionCenter.verifyAddress(), mockVerify);
+        assertEq(extensionCenter.mintAddress(), mockMint);
+        assertEq(extensionCenter.randomAddress(), mockRandom);
+    }
+
+    function testConstructorRevertsOnInvalidUniswapV2FactoryAddress() public {
+        vm.expectRevert(
+            ILOVE20ExtensionCenter.InvalidUniswapV2FactoryAddress.selector
+        );
+        new LOVE20ExtensionCenter(
+            address(0),
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidLaunchAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidLaunchAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            address(0),
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidStakeAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidStakeAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            address(0),
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
     }
 
     function testConstructorRevertsOnInvalidSubmitAddress() public {
         vm.expectRevert(ILOVE20ExtensionCenter.InvalidSubmitAddress.selector);
-        new LOVE20ExtensionCenter(address(0), address(mockJoin));
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(0),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidVoteAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidVoteAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            address(0),
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
     }
 
     function testConstructorRevertsOnInvalidJoinAddress() public {
         vm.expectRevert(ILOVE20ExtensionCenter.InvalidJoinAddress.selector);
-        new LOVE20ExtensionCenter(address(mockSubmit), address(0));
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(0),
+            mockVerify,
+            mockMint,
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidVerifyAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidVerifyAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            address(0),
+            mockMint,
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidMintAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidMintAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            address(0),
+            mockRandom
+        );
+    }
+
+    function testConstructorRevertsOnInvalidRandomAddress() public {
+        vm.expectRevert(ILOVE20ExtensionCenter.InvalidRandomAddress.selector);
+        new LOVE20ExtensionCenter(
+            mockUniswapV2Factory,
+            mockLaunch,
+            mockStake,
+            address(mockSubmit),
+            mockVote,
+            address(mockJoin),
+            mockVerify,
+            mockMint,
+            address(0)
+        );
     }
 
     // ------ Extension Factory tests ------

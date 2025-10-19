@@ -10,8 +10,15 @@ import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // ------ state variables ------
+    address public immutable uniswapV2FactoryAddress;
+    address public immutable launchAddress;
+    address public immutable stakeAddress;
     address public immutable submitAddress;
+    address public immutable voteAddress;
     address public immutable joinAddress;
+    address public immutable verifyAddress;
+    address public immutable mintAddress;
+    address public immutable randomAddress;
 
     // tokenAddress => actionId => extension
     mapping(address => mapping(uint256 => address)) internal _extension;
@@ -42,11 +49,36 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ constructor ------
-    constructor(address submitAddress_, address joinAddress_) {
+    constructor(
+        address uniswapV2FactoryAddress_,
+        address launchAddress_,
+        address stakeAddress_,
+        address submitAddress_,
+        address voteAddress_,
+        address joinAddress_,
+        address verifyAddress_,
+        address mintAddress_,
+        address randomAddress_
+    ) {
+        if (uniswapV2FactoryAddress_ == address(0)) revert InvalidUniswapV2FactoryAddress();
+        if (launchAddress_ == address(0)) revert InvalidLaunchAddress();
+        if (stakeAddress_ == address(0)) revert InvalidStakeAddress();
         if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
+        if (voteAddress_ == address(0)) revert InvalidVoteAddress();
         if (joinAddress_ == address(0)) revert InvalidJoinAddress();
+        if (verifyAddress_ == address(0)) revert InvalidVerifyAddress();
+        if (mintAddress_ == address(0)) revert InvalidMintAddress();
+        if (randomAddress_ == address(0)) revert InvalidRandomAddress();
+        
+        uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
+        launchAddress = launchAddress_;
+        stakeAddress = stakeAddress_;
         submitAddress = submitAddress_;
+        voteAddress = voteAddress_;
         joinAddress = joinAddress_;
+        verifyAddress = verifyAddress_;
+        mintAddress = mintAddress_;
+        randomAddress = randomAddress_;
     }
 
     // ------ register extension factory ------

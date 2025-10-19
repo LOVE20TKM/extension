@@ -29,8 +29,15 @@ interface ILOVE20ExtensionCenter {
     );
 
     // ------ errors ------
+    error InvalidUniswapV2FactoryAddress();
+    error InvalidLaunchAddress();
+    error InvalidStakeAddress();
     error InvalidSubmitAddress();
+    error InvalidVoteAddress();
     error InvalidJoinAddress();
+    error InvalidVerifyAddress();
+    error InvalidMintAddress();
+    error InvalidRandomAddress();
     error NotEnoughGovVotes();
     error InvalidExtensionFactory();
     error ExtensionNotFoundInFactory();
@@ -44,9 +51,16 @@ interface ILOVE20ExtensionCenter {
     error AccountNotJoined();
     error InitializeFailed();
 
-    // ------ constructor ------
+    // ------ core system addresses ------
+    function uniswapV2FactoryAddress() external view returns (address);
+    function launchAddress() external view returns (address);
+    function stakeAddress() external view returns (address);
     function submitAddress() external view returns (address);
+    function voteAddress() external view returns (address);
     function joinAddress() external view returns (address);
+    function verifyAddress() external view returns (address);
+    function mintAddress() external view returns (address);
+    function randomAddress() external view returns (address);
 
     // ------ register extension factory ------
 
