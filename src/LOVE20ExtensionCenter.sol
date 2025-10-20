@@ -60,7 +60,8 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address mintAddress_,
         address randomAddress_
     ) {
-        if (uniswapV2FactoryAddress_ == address(0)) revert InvalidUniswapV2FactoryAddress();
+        if (uniswapV2FactoryAddress_ == address(0))
+            revert InvalidUniswapV2FactoryAddress();
         if (launchAddress_ == address(0)) revert InvalidLaunchAddress();
         if (stakeAddress_ == address(0)) revert InvalidStakeAddress();
         if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
@@ -69,7 +70,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         if (verifyAddress_ == address(0)) revert InvalidVerifyAddress();
         if (mintAddress_ == address(0)) revert InvalidMintAddress();
         if (randomAddress_ == address(0)) revert InvalidRandomAddress();
-        
+
         uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
         launchAddress = launchAddress_;
         stakeAddress = stakeAddress_;
@@ -86,6 +87,9 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address tokenAddress,
         address factory
     ) external {
+        if (ILOVE20ExtensionFactory(factory).center() != address(this)) {
+            revert InvalidExtensionFactory();
+        }
         if (_extensionFactories[tokenAddress][factory])
             revert ExtensionFactoryAlreadyExists();
 

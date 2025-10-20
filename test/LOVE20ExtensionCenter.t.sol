@@ -425,6 +425,17 @@ contract LOVE20ExtensionCenterTest is Test {
         );
     }
 
+    function testAddExtensionFactoryRevertsInvalidExtensionFactory() public {
+        mockFactory = new MockExtensionFactory(address(0x111));
+
+        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
+        vm.prank(govHolder);
+        vm.expectRevert(
+            ILOVE20ExtensionCenter.InvalidExtensionFactory.selector
+        );
+        extensionCenter.addExtensionFactory(tokenAddress, address(mockFactory));
+    }
+
     function testAddExtensionFactoryRevertsIfNotEnoughGovVotes() public {
         // Don't give govHolder permission
         mockSubmit.setCanSubmit(tokenAddress, govHolder, false);
@@ -560,6 +571,7 @@ contract LOVE20ExtensionCenterTest is Test {
             tokenAddress,
             actionId1
         );
+
         mockFactory.addExtension(tokenAddress, address(mockExtension));
 
         vm.expectRevert(
