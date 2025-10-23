@@ -89,6 +89,10 @@ interface ILOVE20ExtensionCenter {
         address extension
     ) external view returns (address tokenAddress, uint256 actionId);
 
+    function extensions(
+        address tokenAddress
+    ) external view returns (address[] memory);
+
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256);

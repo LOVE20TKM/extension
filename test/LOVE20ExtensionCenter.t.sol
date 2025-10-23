@@ -157,6 +157,10 @@ contract MockExtension is ILOVE20Extension {
         return 0;
     }
 
+    function accounts() external view returns (address[] memory) {
+        return _accounts;
+    }
+
     function accountsCount() external view returns (uint256) {
         return _accounts.length;
     }

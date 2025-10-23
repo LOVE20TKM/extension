@@ -176,6 +176,12 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         return (info.tokenAddress, info.actionId);
     }
 
+    function extensions(
+        address tokenAddress
+    ) external view returns (address[] memory) {
+        return _extensions[tokenAddress];
+    }
+
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256) {
