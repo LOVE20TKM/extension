@@ -23,6 +23,7 @@ interface ILOVE20Extension {
     ) external view returns (uint256);
 
     // ------ account status ------
+    function accounts() external view returns (address[] memory);
     function accountsCount() external view returns (uint256);
     function accountAtIndex(uint256) external view returns (address);
 
