@@ -84,6 +84,12 @@ contract MockExtensionFactory is ILOVE20ExtensionFactory {
         _extensions[tokenAddress].push(extension);
     }
 
+    function extensions(
+        address tokenAddress
+    ) external view returns (address[] memory) {
+        return _extensions[tokenAddress];
+    }
+
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256) {

@@ -4,6 +4,10 @@ interface ILOVE20ExtensionFactory {
     function center() external view returns (address);
 
     // ------ created extensions, may not be initialized ------
+    function extensions(
+        address tokenAddress
+    ) external view returns (address[] memory);
+
     function extensionsCount(
         address tokenAddress
     ) external view returns (uint256);
