@@ -65,16 +65,25 @@ interface ILOVE20ExtensionCenter {
     // ------ register extension factory ------
 
     // only 0.3% gov votes holder can call once per round
-    function addExtensionFactory(
-        address tokenAddress,
-        address factory
-    ) external;
+    function addFactory(address tokenAddress, address factory) external;
 
-    function existsExtensionFactory(
+    function existsFactory(
         address tokenAddress,
         address factory
     ) external view returns (bool);
 
+    function factories(
+        address tokenAddress
+    ) external view returns (address[] memory);
+
+    function factoriesCount(
+        address tokenAddress
+    ) external view returns (uint256);
+
+    function factoriesAtIndex(
+        address tokenAddress,
+        uint256 index
+    ) external view returns (address);
     // ------ all the extensions that successfully joined actions ------
 
     // will call extension's initialize() to  join the action, sucess: add extension to Center

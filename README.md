@@ -2,7 +2,7 @@
 
 ## 1. 基于 ILOVE20ExtensionFactory，开发扩展协议工厂合约，基于 ILOVE20Extension 开发具体扩展协议
 
-## 2. 部署工厂合约，并在 Center 里使用 addExtensionFactory 注册添加 扩展协议工厂合约
+## 2. 部署工厂合约，并在 Center 里使用 addFactory 注册添加 扩展协议工厂合约
 
 - 调用者需持有 0.3%治理票
 

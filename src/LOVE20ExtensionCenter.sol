@@ -20,6 +20,11 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     address public immutable mintAddress;
     address public immutable randomAddress;
 
+    // tokenAddress => factory[]
+    mapping(address => address[]) internal _factories;
+    // tokenAddress => factory => bool
+    mapping(address => mapping(address => bool)) internal _existsFactory;
+
     // tokenAddress => actionId => extension
     mapping(address => mapping(uint256 => address)) internal _extension;
 
@@ -36,9 +41,6 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // tokenAddress => account => actionIds array
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
-
-    // tokenAddress => factory => bool
-    mapping(address => mapping(address => bool)) internal _extensionFactories;
 
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
@@ -83,27 +85,44 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ register extension factory ------
-    function addExtensionFactory(
-        address tokenAddress,
-        address factory
-    ) external {
+    function addFactory(address tokenAddress, address factory) external {
         if (ILOVE20ExtensionFactory(factory).center() != address(this)) {
             revert InvalidExtensionFactory();
         }
-        if (_extensionFactories[tokenAddress][factory])
+        if (_existsFactory[tokenAddress][factory])
             revert ExtensionFactoryAlreadyExists();
 
         if (!ILOVE20Submit(submitAddress).canSubmit(tokenAddress, msg.sender))
             revert NotEnoughGovVotes();
         emit ExtensionFactoryAdded(tokenAddress, factory);
-        _extensionFactories[tokenAddress][factory] = true;
+        _existsFactory[tokenAddress][factory] = true;
+        _factories[tokenAddress].push(factory);
     }
 
-    function existsExtensionFactory(
+    function existsFactory(
         address tokenAddress,
         address factory
     ) external view returns (bool) {
-        return _extensionFactories[tokenAddress][factory];
+        return _existsFactory[tokenAddress][factory];
+    }
+
+    function factories(
+        address tokenAddress
+    ) external view returns (address[] memory) {
+        return _factories[tokenAddress];
+    }
+
+    function factoriesCount(
+        address tokenAddress
+    ) external view returns (uint256) {
+        return _factories[tokenAddress].length;
+    }
+
+    function factoriesAtIndex(
+        address tokenAddress,
+        uint256 index
+    ) external view returns (address) {
+        return _factories[tokenAddress][index];
     }
 
     // ------ extensions management ------
@@ -116,7 +135,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             revert ExtensionAlreadyExists();
         }
 
-        if (!_extensionFactories[tokenAddress][ext.factory()])
+        if (!_existsFactory[tokenAddress][ext.factory()])
             revert InvalidExtensionFactory();
 
         ILOVE20ExtensionFactory extFactory = ILOVE20ExtensionFactory(
