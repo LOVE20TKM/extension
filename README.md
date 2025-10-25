@@ -12,6 +12,8 @@ LOVE20 默认的行动激励方式不能满足行动的要求时，可以开发�
 
 部署工厂合约，并在 Center 里使用 addFactory 注册添加 扩展协议工厂合约（调用者需持有 0.3%治理票）
 
+各网络的 Center 合约地址，详见 script/network/[network]/address.extension.center.params
+
 ## 3. 创建扩展合约
 
 使用工厂合约，创建具体行动所使用的扩展协议合约
