@@ -5,6 +5,8 @@ out/
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
+# thinkium70001
+/broadcast/*/70001/
 /broadcast/**/dry-run/
 
 # Docs
