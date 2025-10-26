@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
 import {ILOVE20ExtensionCenter} from "../src/interface/ILOVE20ExtensionCenter.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";

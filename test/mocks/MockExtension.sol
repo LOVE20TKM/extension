@@ -15,10 +15,6 @@ contract MockExtension is ILOVE20Extension {
     bool public initializeCalled;
     bool public shouldFailInitialize;
 
-    address[] internal _accounts;
-    mapping(address => uint256) internal _joinedValues;
-    mapping(uint256 => mapping(address => uint256)) internal _rewards;
-
     constructor(
         address center_,
         address factory_,
@@ -56,31 +52,26 @@ contract MockExtension is ILOVE20Extension {
         return 0;
     }
 
-    function accounts() external view returns (address[] memory) {
-        return _accounts;
+    function accounts() external pure returns (address[] memory) {
+        return new address[](0);
     }
 
-    function accountsCount() external view returns (uint256) {
-        return _accounts.length;
+    function accountsCount() external pure returns (uint256) {
+        return 0;
     }
 
-    function accountAtIndex(uint256 index) external view returns (address) {
-        return _accounts[index];
+    function accountAtIndex(uint256 /*index*/) external pure returns (address) {
+        return address(0);
     }
 
     function rewardByAccount(
-        uint256 round,
-        address account
-    ) external view returns (uint256 reward, bool isMinted) {
-        reward = _rewards[round][account];
-        isMinted = reward > 0;
+        uint256 /*round*/,
+        address /*account*/
+    ) external pure returns (uint256 reward, bool isMinted) {
+        return (0, false);
     }
 
     function claimReward(uint256 /*round*/) external pure returns (uint256) {
         return 0;
-    }
-
-    function addAccountForTest(address account) external {
-        _accounts.push(account);
     }
 }
