@@ -2,6 +2,23 @@
 pragma solidity =0.8.17;
 
 interface ILOVE20Extension {
+    // ============================================
+    // ERRORS
+    // ============================================
+
+    /// @notice Thrown when a function is called by non-center address
+    error OnlyCenterCanCall();
+
+    /// @notice Thrown when trying to initialize an already initialized extension
+    error AlreadyInitialized();
+
+    /// @notice Thrown when an invalid token address is provided
+    error InvalidTokenAddress();
+
+    // ============================================
+    // FUNCTIONS
+    // ============================================
+
     // constructor params
     function center() external view returns (address);
     function factory() external view returns (address);
@@ -34,17 +51,4 @@ interface ILOVE20Extension {
     ) external view returns (uint256 reward, bool isMinted);
     // user claim reward
     function claimReward(uint256 round) external returns (uint256 reward);
-
-    // ?? reward status
-    // ?? function rewardReserved() external view returns (uint256);
-    // ?? function rewardClaimed() external view returns (uint256);
-    // ?? function reward(uint256 round) external view returns (uint256);
-
-    // ?? prepare reward
-    // ?? function prepareRewardIfNeeded(uint256 round) external;
-    // ?? function isRewardPrepared(uint256 round) external view returns (bool);
-
-    // ?? reward accounts
-    // ?? function rewardAccountsCount(uint256 round) external view returns (uint256);
-    // ?? functioin rewardAccountsAtIndex(uint256 round, uint256 index)  external view returns(address);
 }
