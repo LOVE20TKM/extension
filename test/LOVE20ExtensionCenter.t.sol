@@ -293,10 +293,7 @@ contract LOVE20ExtensionCenterTest is Test {
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
         // Create mock extension
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
 
         // Add extension to factory
         mockFactory.addExtension(tokenAddress, address(mockExtension));
@@ -334,7 +331,7 @@ contract LOVE20ExtensionCenterTest is Test {
             extensionCenter.extension(tokenAddress, actionId1),
             address(mockExtension)
         );
-        assertTrue(mockExtension.initializeCalled());
+        assertTrue(mockExtension.initialized());
         assertEq(extensionCenter.extensionsCount(tokenAddress), 1);
         assertEq(
             extensionCenter.extensionsAtIndex(tokenAddress, 0),
@@ -348,10 +345,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension1 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension1 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -371,10 +365,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Try to add another extension with same tokenAddress and actionId
-        MockExtension mockExtension2 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension2 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -398,10 +389,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
     function testInitializeExtensionRevertsIfInvalidFactory() public {
         // Don't add factory to extension center
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
 
         mockFactory.addExtension(tokenAddress, address(mockExtension));
 
@@ -420,10 +408,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         // Don't add extension to factory
 
         vm.expectRevert(
@@ -441,10 +426,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
 
         // Set wrong whitelist address
@@ -471,10 +453,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -500,10 +479,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockExtension.setShouldFailInitialize(true);
 
         mockFactory.addExtension(tokenAddress, address(mockExtension));
@@ -534,10 +510,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -569,10 +542,7 @@ contract LOVE20ExtensionCenterTest is Test {
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
         // Create and initialize first extension
-        MockExtension mockExtension1 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension1 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -592,10 +562,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Create and initialize second extension
-        MockExtension mockExtension2 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension2 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -633,10 +600,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -686,10 +650,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -719,10 +680,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -757,10 +715,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -803,10 +758,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -839,10 +791,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(govHolder);
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
-        MockExtension mockExtension = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -873,10 +822,7 @@ contract LOVE20ExtensionCenterTest is Test {
         extensionCenter.addFactory(tokenAddress, address(mockFactory));
 
         // Create two extensions
-        MockExtension mockExtension1 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension1 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
             tokenAddress,
@@ -895,10 +841,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1
         );
 
-        MockExtension mockExtension2 = new MockExtension(
-            address(extensionCenter),
-            address(mockFactory)
-        );
+        MockExtension mockExtension2 = new MockExtension(address(mockFactory));
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
             tokenAddress,
