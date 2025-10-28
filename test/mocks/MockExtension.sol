@@ -15,26 +15,21 @@ contract MockExtension is ILOVE20Extension {
     bool public initializeCalled;
     bool public shouldFailInitialize;
 
-    constructor(
-        address center_,
-        address factory_,
-        address tokenAddress_,
-        uint256 actionId_
-    ) {
+    constructor(address center_, address factory_) {
         center = center_;
         factory = factory_;
-        tokenAddress = tokenAddress_;
-        actionId = actionId_;
     }
 
     function setShouldFailInitialize(bool value) external {
         shouldFailInitialize = value;
     }
 
-    function initialize() external {
+    function initialize(address tokenAddress_, uint256 actionId_) external {
         if (shouldFailInitialize) {
             revert("Initialize failed");
         }
+        tokenAddress = tokenAddress_;
+        actionId = actionId_;
         initializeCalled = true;
     }
 

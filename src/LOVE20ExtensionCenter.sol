@@ -126,10 +126,12 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ extensions management ------
-    function initializeExtension(address extensionAddress) external {
+    function initializeExtension(
+        address extensionAddress,
+        address tokenAddress,
+        uint256 actionId
+    ) external {
         ILOVE20Extension ext = ILOVE20Extension(extensionAddress);
-        address tokenAddress = ext.tokenAddress();
-        uint256 actionId = ext.actionId();
         // check if extension already exists for this tokenAddress and actionId
         if (_extension[tokenAddress][actionId] != address(0)) {
             revert ExtensionAlreadyExists();
@@ -145,7 +147,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             revert ExtensionNotFoundInFactory();
 
         // initialize the extension
-        try ext.initialize() {
+        try ext.initialize(tokenAddress, actionId) {
             // check if extension is in white list
             ILOVE20Submit submit = ILOVE20Submit(submitAddress);
             ActionInfo memory actionInfo = submit.actionInfo(

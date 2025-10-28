@@ -87,7 +87,11 @@ interface ILOVE20ExtensionCenter {
     // ------ all the extensions that successfully joined actions ------
 
     // will call extension's initialize() to  join the action, sucess: add extension to Center
-    function initializeExtension(address extension) external;
+    function initializeExtension(
+        address extension,
+        address tokenAddress,
+        uint256 actionId
+    ) external;
 
     function extension(
         address tokenAddress,

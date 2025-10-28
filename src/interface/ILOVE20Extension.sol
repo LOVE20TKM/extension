@@ -9,7 +9,7 @@ interface ILOVE20Extension {
     function actionId() external returns (uint256);
 
     // join action as the only whitelist address, only Center can call
-    function initialize() external;
+    function initialize(address tokenAddress, uint256 actionId) external;
 
     // ------ user operation ------
     // join&remove action shuold be implemented in the extension with different input params

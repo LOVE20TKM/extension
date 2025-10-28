@@ -295,9 +295,7 @@ contract LOVE20ExtensionCenterTest is Test {
         // Create mock extension
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
 
         // Add extension to factory
@@ -325,7 +323,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Verify
         assertEq(
@@ -348,9 +350,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension1 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
@@ -364,14 +364,16 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension1),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension1));
+        extensionCenter.initializeExtension(
+            address(mockExtension1),
+            tokenAddress,
+            actionId1
+        );
 
         // Try to add another extension with same tokenAddress and actionId
         MockExtension mockExtension2 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
@@ -387,16 +389,18 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         vm.expectRevert(ILOVE20ExtensionCenter.ExtensionAlreadyExists.selector);
-        extensionCenter.initializeExtension(address(mockExtension2));
+        extensionCenter.initializeExtension(
+            address(mockExtension2),
+            tokenAddress,
+            actionId1
+        );
     }
 
     function testInitializeExtensionRevertsIfInvalidFactory() public {
         // Don't add factory to extension center
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
 
         mockFactory.addExtension(tokenAddress, address(mockExtension));
@@ -404,7 +408,11 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.expectRevert(
             ILOVE20ExtensionCenter.InvalidExtensionFactory.selector
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
     }
 
     function testInitializeExtensionRevertsIfNotFoundInFactory() public {
@@ -414,16 +422,18 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         // Don't add extension to factory
 
         vm.expectRevert(
             ILOVE20ExtensionCenter.ExtensionNotFoundInFactory.selector
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
     }
 
     function testInitializeExtensionRevertsIfInvalidWhiteListAddress() public {
@@ -433,9 +443,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
 
@@ -451,7 +459,11 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.expectRevert(
             ILOVE20ExtensionCenter.InvalidWhiteListAddress.selector
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
     }
 
     function testInitializeExtensionRevertsIfNotJoinedAction() public {
@@ -461,9 +473,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -478,7 +488,11 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.expectRevert(
             ILOVE20ExtensionCenter.ExtensionNotJoinedAction.selector
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
     }
 
     function testInitializeExtensionRevertsIfInitializeFails() public {
@@ -488,9 +502,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockExtension.setShouldFailInitialize(true);
 
@@ -508,7 +520,11 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         vm.expectRevert(ILOVE20ExtensionCenter.InitializeFailed.selector);
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
     }
 
     // ------ Extension info queries ------
@@ -520,9 +536,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -536,7 +550,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Test extensionInfo
         (address returnedToken, uint256 returnedActionId) = extensionCenter
@@ -553,9 +571,7 @@ contract LOVE20ExtensionCenterTest is Test {
         // Create and initialize first extension
         MockExtension mockExtension1 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
@@ -569,14 +585,16 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension1),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension1));
+        extensionCenter.initializeExtension(
+            address(mockExtension1),
+            tokenAddress,
+            actionId1
+        );
 
         // Create and initialize second extension
         MockExtension mockExtension2 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId2
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
@@ -590,7 +608,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension2),
             2000
         );
-        extensionCenter.initializeExtension(address(mockExtension2));
+        extensionCenter.initializeExtension(
+            address(mockExtension2),
+            tokenAddress,
+            actionId2
+        );
 
         // Verify
         assertEq(extensionCenter.extensionsCount(tokenAddress), 2);
@@ -613,9 +635,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -629,7 +649,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Add account from extension
         vm.prank(address(mockExtension));
@@ -664,9 +688,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -680,7 +702,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Try to add account from non-extension address
         vm.prank(user1);
@@ -695,9 +721,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -711,7 +735,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Add account first time
         vm.startPrank(address(mockExtension));
@@ -731,9 +759,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -747,7 +773,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         vm.startPrank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1);
@@ -775,9 +805,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -791,7 +819,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1);
@@ -809,9 +841,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         MockExtension mockExtension = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension));
         mockSubmit.setActionInfo(
@@ -825,7 +855,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension));
+        extensionCenter.initializeExtension(
+            address(mockExtension),
+            tokenAddress,
+            actionId1
+        );
 
         // Try to remove account that was never added
         vm.prank(address(mockExtension));
@@ -841,9 +875,7 @@ contract LOVE20ExtensionCenterTest is Test {
         // Create two extensions
         MockExtension mockExtension1 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId1
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension1));
         mockSubmit.setActionInfo(
@@ -857,13 +889,15 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension1),
             1000
         );
-        extensionCenter.initializeExtension(address(mockExtension1));
+        extensionCenter.initializeExtension(
+            address(mockExtension1),
+            tokenAddress,
+            actionId1
+        );
 
         MockExtension mockExtension2 = new MockExtension(
             address(extensionCenter),
-            address(mockFactory),
-            tokenAddress,
-            actionId2
+            address(mockFactory)
         );
         mockFactory.addExtension(tokenAddress, address(mockExtension2));
         mockSubmit.setActionInfo(
@@ -877,7 +911,11 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension2),
             2000
         );
-        extensionCenter.initializeExtension(address(mockExtension2));
+        extensionCenter.initializeExtension(
+            address(mockExtension2),
+            tokenAddress,
+            actionId2
+        );
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
