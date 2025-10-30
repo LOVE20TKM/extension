@@ -2,6 +2,7 @@
 pragma solidity =0.8.17;
 
 import {LOVE20ExtensionFactoryBase} from "../../src/LOVE20ExtensionFactoryBase.sol";
+import {MockExtension} from "./MockExtension.sol";
 
 /**
  * @title MockExtensionFactory
@@ -10,8 +11,10 @@ import {LOVE20ExtensionFactoryBase} from "../../src/LOVE20ExtensionFactoryBase.s
 contract MockExtensionFactory is LOVE20ExtensionFactoryBase {
     constructor(address center_) LOVE20ExtensionFactoryBase(center_) {}
 
-    /// @dev Test helper function to manually register extensions
-    function addExtension(address tokenAddress, address extension) external {
+    function createExtension(
+        address tokenAddress
+    ) external returns (address extension) {
+        extension = address(new MockExtension(address(this)));
         _registerExtension(tokenAddress, extension);
     }
 }
