@@ -56,6 +56,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     /// @dev Array of accounts participating in this extension
     address[] internal _accounts;
 
+    /// @dev round => reward
+    mapping(uint256 => uint256) internal _reward;
+
     // ============================================
     // MODIFIERS
     // ============================================
@@ -187,5 +190,19 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
             actionId,
             account
         );
+    }
+
+    /// @dev Prepare action reward for a specific round if not already prepared
+    /// @param round The round number to prepare reward for
+    function _prepareRewardIfNeeded(uint256 round) internal {
+        if (_reward[round] > 0) {
+            return;
+        }
+        uint256 totalActionReward = _mint.mintActionReward(
+            tokenAddress,
+            round,
+            actionId
+        );
+        _reward[round] = totalActionReward;
     }
 }
