@@ -8,6 +8,7 @@ import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {MockExtension} from "./mocks/MockExtension.sol";
+import {MockToken} from "./mocks/MockToken.sol";
 
 /**
  * @title LOVE20ExtensionCenterTest
@@ -27,7 +28,7 @@ contract LOVE20ExtensionCenterTest is Test {
     address public mockMint = address(0x2005);
     address public mockRandom = address(0x2006);
 
-    address public tokenAddress = address(0x1000);
+    address public tokenAddress;
     address public user1 = address(0x1001);
     address public user2 = address(0x1002);
     address public govHolder = address(0x1003);
@@ -75,6 +76,10 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Deploy mock factory
         mockFactory = new MockExtensionFactory(address(extensionCenter));
+
+        // Deploy mock token used by base initialize approve
+        MockToken token = new MockToken();
+        tokenAddress = address(token);
     }
 
     // ------ Constructor tests ------
@@ -462,7 +467,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Don't set join amount (extension hasn't joined)
-        mockJoin.setAmount(tokenAddress, actionId1, address(mockExtension), 0);
+        mockJoin.setJoinWillFail(true);
 
         vm.expectRevert(
             ILOVE20ExtensionCenter.ExtensionNotJoinedAction.selector

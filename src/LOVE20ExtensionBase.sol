@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
+import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
 import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
+import {ILOVE20Token} from "@love20/interfaces/ILOVE20Token.sol";
+import {ILOVE20Join} from "@love20/interfaces/ILOVE20Join.sol";
+
+uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
 
 /// @title LOVE20ExtensionBase
 /// @notice Abstract base contract for LOVE20 extensions
@@ -97,6 +102,17 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         initialized = true;
         tokenAddress = tokenAddress_;
         actionId = actionId_;
+
+        // Approve token to joinAddress before joining
+        ILOVE20Token token = ILOVE20Token(tokenAddress);
+        ILOVE20Join join = ILOVE20Join(
+            ILOVE20ExtensionCenter(ILOVE20ExtensionFactory(factory).center())
+                .joinAddress()
+        );
+        token.approve(address(join), DEFAULT_JOIN_AMOUNT);
+
+        // Join the action
+        join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
 
         // Call hook for subclass-specific initialization
         _afterInitialize();
