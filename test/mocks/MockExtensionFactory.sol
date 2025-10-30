@@ -11,10 +11,8 @@ import {MockExtension} from "./MockExtension.sol";
 contract MockExtensionFactory is LOVE20ExtensionFactoryBase {
     constructor(address center_) LOVE20ExtensionFactoryBase(center_) {}
 
-    function createExtension(
-        address tokenAddress
-    ) external returns (address extension) {
+    function createExtension() external returns (address extension) {
         extension = address(new MockExtension(address(this)));
-        _registerExtension(tokenAddress, extension);
+        _registerExtension(extension);
     }
 }

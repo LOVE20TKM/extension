@@ -14,8 +14,8 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     /// @notice The center contract address
     address public immutable center;
 
-    /// @dev tokenAddress => extension addresses array
-    mapping(address => address[]) internal _extensions;
+    /// @dev extension addresses array
+    address[] internal _extensions;
 
     /// @dev extension address => existence flag
     mapping(address => bool) internal _isExtension;
@@ -34,25 +34,20 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     // ============================================
 
     /// @inheritdoc ILOVE20ExtensionFactory
-    function extensions(
-        address tokenAddress
-    ) external view override returns (address[] memory) {
-        return _extensions[tokenAddress];
+    function extensions() external view override returns (address[] memory) {
+        return _extensions;
     }
 
     /// @inheritdoc ILOVE20ExtensionFactory
-    function extensionsCount(
-        address tokenAddress
-    ) external view override returns (uint256) {
-        return _extensions[tokenAddress].length;
+    function extensionsCount() external view override returns (uint256) {
+        return _extensions.length;
     }
 
     /// @inheritdoc ILOVE20ExtensionFactory
     function extensionsAtIndex(
-        address tokenAddress,
         uint256 index
     ) external view override returns (address) {
-        return _extensions[tokenAddress][index];
+        return _extensions[index];
     }
 
     /// @inheritdoc ILOVE20ExtensionFactory
@@ -65,13 +60,9 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     // ============================================
 
     /// @dev Register a new extension
-    /// @param tokenAddress The token address this extension belongs to
     /// @param extension The extension address to register
-    function _registerExtension(
-        address tokenAddress,
-        address extension
-    ) internal {
-        _extensions[tokenAddress].push(extension);
+    function _registerExtension(address extension) internal {
+        _extensions.push(extension);
         _isExtension[extension] = true;
     }
 }
