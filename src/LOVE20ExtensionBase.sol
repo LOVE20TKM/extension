@@ -58,7 +58,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     // ============================================
 
     /// @inheritdoc ILOVE20Extension
-    function center() external view returns (address) {
+    function center() public view returns (address) {
         return ILOVE20ExtensionFactory(factory).center();
     }
 
@@ -126,13 +126,18 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     // INTERNAL HELPER FUNCTIONS
     // ============================================
 
-    /// @dev Add an account to the internal accounts array
+    /// @dev Add an account to the internal accounts array and center registry
     /// @param account The account address to add
     function _addAccount(address account) internal {
         _accounts.push(account);
+        ILOVE20ExtensionCenter(center()).addAccount(
+            tokenAddress,
+            actionId,
+            account
+        );
     }
 
-    /// @dev Remove an account from the internal accounts array
+    /// @dev Remove an account from the internal accounts array and center registry
     /// @param account The account address to remove
     function _removeAccount(address account) internal {
         for (uint256 i = 0; i < _accounts.length; i++) {
@@ -142,5 +147,10 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
                 break;
             }
         }
+        ILOVE20ExtensionCenter(center()).removeAccount(
+            tokenAddress,
+            actionId,
+            account
+        );
     }
 }
