@@ -40,11 +40,16 @@ contract MockExtension is LOVE20ExtensionBase {
     function rewardByAccount(
         uint256 /*round*/,
         address /*account*/
-    ) external pure returns (uint256 reward, bool isMinted) {
+    )
+        public
+        pure
+        override(LOVE20ExtensionBase)
+        returns (uint256 reward, bool isMinted)
+    {
         return (0, false);
     }
 
-    function claimReward(uint256 /*round*/) external pure returns (uint256) {
-        return 0;
-    }
+    function _prepareVerifyResultIfNeeded(
+        uint256 /*round*/
+    ) internal pure override {}
 }

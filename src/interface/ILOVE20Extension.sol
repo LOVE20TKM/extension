@@ -3,6 +3,17 @@ pragma solidity =0.8.17;
 
 interface ILOVE20Extension {
     // ============================================
+    // EVENTS
+    // ============================================
+
+    /// @notice Emitted when a user claims a reward
+    event ClaimReward(
+        address indexed account,
+        uint256 indexed round,
+        uint256 reward
+    );
+
+    // ============================================
     // ERRORS
     // ============================================
 
@@ -14,6 +25,12 @@ interface ILOVE20Extension {
 
     /// @notice Thrown when an invalid token address is provided
     error InvalidTokenAddress();
+
+    /// @notice Thrown when a reward has already been claimed for a round
+    error AlreadyClaimed();
+
+    /// @notice Thrown when a round is not finished
+    error RoundNotFinished();
 
     // ============================================
     // FUNCTIONS
