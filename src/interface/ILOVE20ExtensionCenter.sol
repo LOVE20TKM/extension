@@ -45,7 +45,6 @@ interface ILOVE20ExtensionCenter {
     error ExtensionNotJoinedAction();
     error ExtensionFactoryAlreadyExists();
     error ExtensionAlreadyExists();
-    error ExtensionNotFound();
     error OnlyExtensionCanCall();
     error AccountAlreadyJoined();
     error AccountNotJoined();
