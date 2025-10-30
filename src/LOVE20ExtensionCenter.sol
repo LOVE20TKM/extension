@@ -146,17 +146,17 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         if (!extFactory.exists(extensionAddress))
             revert ExtensionNotFoundInFactory();
 
+        // check if extension is in white list
+        ILOVE20Submit submit = ILOVE20Submit(submitAddress);
+        ActionInfo memory actionInfo = submit.actionInfo(
+            tokenAddress,
+            actionId
+        );
+        if (actionInfo.body.whiteListAddress != extensionAddress)
+            revert InvalidWhiteListAddress();
+
         // initialize the extension
         try ext.initialize(tokenAddress, actionId) {
-            // check if extension is in white list
-            ILOVE20Submit submit = ILOVE20Submit(submitAddress);
-            ActionInfo memory actionInfo = submit.actionInfo(
-                tokenAddress,
-                actionId
-            );
-            if (actionInfo.body.whiteListAddress != extensionAddress)
-                revert InvalidWhiteListAddress();
-
             // check if already successfully joined through joinAddress
             ILOVE20Join join = ILOVE20Join(joinAddress);
             if (
