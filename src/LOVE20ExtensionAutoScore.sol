@@ -3,11 +3,39 @@ pragma solidity =0.8.17;
 
 import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
-import {ILOVE20ExtensionAutoScore} from "./interface/ILOVE20ExtensionAutoScore.sol";
+import {
+    ILOVE20ExtensionAutoScore
+} from "./interface/ILOVE20ExtensionAutoScore.sol";
 
 /// @title LOVE20ExtensionAutoScore
 /// @notice Abstract base contract for auto score-based LOVE20 extensions
 /// @dev Provides common score calculation and reward distribution logic
+///
+/// ==================== IMPLEMENTATION GUIDE ====================
+/// To implement this contract, you MUST override the following functions:
+///
+/// 1. calculateScores() - Calculate scores for all accounts
+///    - Should iterate through _accounts array
+///    - Return total score and array of individual scores
+///
+/// 2. calculateScore(address) - Calculate score for specific account
+///    - Should calculate individual account's score
+///    - Return total score and account's score
+///
+/// Example Implementation:
+/// ```
+/// function calculateScores() public view override returns (uint256 total, uint256[] memory scores) {
+///     scores = new uint256[](_accounts.length);
+///     for (uint256 i = 0; i < _accounts.length; i++) {
+///         uint256 score = /* your scoring logic */;
+///         scores[i] = score;
+///         total += score;
+///     }
+///     return (total, scores);
+/// }
+/// ```
+/// ==============================================================
+///
 abstract contract LOVE20ExtensionAutoScore is
     LOVE20ExtensionBase,
     ILOVE20ExtensionAutoScore
@@ -38,13 +66,27 @@ abstract contract LOVE20ExtensionAutoScore is
     constructor(address factory_) LOVE20ExtensionBase(factory_) {}
 
     // ============================================
-    // SCORE CALCULATION - ABSTRACT METHODS
+    // ⚠️  ABSTRACT METHODS - MUST BE IMPLEMENTED ⚠️
     // ============================================
+    //
+    // Child contracts MUST implement these two functions.
+    // These functions define the scoring logic for your extension.
+    //
 
     /// @notice Calculate scores for all eligible accounts
-    /// @dev Must be implemented by child contracts with specific score calculation logic
+    /// @dev ⚠️ REQUIRED: Must be implemented by child contracts
+    ///
+    /// Implementation requirements:
+    /// - Iterate through all accounts in _accounts array
+    /// - Calculate individual score for each account based on your logic
+    /// - Sum all scores to get the total
+    /// - Return both total and array of individual scores
+    ///
+    /// @custom:must-implement Child contracts must override this function
+    /// @custom:security Ensure scores array length matches _accounts.length
+    ///
     /// @return total The total score across all accounts
-    /// @return scores Array of individual scores corresponding to current accounts
+    /// @return scores Array of individual scores (scores[i] corresponds to _accounts[i])
     function calculateScores()
         public
         view
@@ -52,7 +94,15 @@ abstract contract LOVE20ExtensionAutoScore is
         returns (uint256 total, uint256[] memory scores);
 
     /// @notice Calculate score for a specific account
-    /// @dev Must be implemented by child contracts with specific score calculation logic
+    /// @dev ⚠️ REQUIRED: Must be implemented by child contracts
+    ///
+    /// Implementation requirements:
+    /// - Calculate the score for the given account
+    /// - Calculate total score across all accounts (for proportion calculation)
+    /// - Can call calculateScores() internally and filter result
+    ///
+    /// @custom:must-implement Child contracts must override this function
+    ///
     /// @param account The account address to calculate score for
     /// @return total The total score across all accounts
     /// @return score The score for the specified account

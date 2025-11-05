@@ -3,7 +3,9 @@ pragma solidity =0.8.17;
 
 import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
-import {ILOVE20ExtensionAutoScore} from "./interface/ILOVE20ExtensionAutoScore.sol";
+import {
+    ILOVE20ExtensionAutoScore
+} from "./interface/ILOVE20ExtensionAutoScore.sol";
 
 /// @title LOVE20ExtensionAutoScore
 /// @notice Abstract base contract for auto score-based LOVE20 extensions

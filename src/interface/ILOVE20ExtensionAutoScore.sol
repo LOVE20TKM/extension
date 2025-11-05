@@ -6,20 +6,26 @@ import {ILOVE20Extension} from "./ILOVE20Extension.sol";
 /// @title ILOVE20ExtensionAutoScore
 /// @notice Interface for auto score-based LOVE20 extensions
 /// @dev Extends ILOVE20Extension with score calculation and verification functions
+///
+/// This interface defines the contract for extensions that use automatic score calculation
+/// to distribute rewards proportionally among participants.
+///
 interface ILOVE20ExtensionAutoScore is ILOVE20Extension {
     // ============================================
-    // SCORE CALCULATION
+    // SCORE CALCULATION (MUST IMPLEMENT)
     // ============================================
 
     /// @notice Calculate scores for all eligible accounts
+    /// @dev ⚠️ Implementations must calculate scores for all accounts in the extension
     /// @return total The total score across all accounts
-    /// @return scores Array of individual scores
+    /// @return scores Array of individual scores (must match accounts array order)
     function calculateScores()
         external
         view
         returns (uint256 total, uint256[] memory scores);
 
     /// @notice Calculate score for a specific account
+    /// @dev ⚠️ Implementations must calculate score for the given account
     /// @param account The account address to calculate score for
     /// @return total The total score across all accounts
     /// @return score The score for the specified account
