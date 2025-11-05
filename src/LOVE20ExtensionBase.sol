@@ -128,11 +128,11 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
     /// @inheritdoc ILOVE20Extension
     /// @dev Base implementation handles common validation and state updates
-    /// Subclasses should override _afterInitialize() for custom logic
+    /// Subclasses can override this function and call super.initialize() for custom logic
     function initialize(
         address tokenAddress_,
         uint256 actionId_
-    ) external onlyCenter {
+    ) public virtual onlyCenter {
         if (initialized) {
             revert AlreadyInitialized();
         }
@@ -154,14 +154,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
         // Join the action
         join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
-
-        // Call hook for subclass-specific initialization
-        _afterInitialize();
     }
-
-    /// @dev Hook called after base initialization is complete
-    /// Subclasses should override this to add custom initialization logic
-    function _afterInitialize() internal virtual {}
 
     // ============================================
     // INTERNAL HELPER FUNCTIONS
@@ -209,7 +202,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         _reward[round] = totalActionReward;
     }
 
-    function _prepareVerifyResultIfNeeded(uint256 round) internal virtual {}
+    function _prepareVerifyResultIfNeeded() internal virtual {}
 
     /// @dev Virtual function to calculate reward for an account in a specific round
     /// @param round The round number
@@ -228,7 +221,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         }
 
         // Prepare verify result and reward
-        _prepareVerifyResultIfNeeded(round);
+        // Note: _prepareVerifyResultIfNeeded() only generates result for current round
+        // For completed rounds, verification result should have been generated in that round's verify phase
+        _prepareVerifyResultIfNeeded();
         _prepareRewardIfNeeded(round);
 
         return _claimReward(round);

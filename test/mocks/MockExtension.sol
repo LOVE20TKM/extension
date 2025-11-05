@@ -16,8 +16,12 @@ contract MockExtension is LOVE20ExtensionBase {
         shouldFailInitialize = value;
     }
 
-    /// @dev Override _afterInitialize to add test-specific logic
-    function _afterInitialize() internal view override {
+    /// @dev Override initialize to add test-specific logic
+    function initialize(
+        address tokenAddress_,
+        uint256 actionId_
+    ) public override {
+        super.initialize(tokenAddress_, actionId_);
         if (shouldFailInitialize) {
             revert("Initialize failed");
         }
@@ -49,7 +53,5 @@ contract MockExtension is LOVE20ExtensionBase {
         return (0, false);
     }
 
-    function _prepareVerifyResultIfNeeded(
-        uint256 /*round*/
-    ) internal pure override {}
+    function _prepareVerifyResultIfNeeded() internal pure override {}
 }
