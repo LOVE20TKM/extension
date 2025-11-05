@@ -3,14 +3,14 @@ pragma solidity =0.8.17;
 
 import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
-import {ILOVE20ExtensionScore} from "./interface/ILOVE20ExtensionScore.sol";
+import {ILOVE20ExtensionAutoScore} from "./interface/ILOVE20ExtensionAutoScore.sol";
 
-/// @title LOVE20ExtensionScoreBase
-/// @notice Abstract base contract for score-based LOVE20 extensions
+/// @title LOVE20ExtensionAutoScore
+/// @notice Abstract base contract for auto score-based LOVE20 extensions
 /// @dev Provides common score calculation and reward distribution logic
-abstract contract LOVE20ExtensionScoreBase is
+abstract contract LOVE20ExtensionAutoScore is
     LOVE20ExtensionBase,
-    ILOVE20ExtensionScore
+    ILOVE20ExtensionAutoScore
 {
     // ============================================
     // STATE VARIABLES - SCORE SYSTEM
