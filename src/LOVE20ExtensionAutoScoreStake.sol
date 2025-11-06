@@ -21,33 +21,10 @@ import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
 ///
 /// To implement this contract, you need to:
 ///
-/// 1. Implement calculateScores() and calculateScore() from LOVE20ExtensionAutoScore
+/// Implement calculateScores() and calculateScore() from LOVE20ExtensionAutoScore
 ///    - Define how scores are calculated based on staked amounts
 ///    - See LOVE20ExtensionAutoScore for details
 ///
-/// 2. Optionally override _validateStakeToken() in initialize()
-///    - Add custom validation logic for stake token
-///    - Default implementation does no validation
-///
-/// 3. Optionally override _onStake(), _onUnstake(), _onWithdraw()
-///    - Add custom logic before/after stake operations
-///    - Default implementations do nothing
-///
-/// Example:
-/// ```
-/// contract MyStakeExtension is LOVE20ExtensionAutoScoreStake {
-///     constructor(
-///         address factory,
-///         address stakeToken,
-///         uint256 waitingPhases,
-///         uint256 minGovVotes
-///     ) LOVE20ExtensionAutoScoreStake(factory, stakeToken, waitingPhases, minGovVotes) {}
-///
-///     function calculateScores() public view override returns (uint256 total, uint256[] memory scores) {
-///         // Your scoring logic based on _stakeInfo
-///     }
-/// }
-/// ```
 /// ==============================================================
 ///
 abstract contract LOVE20ExtensionAutoScoreStake is
