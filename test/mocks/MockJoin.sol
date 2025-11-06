@@ -7,6 +7,7 @@ pragma solidity =0.8.17;
  */
 contract MockJoin {
     bool public _joinWillFail;
+    uint256 private _currentRound = 1;
     mapping(address => mapping(uint256 => mapping(address => uint256)))
         internal _amounts;
 
@@ -43,5 +44,13 @@ contract MockJoin {
         address account
     ) external view returns (uint256) {
         return _amounts[tokenAddress][actionId][account];
+    }
+
+    function currentRound() external view returns (uint256) {
+        return _currentRound;
+    }
+
+    function setCurrentRound(uint256 round) external {
+        _currentRound = round;
     }
 }
