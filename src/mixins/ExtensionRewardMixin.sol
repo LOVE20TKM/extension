@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
-import {ILOVE20Token} from "@love20/interfaces/ILOVE20Token.sol";
+import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 
 /// @title ExtensionRewardMixin
 /// @notice Mixin for handling reward distribution

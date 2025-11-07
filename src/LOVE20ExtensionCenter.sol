@@ -4,9 +4,9 @@ pragma solidity =0.8.17;
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
-import {ILOVE20Submit, ActionInfo} from "@love20/interfaces/ILOVE20Submit.sol";
-import {ILOVE20Join} from "@love20/interfaces/ILOVE20Join.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
+import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // ------ state variables ------

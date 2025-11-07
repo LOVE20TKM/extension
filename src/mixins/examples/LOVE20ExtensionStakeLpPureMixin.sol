@@ -12,7 +12,7 @@ import {
 } from "../../interface/ILOVE20ExtensionCenter.sol";
 import {
     IUniswapV2Pair
-} from "@love20/uniswap-v2-core/interfaces/IUniswapV2Pair.sol";
+} from "@core/uniswap-v2-core/interfaces/IUniswapV2Pair.sol";
 
 /// @title LOVE20ExtensionStakeLpPureMixin
 /// @notice Pure Mixin版本的LP Staking Extension（不继承旧接口，演示Mixin架构）

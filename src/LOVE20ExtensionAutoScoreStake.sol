@@ -6,7 +6,7 @@ import {
     ILOVE20ExtensionAutoScoreStake
 } from "./interface/ILOVE20ExtensionAutoScoreStake.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
 /// @title LOVE20ExtensionAutoScoreStake
 /// @notice Abstract base contract for auto-score-based stake LOVE20 extensions

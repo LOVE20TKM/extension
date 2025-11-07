@@ -5,7 +5,7 @@ import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
 import {ExtensionAccountMixin} from "./ExtensionAccountMixin.sol";
 import {ExtensionVerificationMixin} from "./ExtensionVerificationMixin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
 /// @title ExtensionStakeMixin
 /// @notice Mixin for staking functionality with phase-based waiting period

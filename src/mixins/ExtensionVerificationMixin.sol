@@ -2,8 +2,8 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
-import {ActionInfo} from "@love20/interfaces/ILOVE20Submit.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
+import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 
 /// @title ExtensionVerificationMixin
 /// @notice Mixin for managing verification information

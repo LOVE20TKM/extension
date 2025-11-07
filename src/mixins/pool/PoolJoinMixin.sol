@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {PoolCapacityMixin} from "./PoolCapacityMixin.sol";
 import {ExtensionAccountMixin} from "../ExtensionAccountMixin.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
 /// @title PoolJoinMixin
 /// @notice Mixin for miner joining/exiting pools without lock period
@@ -19,10 +19,7 @@ import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
 /// **Note:** This is for "join" mode participation (no lock period).
 ///          For staking with lock period, see PoolStakeMixin.
 ///
-abstract contract PoolJoinMixin is
-    PoolCapacityMixin,
-    ExtensionAccountMixin
-{
+abstract contract PoolJoinMixin is PoolCapacityMixin, ExtensionAccountMixin {
     using ArrayUtils for uint256[];
 
     // ============================================
@@ -449,4 +446,3 @@ abstract contract PoolJoinMixin is
         return _minerPoolByRound[miner][nearestRound];
     }
 }
-

@@ -4,17 +4,17 @@ pragma solidity =0.8.17;
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
 import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
-import {ILOVE20Token} from "@love20/interfaces/ILOVE20Token.sol";
-import {ILOVE20Launch} from "@love20/interfaces/ILOVE20Launch.sol";
-import {ILOVE20Stake} from "@love20/interfaces/ILOVE20Stake.sol";
-import {ILOVE20Submit} from "@love20/interfaces/ILOVE20Submit.sol";
-import {ILOVE20Vote} from "@love20/interfaces/ILOVE20Vote.sol";
-import {ILOVE20Join} from "@love20/interfaces/ILOVE20Join.sol";
-import {ILOVE20Verify} from "@love20/interfaces/ILOVE20Verify.sol";
-import {ILOVE20Mint} from "@love20/interfaces/ILOVE20Mint.sol";
-import {ILOVE20Random} from "@love20/interfaces/ILOVE20Random.sol";
-import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
-import {ActionInfo} from "@love20/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
+import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
+import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
+import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
+import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
+import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
+import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
+import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
+import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
+import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 
 uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
 
