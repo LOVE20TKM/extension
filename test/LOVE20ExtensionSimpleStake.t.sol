@@ -53,9 +53,24 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
     uint256 constant WAITING_PHASES = 7;
     uint256 constant MIN_GOV_VOTES = 1e18;
 
-    event Stake(address indexed account, uint256 amount);
-    event Unstake(address indexed account, uint256 amount);
-    event Withdraw(address indexed account, uint256 amount);
+    event Stake(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
+    event Unstake(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
+    event Withdraw(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
     event ClaimReward(
         address indexed account,
         uint256 indexed round,
@@ -155,7 +170,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         uint256 amount = 100e18;
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         (uint256 stakedAmount, uint256 requestedUnstakeRound) = extension
             .stakeInfo(user1);
@@ -168,22 +183,22 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
     function test_Stake_EmitEvent() public {
         uint256 amount = 100e18;
 
-        vm.expectEmit(true, false, false, true);
-        emit Stake(user1, amount);
+        vm.expectEmit(true, true, true, true);
+        emit Stake(address(token), user1, ACTION_ID, amount);
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
     }
 
     function test_Stake_MultipleUsers() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         vm.prank(user3);
-        extension.stake(300e18);
+        extension.stake(300e18, new string[](0));
 
         assertEq(extension.totalStakedAmount(), 600e18);
         assertEq(extension.accountsCount(), 3);
@@ -191,8 +206,8 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Stake_MultipleTimes() public {
         vm.startPrank(user1);
-        extension.stake(100e18);
-        extension.stake(50e18);
+        extension.stake(100e18, new string[](0));
+        extension.stake(50e18, new string[](0));
         vm.stopPrank();
 
         (uint256 amount, ) = extension.stakeInfo(user1);
@@ -205,7 +220,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         vm.expectRevert(
             ILOVE20ExtensionAutoScoreStake.StakeAmountZero.selector
         );
-        extension.stake(0);
+        extension.stake(0, new string[](0));
     }
 
     function test_Stake_RevertIfInsufficientGovVotes() public {
@@ -219,18 +234,18 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         vm.expectRevert(
             ILOVE20ExtensionAutoScoreStake.InsufficientGovVotes.selector
         );
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
     }
 
     function test_Stake_RevertIfUnstakeRequested() public {
         vm.startPrank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
         extension.unstake();
 
         vm.expectRevert(
             ILOVE20ExtensionAutoScoreStake.UnstakeRequested.selector
         );
-        extension.stake(50e18);
+        extension.stake(50e18, new string[](0));
         vm.stopPrank();
     }
 
@@ -242,7 +257,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         stake.setValidGovVotes(address(token), minUser, MIN_GOV_VOTES);
 
         vm.prank(minUser);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         (uint256 amount, ) = extension.stakeInfo(minUser);
         assertEq(amount, 100e18);
@@ -256,7 +271,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         uint256 amount = 100e18;
 
         vm.startPrank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         uint256 currentRound = join.currentRound();
         extension.unstake();
@@ -276,10 +291,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         uint256 amount = 100e18;
 
         vm.startPrank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
-        vm.expectEmit(true, false, false, true);
-        emit Unstake(user1, amount);
+        vm.expectEmit(true, true, true, true);
+        emit Unstake(address(token), user1, ACTION_ID, amount);
 
         extension.unstake();
         vm.stopPrank();
@@ -293,7 +308,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Unstake_RevertIfAlreadyRequested() public {
         vm.startPrank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
         extension.unstake();
 
         vm.expectRevert(
@@ -311,7 +326,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         uint256 amount = 100e18;
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -339,15 +354,15 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         uint256 amount = 100e18;
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
 
         join.setCurrentRound(join.currentRound() + WAITING_PHASES + 1);
 
-        vm.expectEmit(true, false, false, true);
-        emit Withdraw(user1, amount);
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(address(token), user1, ACTION_ID, amount);
 
         vm.prank(user1);
         extension.withdraw();
@@ -355,7 +370,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Withdraw_RevertIfNotRequested() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user1);
         vm.expectRevert(
@@ -366,7 +381,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Withdraw_RevertIfNotEnoughWaitingPhases() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -383,7 +398,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Withdraw_ExactlyAtWaitingPhases() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         uint256 unstakeRound = join.currentRound();
 
@@ -406,10 +421,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Unstakers() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -427,10 +442,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_UnstakersAtIndex() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -454,7 +469,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_CalculateScores_SingleUser() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         (uint256 total, uint256[] memory scores) = extension.calculateScores();
         assertEq(total, 100e18);
@@ -464,13 +479,13 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_CalculateScores_MultipleUsers() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         vm.prank(user3);
-        extension.stake(300e18);
+        extension.stake(300e18, new string[](0));
 
         (uint256 total, uint256[] memory scores) = extension.calculateScores();
         assertEq(total, 600e18);
@@ -482,10 +497,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_CalculateScore_ExistingAccount() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         (uint256 total, uint256 score) = extension.calculateScore(user1);
         assertEq(total, 300e18);
@@ -494,7 +509,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_CalculateScore_NonExistentAccount() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         (uint256 total, uint256 score) = extension.calculateScore(user2);
         assertEq(total, 100e18);
@@ -503,10 +518,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_CalculateScores_AfterUnstake() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -524,10 +539,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_Accounts() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         address[] memory accounts = extension.accounts();
         assertEq(accounts.length, 2);
@@ -539,11 +554,11 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         assertEq(extension.accountsCount(), 0);
 
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
         assertEq(extension.accountsCount(), 1);
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
         assertEq(extension.accountsCount(), 2);
 
         vm.prank(user1);
@@ -553,10 +568,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_AccountAtIndex() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         assertEq(extension.accountAtIndex(0), user1);
         assertEq(extension.accountAtIndex(1), user2);
@@ -568,7 +583,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
     function test_ClaimReward_RevertIfRoundNotFinished() public {
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         verify.setCurrentRound(1);
 
@@ -584,7 +599,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
     function test_StakeUnstakeWithdrawCycle() public {
         // First stake
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         assertEq(extension.totalStakedAmount(), 100e18);
         assertEq(extension.accountsCount(), 1);
@@ -609,7 +624,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
         // Stake again
         vm.prank(user1);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         assertEq(extension.totalStakedAmount(), 200e18);
         assertEq(extension.accountsCount(), 1);
@@ -618,10 +633,10 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
     function test_MultipleUsersComplexScenario() public {
         // User1 and User2 stake
         vm.prank(user1);
-        extension.stake(100e18);
+        extension.stake(100e18, new string[](0));
 
         vm.prank(user2);
-        extension.stake(200e18);
+        extension.stake(200e18, new string[](0));
 
         assertEq(extension.totalStakedAmount(), 300e18);
         assertEq(extension.accountsCount(), 2);
@@ -637,7 +652,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
 
         // User3 stakes
         vm.prank(user3);
-        extension.stake(300e18);
+        extension.stake(300e18, new string[](0));
 
         assertEq(extension.totalStakedAmount(), 500e18);
         assertEq(extension.accountsCount(), 2);
@@ -672,7 +687,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         amount = bound(amount, 1, 1000e18);
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         (uint256 stakedAmount, ) = extension.stakeInfo(user1);
         assertEq(stakedAmount, amount);
@@ -684,7 +699,7 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         extraPhases = bound(extraPhases, 0, 100);
 
         vm.prank(user1);
-        extension.stake(amount);
+        extension.stake(amount, new string[](0));
 
         vm.prank(user1);
         extension.unstake();
@@ -711,13 +726,13 @@ contract LOVE20ExtensionSimpleStakeTest is Test {
         amount3 = bound(amount3, 1, 333e18);
 
         vm.prank(user1);
-        extension.stake(amount1);
+        extension.stake(amount1, new string[](0));
 
         vm.prank(user2);
-        extension.stake(amount2);
+        extension.stake(amount2, new string[](0));
 
         vm.prank(user3);
-        extension.stake(amount3);
+        extension.stake(amount3, new string[](0));
 
         assertEq(extension.totalStakedAmount(), amount1 + amount2 + amount3);
 

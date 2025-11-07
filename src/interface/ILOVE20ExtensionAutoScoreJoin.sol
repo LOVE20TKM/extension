@@ -31,15 +31,30 @@ interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
     // ============================================
 
     /// @notice Emitted when a user joins with tokens
+    /// @param tokenAddress The token address
     /// @param account The account that joined
+    /// @param actionId The action ID
     /// @param amount The amount joined
     /// @param joinedBlock The block number when joined
-    event Join(address indexed account, uint256 amount, uint256 joinedBlock);
+    event Join(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount,
+        uint256 joinedBlock
+    );
 
     /// @notice Emitted when a user withdraws tokens after waiting period
+    /// @param tokenAddress The token address
     /// @param account The account that withdrew
+    /// @param actionId The action ID
     /// @param amount The amount withdrawn
-    event Withdraw(address indexed account, uint256 amount);
+    event Withdraw(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
 
     // ============================================
     // STRUCTS
@@ -75,7 +90,9 @@ interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
 
     /// @notice Join with tokens to participate in the extension
     /// @param amount The amount to join with
-    function join(uint256 amount) external;
+    /// @param verificationInfos Array of verification information (optional, can be empty)
+    ///        Must correspond to action's verificationKeys order
+    function join(uint256 amount, string[] memory verificationInfos) external;
 
     /// @notice Withdraw tokens after the waiting period
     /// @dev Can only be called after waiting blocks have passed

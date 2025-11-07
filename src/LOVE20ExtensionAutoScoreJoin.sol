@@ -79,7 +79,7 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     // ============================================
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
-    function join(uint256 amount) external {
+    function join(uint256 amount, string[] memory verificationInfos) external {
         _prepareVerifyResultIfNeeded();
 
         JoinInfo storage info = _joinInfo[msg.sender];
@@ -107,7 +107,10 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
         // Transfer tokens from user
         _joinToken.transferFrom(msg.sender, address(this), amount);
 
-        emit Join(msg.sender, amount, block.number);
+        // Update verification info if provided
+        updateVerificationInfo(verificationInfos);
+
+        emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
@@ -135,7 +138,7 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
         // Transfer tokens back to user
         _joinToken.transfer(msg.sender, amount);
 
-        emit Withdraw(msg.sender, amount);
+        emit Withdraw(tokenAddress, msg.sender, actionId, amount);
     }
 
     // ============================================

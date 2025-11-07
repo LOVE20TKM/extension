@@ -34,19 +34,40 @@ interface ILOVE20ExtensionAutoScoreStake is ILOVE20ExtensionAutoScore {
     // ============================================
 
     /// @notice Emitted when a user stakes tokens
+    /// @param tokenAddress The token address
     /// @param account The account that staked
+    /// @param actionId The action ID
     /// @param amount The amount staked
-    event Stake(address indexed account, uint256 amount);
+    event Stake(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
 
     /// @notice Emitted when a user requests to unstake tokens
+    /// @param tokenAddress The token address
     /// @param account The account that unstaked
+    /// @param actionId The action ID
     /// @param amount The amount unstaked
-    event Unstake(address indexed account, uint256 amount);
+    event Unstake(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
 
     /// @notice Emitted when a user withdraws tokens after waiting period
+    /// @param tokenAddress The token address
     /// @param account The account that withdrew
+    /// @param actionId The action ID
     /// @param amount The amount withdrawn
-    event Withdraw(address indexed account, uint256 amount);
+    event Withdraw(
+        address indexed tokenAddress,
+        address indexed account,
+        uint256 indexed actionId,
+        uint256 amount
+    );
 
     // ============================================
     // STRUCTS
@@ -82,7 +103,9 @@ interface ILOVE20ExtensionAutoScoreStake is ILOVE20ExtensionAutoScore {
 
     /// @notice Stake tokens to participate in the extension
     /// @param amount The amount to stake
-    function stake(uint256 amount) external;
+    /// @param verificationInfos Array of verification information (optional, can be empty)
+    ///        Must correspond to action's verificationKeys order
+    function stake(uint256 amount, string[] memory verificationInfos) external;
 
     /// @notice Request to unstake all staked tokens
     /// @dev Starts the waiting period before withdrawal

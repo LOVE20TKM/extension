@@ -13,6 +13,8 @@ import {ILOVE20Join} from "@love20/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@love20/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@love20/interfaces/ILOVE20Mint.sol";
 import {ILOVE20Random} from "@love20/interfaces/ILOVE20Random.sol";
+import {ArrayUtils} from "@love20/lib/ArrayUtils.sol";
+import {ActionInfo} from "@love20/interfaces/ILOVE20Submit.sol";
 
 uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
 
@@ -20,6 +22,7 @@ uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
 /// @notice Abstract base contract for LOVE20 extensions
 /// @dev Provides common storage and implementation for all extensions
 abstract contract LOVE20ExtensionBase is ILOVE20Extension {
+    using ArrayUtils for uint256[];
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -61,6 +64,14 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
     /// @dev round => account => claimedReward
     mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
+
+    /// @dev account => verificationKey => round => verificationInfo
+    mapping(address => mapping(string => mapping(uint256 => string)))
+        internal _verificationInfoByRound;
+
+    /// @dev account => verificationKey => round[]
+    mapping(address => mapping(string => uint256[]))
+        internal _verificationInfoUpdateRounds;
 
     // ============================================
     // MODIFIERS
@@ -249,6 +260,116 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
             token.transfer(msg.sender, reward);
         }
 
-        emit ClaimReward(msg.sender, round, reward);
+        emit ClaimReward(tokenAddress, msg.sender, actionId, round, reward);
+    }
+
+    // ============================================
+    // VERIFICATION INFO
+    // ============================================
+
+    /// @inheritdoc ILOVE20Extension
+    function updateVerificationInfo(string[] memory verificationInfos) public {
+        if (verificationInfos.length == 0) {
+            return;
+        }
+
+        // Get verificationKeys from action info
+        ActionInfo memory actionInfo = _submit.actionInfo(
+            tokenAddress,
+            actionId
+        );
+        string[] memory verificationKeys = actionInfo.body.verificationKeys;
+
+        if (verificationKeys.length != verificationInfos.length) {
+            revert VerificationInfoLengthMismatch();
+        }
+        for (uint256 i = 0; i < verificationKeys.length; i++) {
+            _updateVerificationInfoByKey(
+                verificationKeys[i],
+                verificationInfos[i]
+            );
+        }
+    }
+
+    /// @dev Internal function to update verification info for a single key
+    /// @param verificationKey The verification key
+    /// @param aVerificationInfo The verification information
+    function _updateVerificationInfoByKey(
+        string memory verificationKey,
+        string memory aVerificationInfo
+    ) internal {
+        uint256 currentRound = _join.currentRound();
+        uint256[] storage rounds = _verificationInfoUpdateRounds[msg.sender][
+            verificationKey
+        ];
+
+        if (rounds.length == 0 || rounds[rounds.length - 1] != currentRound) {
+            rounds.push(currentRound);
+        }
+
+        _verificationInfoByRound[msg.sender][verificationKey][
+            currentRound
+        ] = aVerificationInfo;
+
+        emit UpdateVerificationInfo({
+            tokenAddress: tokenAddress,
+            account: msg.sender,
+            actionId: actionId,
+            verificationKey: verificationKey,
+            round: currentRound,
+            verificationInfo: aVerificationInfo
+        });
+    }
+
+    /// @inheritdoc ILOVE20Extension
+    function verificationInfo(
+        address account,
+        string calldata verificationKey
+    ) external view returns (string memory) {
+        uint256[] memory rounds = _verificationInfoUpdateRounds[account][
+            verificationKey
+        ];
+        if (rounds.length == 0) {
+            return "";
+        }
+
+        uint256 latestRound = rounds[rounds.length - 1];
+        return _verificationInfoByRound[account][verificationKey][latestRound];
+    }
+
+    /// @inheritdoc ILOVE20Extension
+    function verificationInfoByRound(
+        address account,
+        string calldata verificationKey,
+        uint256 round
+    ) external view returns (string memory) {
+        uint256[] storage rounds = _verificationInfoUpdateRounds[account][
+            verificationKey
+        ];
+
+        (bool found, uint256 nearestRound) = rounds.findLeftNearestOrEqualValue(
+            round
+        );
+        if (!found) {
+            return "";
+        }
+        return _verificationInfoByRound[account][verificationKey][nearestRound];
+    }
+
+    /// @inheritdoc ILOVE20Extension
+    function verificationInfoUpdateRoundsCount(
+        address account,
+        string calldata verificationKey
+    ) external view returns (uint256) {
+        return _verificationInfoUpdateRounds[account][verificationKey].length;
+    }
+
+    /// @inheritdoc ILOVE20Extension
+    function verificationInfoUpdateRoundsAtIndex(
+        address account,
+        string calldata verificationKey,
+        uint256 index
+    ) external view returns (uint256) {
+        return _verificationInfoUpdateRounds[account][verificationKey][index];
     }
 }

@@ -89,7 +89,7 @@ abstract contract LOVE20ExtensionAutoScoreStake is
     // ============================================
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreStake
-    function stake(uint256 amount) external {
+    function stake(uint256 amount, string[] memory verificationInfos) external {
         _prepareVerifyResultIfNeeded();
 
         StakeInfo storage info = _stakeInfo[msg.sender];
@@ -116,7 +116,11 @@ abstract contract LOVE20ExtensionAutoScoreStake is
         info.amount += amount;
         totalStakedAmount += amount;
         _stakeToken.transferFrom(msg.sender, address(this), amount);
-        emit Stake(msg.sender, amount);
+
+        // Update verification info if provided
+        updateVerificationInfo(verificationInfos);
+
+        emit Stake(tokenAddress, msg.sender, actionId, amount);
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreStake
@@ -138,7 +142,7 @@ abstract contract LOVE20ExtensionAutoScoreStake is
         _removeAccount(msg.sender);
         _unstakers.push(msg.sender);
 
-        emit Unstake(msg.sender, amount);
+        emit Unstake(tokenAddress, msg.sender, actionId, amount);
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreStake
@@ -162,7 +166,7 @@ abstract contract LOVE20ExtensionAutoScoreStake is
         ArrayUtils.remove(_unstakers, msg.sender);
 
         _stakeToken.transfer(msg.sender, amount);
-        emit Withdraw(msg.sender, amount);
+        emit Withdraw(tokenAddress, msg.sender, actionId, amount);
     }
 
     // ============================================
