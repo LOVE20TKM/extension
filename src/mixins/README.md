@@ -1,40 +1,46 @@
-# LOVE20 Extension Mixin Architecture
+# LOVE20 Extension 混入（Mixin）架构文档
 
-## 📖 Overview
+## 📖 概述
 
-This directory contains a mixin-based architecture for building LOVE20 extensions. The mixin pattern allows you to compose functionality by combining independent, reusable modules instead of using deep inheritance chains.
+本目录包含了一套基于 Mixin（混入）模式的 LOVE20 扩展合约架构。采用 mixin 你可以通过组合独立、可复用的模块来实现功能，而不必依赖繁琐的深层继承链。
 
-## 🏗️ Architecture Benefits
+## 🏗️ 架构优势
 
-### Before (Deep Inheritance)
+### 之前（深继承）
+
 ```
 Base → AutoScore → Join/Stake
 ```
-- Tight coupling
-- Hard to customize
-- Inflexible composition
 
-### After (Mixin Composition)
+- 耦合度高
+- 自定义难度大
+- 组合不灵活
+
+### 现在（Mixin 组合）
+
 ```
 Core + Account + Reward + Verification + Score + Join/Stake
 ```
-- Loose coupling
-- Easy to customize
-- Flexible composition
-- Single Responsibility Principle
 
-## 🧩 Available Mixins
+- 耦合度低
+- 易于自定义
+- 组合灵活
+- 单一职责原则
+
+## 🧩 可用的 Mixin 列表
 
 ### 1. **ExtensionCoreMixin**
-Core functionality for all extensions.
 
-**Provides:**
-- Factory and center contract references
-- Protocol contract interfaces (Launch, Stake, Submit, Vote, Join, Verify, Mint, Random)
-- Basic initialization
-- Access control (onlyCenter modifier)
+所有扩展的核心功能。
 
-**Use when:** Always - this is the foundation for all extensions
+**提供：**
+
+- 工厂和中心合约引用
+- 各协议合约接口（Launch, Stake, Submit, Vote, Join, Verify, Mint, Random）
+- 基础初始化
+- 访问控制（onlyCenter 修饰器）
+
+**使用场景：** 必选，所有扩展的基础
 
 ```solidity
 contract MyExtension is ExtensionCoreMixin {
@@ -45,22 +51,24 @@ contract MyExtension is ExtensionCoreMixin {
 ---
 
 ### 2. **ExtensionAccountMixin**
-Account management functionality.
 
-**Provides:**
-- Account list storage and management
-- Add/remove accounts
-- Query functions (accounts, accountsCount, accountAtIndex)
+账户管理功能。
 
-**Use when:** Your extension needs to track participants
+**提供：**
+
+- 参与者账号列表的存储与管理
+- 添加/移除账号
+- 查询功能（accounts, accountsCount, accountAtIndex）
+
+**使用场景：** 需要追踪参与者的扩展
 
 ```solidity
-contract MyExtension is 
+contract MyExtension is
     ExtensionCoreMixin,
-    ExtensionAccountMixin 
+    ExtensionAccountMixin
 {
     function someFunction() {
-        _addAccount(msg.sender);  // Use internal helper
+        _addAccount(msg.sender);  // 内部辅助函数
     }
 }
 ```
@@ -68,37 +76,42 @@ contract MyExtension is
 ---
 
 ### 3. **ExtensionRewardMixin**
-Reward distribution system.
 
-**Provides:**
-- Reward storage per round
-- Reward claiming functionality
-- Abstract reward calculation hook
+奖励分配系统。
 
-**Use when:** Your extension distributes rewards
+**提供：**
 
-**Must implement:**
+- 按轮次存储奖励
+- 奖励领取功能
+- 抽象奖励计算钩子
+
+**使用场景：** 需要分配奖励的扩展
+
+**必须实现：**
+
 ```solidity
-function rewardByAccount(uint256 round, address account) 
+function rewardByAccount(uint256 round, address account)
     public view virtual returns (uint256 reward, bool isMinted);
 ```
 
 ---
 
 ### 4. **ExtensionVerificationMixin**
-Verification information management.
 
-**Provides:**
-- Verification info storage by round
-- Update and query functions
-- Historical verification data tracking
+验证信息管理。
 
-**Use when:** Your extension needs verification info from users
+**提供：**
+
+- 按轮次存储验证信息
+- 更新和查询接口
+- 历史验证数据记录
+
+**使用场景：** 需要用户验证信息的扩展
 
 ```solidity
-contract MyExtension is 
+contract MyExtension is
     ExtensionCoreMixin,
-    ExtensionVerificationMixin 
+    ExtensionVerificationMixin
 {
     function myFunction(string[] memory infos) {
         updateVerificationInfo(infos);
@@ -109,83 +122,95 @@ contract MyExtension is
 ---
 
 ### 5. **ExtensionScoreMixin**
-Score-based reward calculation.
 
-**Provides:**
-- Score storage and management
-- Score-based reward distribution
-- Automatic verification result generation
+基于分数的奖励计算。
 
-**Requires:**
+**提供：**
+
+- 分数的存储和管理
+- 基于分数的奖励分配
+- 自动化生成验证结果
+
+**依赖：**
+
 - ExtensionCoreMixin
 - ExtensionAccountMixin
 - ExtensionRewardMixin
 
-**Must implement:**
+**必须实现：**
+
 ```solidity
-function calculateScores() 
-    public view virtual 
+function calculateScores()
+    public view virtual
     returns (uint256 total, uint256[] memory scores);
 
-function calculateScore(address account) 
-    public view virtual 
+function calculateScore(address account)
+    public view virtual
     returns (uint256 total, uint256 score);
 ```
 
-**Use when:** Your extension uses scoring logic for rewards
+**使用场景：** 如果你的扩展需要基于分数的奖励逻辑
 
 ---
 
 ### 6. **ExtensionJoinMixin**
-Join/withdraw functionality with block-based waiting period.
 
-**Provides:**
-- Join with token amount
-- Withdraw after waiting blocks
-- Minimum governance votes check
-- Join info tracking
+基于区块等待的加入/退出功能。
 
-**Requires:**
+**提供：**
+
+- 按金额加入
+- 等待指定区块后可退出
+- 最低治理票数检查
+- 加入信息追踪
+
+**依赖：**
+
 - ExtensionCoreMixin
 - ExtensionAccountMixin
 - ExtensionVerificationMixin
 
-**Parameters:**
-- `joinTokenAddress`: Token to join with
-- `waitingBlocks`: Blocks to wait before withdrawal
-- `minGovVotes`: Minimum governance votes required
+**参数：**
 
-**Use when:** Your extension needs join functionality
+- `joinTokenAddress`: 可加入的代币
+- `waitingBlocks`: 提现需等待的区块数
+- `minGovVotes`: 加入需满足的最低治理票数
+
+**使用场景：** 需要加入机制的扩展
 
 ---
 
 ### 7. **ExtensionStakeMixin**
-Stake/unstake/withdraw functionality with phase-based waiting period.
 
-**Provides:**
-- Stake with token amount
-- Unstake request
-- Withdraw after waiting phases
-- Minimum governance votes check
-- Stake info tracking
+基于阶段等待的质押/解押/提款功能。
 
-**Requires:**
+**提供：**
+
+- 按金额质押
+- 解押请求
+- 等待指定阶段后可提款
+- 最低治理票数检查
+- 质押信息追踪
+
+**依赖：**
+
 - ExtensionCoreMixin
 - ExtensionAccountMixin
 - ExtensionVerificationMixin
 
-**Parameters:**
-- `stakeTokenAddress`: Token to stake
-- `waitingPhases`: Phases to wait before withdrawal
-- `minGovVotes`: Minimum governance votes required
+**参数：**
 
-**Use when:** Your extension needs staking functionality
+- `stakeTokenAddress`: 可质押的代币
+- `waitingPhases`: 提款需等待的阶段数
+- `minGovVotes`: 质押需满足的最低治理票数
+
+**使用场景：** 需要质押功能的扩展
 
 ---
 
-## 📚 Usage Examples
+## 📚 用法示例
 
-### Example 1: Extension with Join
+### 示例 1：支持加入功能的扩展
 
 ```solidity
 contract MyJoinExtension is
@@ -211,10 +236,10 @@ contract MyJoinExtension is
         )
     {}
 
-    // Implement required score calculation
-    function calculateScores() 
-        public view override 
-        returns (uint256 total, uint256[] memory scores) 
+    // 实现分数计算
+    function calculateScores()
+        public view override
+        returns (uint256 total, uint256[] memory scores)
     {
         scores = new uint256[](_accounts.length);
         for (uint256 i = 0; i < _accounts.length; i++) {
@@ -223,9 +248,9 @@ contract MyJoinExtension is
         }
     }
 
-    function calculateScore(address account) 
-        public view override 
-        returns (uint256 total, uint256 score) 
+    function calculateScore(address account)
+        public view override
+        returns (uint256 total, uint256 score)
     {
         (total, ) = calculateScores();
         score = _joinInfo[account].amount;
@@ -233,7 +258,7 @@ contract MyJoinExtension is
 }
 ```
 
-### Example 2: Extension with Stake
+### 示例 2：支持质押功能的扩展
 
 ```solidity
 contract MyStakeExtension is
@@ -259,10 +284,10 @@ contract MyStakeExtension is
         )
     {}
 
-    // Implement required score calculation
-    function calculateScores() 
-        public view override 
-        returns (uint256 total, uint256[] memory scores) 
+    // 实现分数计算
+    function calculateScores()
+        public view override
+        returns (uint256 total, uint256[] memory scores)
     {
         scores = new uint256[](_accounts.length);
         for (uint256 i = 0; i < _accounts.length; i++) {
@@ -271,9 +296,9 @@ contract MyStakeExtension is
         }
     }
 
-    function calculateScore(address account) 
-        public view override 
-        returns (uint256 total, uint256 score) 
+    function calculateScore(address account)
+        public view override
+        returns (uint256 total, uint256 score)
     {
         (total, ) = calculateScores();
         score = _stakeInfo[account].amount;
@@ -281,7 +306,7 @@ contract MyStakeExtension is
 }
 ```
 
-### Example 3: Custom Scoring Logic
+### 示例 3：自定义计分逻辑
 
 ```solidity
 contract MyCustomExtension is
@@ -294,65 +319,65 @@ contract MyCustomExtension is
 {
     // ... constructor ...
 
-    // Custom scoring: square root of joined amount
-    function calculateScores() 
-        public view override 
-        returns (uint256 total, uint256[] memory scores) 
+    // 自定义计分：取加入金额的平方根作为分数
+    function calculateScores()
+        public view override
+        returns (uint256 total, uint256[] memory scores)
     {
         scores = new uint256[](_accounts.length);
         for (uint256 i = 0; i < _accounts.length; i++) {
             uint256 amount = _joinInfo[_accounts[i]].amount;
-            scores[i] = sqrt(amount);  // Custom logic
+            scores[i] = sqrt(amount);  // 自定义逻辑
             total += scores[i];
         }
     }
 
     function sqrt(uint256 x) internal pure returns (uint256) {
-        // ... sqrt implementation ...
+        // ... 实现平方根函数 ...
     }
 }
 ```
 
-## 🎯 Mixin Selection Guide
+## 🎯 Mixin 选择导航
 
-**Need basic extension?**
+**需要基础扩展功能？**  
 → `CoreMixin` + `AccountMixin` + `RewardMixin`
 
-**Need join functionality?**
-→ Add `VerificationMixin` + `JoinMixin`
+**需要加入功能？**  
+→ 增加 `VerificationMixin` + `JoinMixin`
 
-**Need staking functionality?**
-→ Add `VerificationMixin` + `StakeMixin`
+**需要质押功能？**  
+→ 增加 `VerificationMixin` + `StakeMixin`
 
-**Need score-based rewards?**
-→ Add `ScoreMixin` (implements reward calculation)
+**需要基于分数的奖励？**  
+→ 增加 `ScoreMixin`（实现奖励分配）
 
-**Need custom reward logic?**
-→ Use `RewardMixin` and implement `rewardByAccount()`
+**需要自定义奖励逻辑？**  
+→ 只用 `RewardMixin` 并实现 `rewardByAccount()`
 
-## 🔧 Creating Custom Mixins
+## 🔧 如何创建自定义 Mixin
 
-You can create your own mixins following these principles:
+你可以按照以下原则编写自己的 mixin：
 
-1. **Single Responsibility**: Each mixin should do one thing well
-2. **Composability**: Mixins should work together without conflicts
-3. **Minimal Dependencies**: Only depend on necessary mixins
-4. **Clear Interface**: Expose both internal helpers and public functions
+1. **单一职责**：每个 mixin 只做好一件事
+2. **可组合性**：mixin 间可自由组合且不冲突
+3. **最小化依赖**：只依赖必要的其它 mixin
+4. **清晰接口**：同时暴露内部辅助和对外方法
 
 ```solidity
 abstract contract MyCustomMixin is ExtensionCoreMixin {
-    // State variables
+    // 状态变量
     mapping(address => uint256) internal _myData;
-    
-    // Events
+
+    // 事件
     event MyEvent(address indexed account, uint256 value);
-    
-    // Public functions
+
+    // 外部接口
     function myPublicFunction() external {
         _myInternalLogic();
     }
-    
-    // Internal helpers (for composition)
+
+    // 内部辅助（供组合用）
     function _myInternalLogic() internal {
         _myData[msg.sender] = block.timestamp;
         emit MyEvent(msg.sender, block.timestamp);
@@ -360,30 +385,32 @@ abstract contract MyCustomMixin is ExtensionCoreMixin {
 }
 ```
 
-## 📋 Comparison with Original Design
+## 📋 与原始设计对比
 
-| Aspect | Original | Mixin |
-|--------|----------|-------|
-| **Inheritance Depth** | 3 levels | 1 level (flat) |
-| **Reusability** | Limited | High |
-| **Customization** | Difficult | Easy |
-| **Testing** | Complex | Simple (per mixin) |
-| **Code Duplication** | Possible | Minimized |
-| **Flexibility** | Low | High |
+| 项目         | 原始架构 | Mixin 架构            |
+| ------------ | -------- | --------------------- |
+| **继承深度** | 3 层     | 1 层（扁平）          |
+| **复用性**   | 较低     | 较高                  |
+| **定制性**   | 困难     | 容易                  |
+| **测试难度** | 复杂     | 简单（按 mixin 测试） |
+| **代码重复** | 可能较多 | 极低                  |
+| **灵活性**   | 低       | 高                    |
 
-## 🚀 Migration Guide
+## 🚀 迁移指南
 
-### From Base/AutoScore/Join to Mixins:
+### 从 Base/AutoScore/Join 模式迁移到 Mixin
 
-**Before:**
+**改造前：**
+
 ```solidity
 contract MyExtension is LOVE20ExtensionAutoScoreJoin {
     constructor(...) LOVE20ExtensionAutoScoreJoin(...) {}
-    // Limited customization
+    // 功能定制受限
 }
 ```
 
-**After:**
+**改造后：**
+
 ```solidity
 contract MyExtension is
     ExtensionCoreMixin,
@@ -393,93 +420,96 @@ contract MyExtension is
     ExtensionScoreMixin,
     ExtensionJoinMixin
 {
-    constructor(...) 
+    constructor(...)
         ExtensionCoreMixin(factory_)
         ExtensionJoinMixin(factory_, token_, blocks_, votes_)
     {}
-    
-    // Full customization - override any function
+
+    // 完全开放定制——可随意重写函数
     function calculateScores() public view override returns (...) {
-        // Your custom logic
+        // 你的自定义逻辑
     }
 }
 ```
 
-## 💡 Best Practices
+## 💡 最佳实践
 
-1. **Always start with CoreMixin** - it's the foundation
-2. **Add AccountMixin early** - most extensions track participants
-3. **Choose between Join and Stake** - don't use both unless necessary
-4. **Use ScoreMixin for proportional rewards** - or implement custom logic
-5. **Override carefully** - call parent implementations when needed
-6. **Test mixins independently** - easier debugging
-7. **Document your composition** - explain why you chose specific mixins
+1. **一定要先继承 CoreMixin** ——一切的基础
+2. **尽早加上 AccountMixin** ——大多数扩展都需要参与者追踪
+3. **二选一：Join 或 Stake** ——除非确有必要，否则别混用
+4. **用 ScoreMixin 实现按分数分配** ——或者自行实现分配逻辑
+5. **重写时小心** ——必要时调用父类实现
+6. **单独测试每个 mixin** ——调试更高效
+7. **写清文档注释你的组合** ——说明为何选择各个 mixin
 
-## 🐛 Common Issues
+## 🐛 常见问题排查
 
-### Issue: Constructor conflicts
+### 问题：构造函数冲突
+
 ```solidity
-// ❌ Wrong - missing ExtensionCoreMixin constructor
+// ❌ 错误（缺少 CoreMixin 构造参数）
 contract Bad is ExtensionCoreMixin, ExtensionJoinMixin {
-    constructor() {}  // Missing factory_ parameter!
+    constructor() {}  // 缺少 factory_ 参数!
 }
 
-// ✅ Correct
+// ✅ 正确
 contract Good is ExtensionCoreMixin, ExtensionJoinMixin {
-    constructor(address factory_, ...) 
+    constructor(address factory_, ...)
         ExtensionCoreMixin(factory_)
         ExtensionJoinMixin(factory_, ...)
     {}
 }
 ```
 
-### Issue: Missing implementation
+### 问题：缺少实现
+
 ```solidity
-// ❌ Wrong - ScoreMixin requires implementation
+// ❌ 错误（缺少必要实现）
 contract Bad is ExtensionScoreMixin {
-    // Missing calculateScores() and calculateScore()
+    // 没有实现 calculateScores() 和 calculateScore()
 }
 
-// ✅ Correct
+// ✅ 正确
 contract Good is ExtensionScoreMixin {
     function calculateScores() public view override returns (...) {
-        // Implementation
+        // 实现
     }
     function calculateScore(address) public view override returns (...) {
-        // Implementation
+        // 实现
     }
 }
 ```
 
-### Issue: Storage collision
+### 问题：存储变量名冲突
+
 ```solidity
-// ❌ Wrong - variable name collision
+// ❌ 错误（变量名重复）
 contract Bad is ExtensionAccountMixin {
-    address[] internal _accounts;  // Already in AccountMixin!
+    address[] internal _accounts;  // AccountMixin 已有同名变量!
 }
 
-// ✅ Correct - use different name or access parent's
+// ✅ 正确
 contract Good is ExtensionAccountMixin {
-    address[] internal _myCustomAccounts;  // Different name
+    address[] internal _myCustomAccounts;  // 自定义名称
 }
 ```
 
-## 📖 Further Reading
+## 📖 深入阅读
 
-- [Solidity Documentation - Multiple Inheritance](https://docs.soliditylang.org/en/latest/contracts.html#multiple-inheritance-and-linearization)
-- [OpenZeppelin - Access Control](https://docs.openzeppelin.com/contracts/4.x/access-control)
-- [Design Patterns in Solidity](https://fravoll.github.io/solidity-patterns/)
+- [Solidity 官方文档 - 多重继承](https://docs.soliditylang.org/zh/latest/contracts.html#multiple-inheritance-and-linearization)
+- [OpenZeppelin - 权限管理](https://docs.openzeppelin.com/contracts/4.x/access-control)
+- [Solidity 设计模式](https://fravoll.github.io/solidity-patterns/)
 
 ---
 
-## ✨ Summary
+## ✨ 总结
 
-The mixin architecture provides:
-- ✅ **Modularity**: Pick only what you need
-- ✅ **Flexibility**: Easy to customize and extend
-- ✅ **Maintainability**: Each mixin is independently testable
-- ✅ **Reusability**: Compose different combinations
-- ✅ **Clarity**: Single responsibility per mixin
+Mixin 架构带来了：
 
-Start building your custom extension by selecting the mixins that match your requirements!
+- ✅ **模块化**：按需选择功能模块
+- ✅ **灵活性**：高自由度组合与拓展
+- ✅ **易维护**：每个混入可独立测试
+- ✅ **高复用**：组合多样
+- ✅ **结构清晰**：每个 mixin 单一职责
 
+现在就根据你的需求选择 Mixin，构建专属的自定义扩展吧！
