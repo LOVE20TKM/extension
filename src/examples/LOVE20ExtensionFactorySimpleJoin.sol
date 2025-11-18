@@ -22,7 +22,6 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     struct ExtensionParams {
         address joinTokenAddress;
         uint256 waitingBlocks;
-        uint256 minGovVotes;
     }
 
     // ============================================
@@ -40,24 +39,20 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     /// @notice Create a new SimpleJoin extension
     /// @param joinTokenAddress_ The token to join with
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
-    /// @param minGovVotes_ Minimum governance votes required
     /// @return The address of the created extension
     function createExtension(
         address joinTokenAddress_,
-        uint256 waitingBlocks_,
-        uint256 minGovVotes_
+        uint256 waitingBlocks_
     ) external returns (address) {
         LOVE20ExtensionSimpleJoin extension = new LOVE20ExtensionSimpleJoin(
             address(this),
             joinTokenAddress_,
-            waitingBlocks_,
-            minGovVotes_
+            waitingBlocks_
         );
 
         _extensionParams[address(extension)] = ExtensionParams({
             joinTokenAddress: joinTokenAddress_,
-            waitingBlocks: waitingBlocks_,
-            minGovVotes: minGovVotes_
+            waitingBlocks: waitingBlocks_
         });
 
         _registerExtension(address(extension));
@@ -69,7 +64,6 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     /// @param extension_ The extension address
     /// @return joinTokenAddress The join token address
     /// @return waitingBlocks The waiting blocks
-    /// @return minGovVotes The minimum governance votes
     function extensionParams(
         address extension_
     )
@@ -77,15 +71,13 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
         view
         returns (
             address joinTokenAddress,
-            uint256 waitingBlocks,
-            uint256 minGovVotes
+            uint256 waitingBlocks
         )
     {
         ExtensionParams memory params = _extensionParams[extension_];
         return (
             params.joinTokenAddress,
-            params.waitingBlocks,
-            params.minGovVotes
+            params.waitingBlocks
         );
     }
 }

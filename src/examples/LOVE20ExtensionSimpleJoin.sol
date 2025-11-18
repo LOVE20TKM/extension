@@ -21,18 +21,15 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionAutoScoreJoin {
     /// @param factory_ The factory address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
-    /// @param minGovVotes_ Minimum governance votes required to join
     constructor(
         address factory_,
         address joinTokenAddress_,
-        uint256 waitingBlocks_,
-        uint256 minGovVotes_
+        uint256 waitingBlocks_
     )
         LOVE20ExtensionAutoScoreJoin(
             factory_,
             joinTokenAddress_,
-            waitingBlocks_,
-            minGovVotes_
+            waitingBlocks_
         )
     {}
 

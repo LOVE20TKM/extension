@@ -51,7 +51,6 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
 
     uint256 constant ACTION_ID = 1;
     uint256 constant WAITING_BLOCKS = 100;
-    uint256 constant MIN_GOV_VOTES = 1e18;
 
     event Join(
         address indexed tokenAddress,
@@ -106,8 +105,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         extension = LOVE20ExtensionSimpleJoin(
             factory.createExtension(
                 address(joinToken),
-                WAITING_BLOCKS,
-                MIN_GOV_VOTES
+                WAITING_BLOCKS
             )
         );
 
@@ -149,7 +147,6 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
     function test_ImmutableVariables() public view {
         assertEq(extension.joinTokenAddress(), address(joinToken));
         assertEq(extension.waitingBlocks(), WAITING_BLOCKS);
-        assertEq(extension.minGovVotes(), MIN_GOV_VOTES);
         // factory is MockExtensionFactory, not center
         assertTrue(extension.factory() != address(0));
     }
@@ -206,20 +203,6 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         extension.join(0, new string[](0));
     }
 
-    function test_Join_RevertIfInsufficientGovVotes() public {
-        address poorUser = address(0x999);
-        joinToken.mint(poorUser, 1000e18);
-        vm.prank(poorUser);
-        joinToken.approve(address(extension), type(uint256).max);
-        stake.setValidGovVotes(address(token), poorUser, 0);
-
-        vm.prank(poorUser);
-        vm.expectRevert(
-            ILOVE20ExtensionAutoScoreJoin.InsufficientGovVotes.selector
-        );
-        extension.join(100e18, new string[](0));
-    }
-
     function test_Join_RevertIfAlreadyJoined() public {
         vm.startPrank(user1);
         extension.join(100e18, new string[](0));
@@ -227,20 +210,6 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.expectRevert(ILOVE20ExtensionAutoScoreJoin.AlreadyJoined.selector);
         extension.join(50e18, new string[](0));
         vm.stopPrank();
-    }
-
-    function test_Join_SuccessWithMinimumGovVotes() public {
-        address minUser = address(0x888);
-        joinToken.mint(minUser, 1000e18);
-        vm.prank(minUser);
-        joinToken.approve(address(extension), type(uint256).max);
-        stake.setValidGovVotes(address(token), minUser, MIN_GOV_VOTES);
-
-        vm.prank(minUser);
-        extension.join(100e18, new string[](0));
-
-        (uint256 amount, ) = extension.joinInfo(minUser);
-        assertEq(amount, 100e18);
     }
 
     // ============================================
