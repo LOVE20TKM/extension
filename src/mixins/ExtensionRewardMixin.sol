@@ -4,6 +4,24 @@ pragma solidity =0.8.17;
 import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 
+/// @title ExtensionRewardMixin
+/// @notice Base reward distribution framework
+/// @dev Provides the core reward claiming logic without enforcing a specific distribution strategy
+///
+/// ARCHITECTURE:
+/// This mixin defines the reward claiming workflow and storage,
+/// but delegates the actual reward calculation to derived contracts.
+///
+/// RESPONSIBILITIES:
+/// - Manage reward claiming state (_reward, _claimedReward)
+/// - Provide claimReward() function with standard workflow
+/// - Define hooks for preparation (_prepareVerifyResultIfNeeded, _prepareRewardIfNeeded)
+/// - Handle token transfers
+///
+/// EXTENSION POINTS:
+/// Derived contracts must implement:
+/// - rewardByAccount() - Calculate reward for specific account
+///
 abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // ============================================
     // ERRORS
@@ -26,16 +44,21 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // STATE VARIABLES
     // ============================================
 
-    /// @dev round => reward
+    /// @dev round => total reward for that round
     mapping(uint256 => uint256) internal _reward;
 
-    /// @dev round => account => claimedReward
+    /// @dev round => account => claimed reward amount
     mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
 
     // ============================================
-    // ABSTRACT FUNCTIONS
+    // ABSTRACT FUNCTIONS - MUST BE IMPLEMENTED
     // ============================================
 
+    /// @notice Calculate reward for a specific account in a specific round
+    /// @param round The round number
+    /// @param account The account address
+    /// @return reward The calculated reward amount
+    /// @return isMinted Whether the reward has already been minted/claimed
     function rewardByAccount(
         uint256 round,
         address account
@@ -45,6 +68,9 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // PUBLIC FUNCTIONS
     // ============================================
 
+    /// @notice Claim reward for a specific round
+    /// @param round The round number to claim reward from
+    /// @return reward The amount of reward claimed
     function claimReward(
         uint256 round
     ) external virtual returns (uint256 reward) {
@@ -59,10 +85,16 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     }
 
     // ============================================
-    // INTERNAL FUNCTIONS
+    // INTERNAL FUNCTIONS - HOOKS
     // ============================================
 
+    /// @dev Hook to prepare verification results before claiming
+    /// Override this in derived contracts if verification result preparation is needed
     function _prepareVerifyResultIfNeeded() internal virtual {}
+
+    /// @dev Hook to prepare reward data for a specific round
+    /// Default implementation mints action reward from the mint contract
+    /// @param round The round number
     function _prepareRewardIfNeeded(uint256 round) internal virtual {
         if (_reward[round] > 0) {
             return;
@@ -75,16 +107,21 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
         _reward[round] = totalActionReward;
     }
 
+    /// @dev Internal function to execute the reward claim
+    /// @param round The round number
+    /// @return reward The amount of reward claimed
     function _claimReward(
         uint256 round
     ) internal virtual returns (uint256 reward) {
         // Calculate reward for the user
         bool isMinted;
         (reward, isMinted) = rewardByAccount(round, msg.sender);
+
         // Check if already minted
         if (isMinted) {
             revert AlreadyClaimed();
         }
+
         // Update claimed reward
         _claimedReward[round][msg.sender] = reward;
 

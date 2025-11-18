@@ -5,7 +5,7 @@ import {ExtensionCoreMixin} from "../ExtensionCoreMixin.sol";
 import {ExtensionAccountMixin} from "../ExtensionAccountMixin.sol";
 import {ExtensionRewardMixin} from "../ExtensionRewardMixin.sol";
 import {ExtensionVerificationMixin} from "../ExtensionVerificationMixin.sol";
-import {ExtensionScoreMixin} from "../ExtensionScoreMixin.sol";
+import {ExtensionScoreBasedRewardMixin} from "../ExtensionScoreBasedRewardMixin.sol";
 import {ExtensionJoinMixin} from "../ExtensionJoinMixin.sol";
 
 /// @title ExtensionWithJoin
@@ -15,9 +15,9 @@ import {ExtensionJoinMixin} from "../ExtensionJoinMixin.sol";
 /// Mixin Composition:
 /// - ExtensionCoreMixin: Core functionality (factory, initialization)
 /// - ExtensionAccountMixin: Account management
-/// - ExtensionRewardMixin: Reward distribution
+/// - ExtensionRewardMixin: Reward distribution framework
 /// - ExtensionVerificationMixin: Verification info management
-/// - ExtensionScoreMixin: Score-based reward calculation
+/// - ExtensionScoreBasedRewardMixin: Score-based reward calculation strategy
 /// - ExtensionJoinMixin: Join/withdraw functionality
 ///
 contract ExtensionWithJoin is
@@ -25,7 +25,7 @@ contract ExtensionWithJoin is
     ExtensionAccountMixin,
     ExtensionRewardMixin,
     ExtensionVerificationMixin,
-    ExtensionScoreMixin,
+    ExtensionScoreBasedRewardMixin,
     ExtensionJoinMixin
 {
     // ============================================
@@ -97,13 +97,13 @@ contract ExtensionWithJoin is
     // HOOK OVERRIDES
     // ============================================
 
-    /// @dev Override to resolve conflict between RewardMixin and ScoreMixin
+    /// @dev Override to resolve conflict between RewardMixin and ScoreBasedRewardMixin
     function _prepareVerifyResultIfNeeded()
         internal
         virtual
-        override(ExtensionRewardMixin, ExtensionScoreMixin)
+        override(ExtensionRewardMixin, ExtensionScoreBasedRewardMixin)
     {
-        ExtensionScoreMixin._prepareVerifyResultIfNeeded();
+        ExtensionScoreBasedRewardMixin._prepareVerifyResultIfNeeded();
     }
 
     // ============================================
