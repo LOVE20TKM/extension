@@ -37,9 +37,6 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @notice Number of blocks to wait before withdrawal after joining
     uint256 public immutable waitingBlocks;
 
-    /// @notice Minimum governance votes required to join
-    uint256 public immutable minGovVotes;
-
     // ============================================
     // STATE VARIABLES - JOIN STATE
     // ============================================
@@ -61,16 +58,13 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @param factory_ The factory address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
-    /// @param minGovVotes_ Minimum governance votes required to join
     constructor(
         address factory_,
         address joinTokenAddress_,
-        uint256 waitingBlocks_,
-        uint256 minGovVotes_
+        uint256 waitingBlocks_
     ) LOVE20ExtensionAutoScore(factory_) {
         joinTokenAddress = joinTokenAddress_;
         waitingBlocks = waitingBlocks_;
-        minGovVotes = minGovVotes_;
         _joinToken = IERC20(joinTokenAddress_);
     }
 
@@ -91,12 +85,6 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
         }
         if (amount == 0) {
             revert JoinAmountZero();
-        }
-
-        // Check minimum governance votes requirement
-        uint256 userGovVotes = _stake.validGovVotes(tokenAddress, msg.sender);
-        if (userGovVotes < minGovVotes) {
-            revert InsufficientGovVotes();
         }
 
         // Update state

@@ -10,8 +10,6 @@ interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
 
     error NotEnoughWaitingBlocks();
 
-    error InsufficientGovVotes();
-
     error AlreadyJoined();
 
     event Join(
@@ -37,8 +35,6 @@ interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
     function joinTokenAddress() external view returns (address);
 
     function waitingBlocks() external view returns (uint256);
-
-    function minGovVotes() external view returns (uint256);
 
     function join(uint256 amount, string[] memory verificationInfos) external;
 
