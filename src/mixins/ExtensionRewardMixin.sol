@@ -4,9 +4,6 @@ pragma solidity =0.8.17;
 import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 
-/// @title ExtensionRewardMixin
-/// @notice Mixin for handling reward distribution
-/// @dev Provides reward preparation and claiming functionality
 abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // ============================================
     // ERRORS
@@ -39,33 +36,22 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // ABSTRACT FUNCTIONS
     // ============================================
 
-    /// @dev Virtual function to calculate reward for an account in a specific round
-    /// @param round The round number
-    /// @param account The account address
-    /// @return reward The amount of reward for the account
-    /// @return isMinted Whether the reward has already been minted
     function rewardByAccount(
         uint256 round,
         address account
     ) public view virtual returns (uint256 reward, bool isMinted);
 
-    /// @dev Prepare verify result if needed (hook for subclasses)
-    function _prepareVerifyResultIfNeeded() internal virtual {}
-
     // ============================================
     // PUBLIC FUNCTIONS
     // ============================================
 
-    /// @notice Claim reward for a specific round
-    /// @param round The round number
-    /// @return reward The amount of reward claimed
-    function claimReward(uint256 round) external returns (uint256 reward) {
-        // Verify phase must be finished for this round
+    function claimReward(
+        uint256 round
+    ) external virtual returns (uint256 reward) {
         if (round >= _verify.currentRound()) {
             revert RoundNotFinished();
         }
 
-        // Prepare verify result and reward
         _prepareVerifyResultIfNeeded();
         _prepareRewardIfNeeded(round);
 
@@ -76,8 +62,7 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // INTERNAL FUNCTIONS
     // ============================================
 
-    /// @dev Prepare action reward for a specific round if not already prepared
-    /// @param round The round number to prepare reward for
+    function _prepareVerifyResultIfNeeded() internal virtual {}
     function _prepareRewardIfNeeded(uint256 round) internal virtual {
         if (_reward[round] > 0) {
             return;
@@ -90,10 +75,9 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
         _reward[round] = totalActionReward;
     }
 
-    /// @dev Internal function to claim reward for a specific round
-    /// @param round The round number to claim reward for
-    /// @return reward The amount of reward claimed
-    function _claimReward(uint256 round) internal returns (uint256 reward) {
+    function _claimReward(
+        uint256 round
+    ) internal virtual returns (uint256 reward) {
         // Calculate reward for the user
         bool isMinted;
         (reward, isMinted) = rewardByAccount(round, msg.sender);
