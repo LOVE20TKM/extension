@@ -5,7 +5,9 @@ import {ExtensionCoreMixin} from "../ExtensionCoreMixin.sol";
 import {ExtensionAccountMixin} from "../ExtensionAccountMixin.sol";
 import {ExtensionRewardMixin} from "../ExtensionRewardMixin.sol";
 import {ExtensionVerificationMixin} from "../ExtensionVerificationMixin.sol";
-import {ExtensionScoreBasedRewardMixin} from "../ExtensionScoreBasedRewardMixin.sol";
+import {
+    ExtensionScoreBasedRewardMixin
+} from "../ExtensionScoreBasedRewardMixin.sol";
 import {ExtensionJoinMixin} from "../ExtensionJoinMixin.sol";
 
 /// @title ExtensionWithJoin
@@ -35,20 +37,11 @@ contract ExtensionWithJoin is
     /// @param factory_ The factory contract address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
-    /// @param minGovVotes_ Minimum governance votes required
     constructor(
         address factory_,
         address joinTokenAddress_,
-        uint256 waitingBlocks_,
-        uint256 minGovVotes_
-    )
-        ExtensionJoinMixin(
-            factory_,
-            joinTokenAddress_,
-            waitingBlocks_,
-            minGovVotes_
-        )
-    {}
+        uint256 waitingBlocks_
+    ) ExtensionJoinMixin(factory_, joinTokenAddress_, waitingBlocks_) {}
 
     // ============================================
     // INITIALIZATION
@@ -60,6 +53,29 @@ contract ExtensionWithJoin is
         uint256 actionId_
     ) public override onlyCenter {
         super.initialize(tokenAddress_, actionId_);
+    }
+
+    // ============================================
+    // JOIN/WITHDRAW OVERRIDES
+    // ============================================
+
+    /// @notice Join with tokens to participate
+    /// @dev Override to add verification result preparation
+    /// @param amount The amount of tokens to join with
+    /// @param verificationInfos Verification information array
+    function join(
+        uint256 amount,
+        string[] memory verificationInfos
+    ) public override {
+        _prepareVerifyResultIfNeeded();
+        ExtensionJoinMixin.join(amount, verificationInfos);
+    }
+
+    /// @notice Withdraw joined tokens after waiting period
+    /// @dev Override to add verification result preparation
+    function withdraw() public override {
+        _prepareVerifyResultIfNeeded();
+        ExtensionJoinMixin.withdraw();
     }
 
     // ============================================
@@ -127,4 +143,3 @@ contract ExtensionWithJoin is
         return _joinInfo[account].amount;
     }
 }
-

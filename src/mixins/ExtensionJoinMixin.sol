@@ -13,7 +13,6 @@ abstract contract ExtensionJoinMixin is
 {
     error AlreadyJoined();
     error JoinAmountZero();
-    error InsufficientGovVotes();
     error NoJoinedAmount();
     error NotEnoughWaitingBlocks();
 
@@ -40,8 +39,6 @@ abstract contract ExtensionJoinMixin is
 
     uint256 public immutable waitingBlocks;
 
-    uint256 public immutable minGovVotes;
-
     uint256 public totalJoinedAmount;
 
     // account => JoinInfo
@@ -52,31 +49,23 @@ abstract contract ExtensionJoinMixin is
     constructor(
         address factory_,
         address joinTokenAddress_,
-        uint256 waitingBlocks_,
-        uint256 minGovVotes_
+        uint256 waitingBlocks_
     ) ExtensionCoreMixin(factory_) {
         joinTokenAddress = joinTokenAddress_;
         waitingBlocks = waitingBlocks_;
-        minGovVotes = minGovVotes_;
         _joinToken = IERC20(joinTokenAddress_);
     }
 
     function join(
         uint256 amount,
         string[] memory verificationInfos
-    ) external virtual {
+    ) public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (info.joinedBlock != 0) {
             revert AlreadyJoined();
         }
         if (amount == 0) {
             revert JoinAmountZero();
-        }
-
-        // Check minimum governance votes requirement
-        uint256 userGovVotes = _stake.validGovVotes(tokenAddress, msg.sender);
-        if (userGovVotes < minGovVotes) {
-            revert InsufficientGovVotes();
         }
 
         // Update state
@@ -96,7 +85,7 @@ abstract contract ExtensionJoinMixin is
         emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
     }
 
-    function withdraw() external virtual {
+    function withdraw() public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (!_canWithdraw(msg.sender)) {
             if (info.joinedBlock == 0) {
