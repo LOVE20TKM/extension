@@ -139,20 +139,22 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
     function joinInfo(
         address account
-    ) external view virtual returns (uint256 amount, uint256 joinedBlock) {
-        return (_joinInfo[account].amount, _joinInfo[account].joinedBlock);
+    )
+        external
+        view
+        virtual
+        returns (uint256 amount, uint256 joinedBlock, uint256 withdrawableBlock)
+    {
+        return (
+            _joinInfo[account].amount,
+            _joinInfo[account].joinedBlock,
+            _getWithdrawableBlock(account)
+        );
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
     function canWithdraw(address account) external view virtual returns (bool) {
         return _canWithdraw(account);
-    }
-
-    /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
-    function withdrawableBlock(
-        address account
-    ) external view virtual returns (uint256) {
-        return _getWithdrawableBlock(account);
     }
 
     // ============================================

@@ -42,11 +42,16 @@ interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
 
     function joinInfo(
         address account
-    ) external view returns (uint256 amount, uint256 joinedBlock);
+    )
+        external
+        view
+        returns (
+            uint256 amount,
+            uint256 joinedBlock,
+            uint256 withdrawableBlock
+        );
 
     function totalJoinedAmount() external view returns (uint256);
 
     function canWithdraw(address account) external view returns (bool);
-
-    function withdrawableBlock(address account) external view returns (uint256);
 }

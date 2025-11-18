@@ -40,40 +40,20 @@ abstract contract ExtensionCoreMixin {
     // STATE VARIABLES
     // ============================================
 
-    /// @notice The factory contract address
     address public immutable factory;
-
-    /// @notice The token address this extension is associated with
     address public tokenAddress;
-
-    /// @notice The action ID this extension is associated with
     uint256 public actionId;
-
-    /// @notice Whether the extension has been initialized
     bool public initialized;
 
-    /// @notice The launch contract address
     ILOVE20Launch internal immutable _launch;
-    /// @notice The stake contract address
     ILOVE20Stake internal immutable _stake;
-    /// @notice The submit contract address
     ILOVE20Submit internal immutable _submit;
-    /// @notice The vote contract address
     ILOVE20Vote internal immutable _vote;
-    /// @notice The join contract address
     ILOVE20Join internal immutable _join;
-    /// @notice The verify contract address
     ILOVE20Verify internal immutable _verify;
-    /// @notice The mint contract address
     ILOVE20Mint internal immutable _mint;
-    /// @notice The random contract address
     ILOVE20Random internal _random;
 
-    // ============================================
-    // MODIFIERS
-    // ============================================
-
-    /// @dev Restricts function access to center contract only
     modifier onlyCenter() {
         if (msg.sender != ILOVE20ExtensionFactory(factory).center()) {
             revert OnlyCenterCanCall();
@@ -81,11 +61,6 @@ abstract contract ExtensionCoreMixin {
         _;
     }
 
-    // ============================================
-    // CONSTRUCTOR
-    // ============================================
-
-    /// @param factory_ The factory contract address
     constructor(address factory_) {
         factory = factory_;
         ILOVE20ExtensionCenter c = ILOVE20ExtensionCenter(
@@ -101,23 +76,10 @@ abstract contract ExtensionCoreMixin {
         _random = ILOVE20Random(c.randomAddress());
     }
 
-    // ============================================
-    // BASIC INFO
-    // ============================================
-
-    /// @notice Get the center contract address
     function center() public view returns (address) {
         return ILOVE20ExtensionFactory(factory).center();
     }
 
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-
-    /// @notice Initialize the extension
-    /// @dev Base implementation handles common validation and state updates
-    /// @param tokenAddress_ The token address
-    /// @param actionId_ The action ID
     function initialize(
         address tokenAddress_,
         uint256 actionId_
@@ -133,15 +95,12 @@ abstract contract ExtensionCoreMixin {
         tokenAddress = tokenAddress_;
         actionId = actionId_;
 
-        // Approve token to joinAddress before joining
         ILOVE20Token token = ILOVE20Token(tokenAddress);
         ILOVE20Join join = ILOVE20Join(
             ILOVE20ExtensionCenter(ILOVE20ExtensionFactory(factory).center())
                 .joinAddress()
         );
         token.approve(address(join), DEFAULT_JOIN_AMOUNT);
-
-        // Join the action
         join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
     }
 }

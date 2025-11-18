@@ -103,10 +103,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
 
         // Create extension through factory
         extension = LOVE20ExtensionSimpleJoin(
-            factory.createExtension(
-                address(joinToken),
-                WAITING_BLOCKS
-            )
+            factory.createExtension(address(joinToken), WAITING_BLOCKS)
         );
 
         // Register factory to center (needs canSubmit permission)
@@ -166,9 +163,14 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        (uint256 joinedAmount, uint256 joinedBlock) = extension.joinInfo(user1);
+        (
+            uint256 joinedAmount,
+            uint256 joinedBlock,
+            uint256 withdrawableBlock
+        ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
         assertEq(joinedBlock, blockBefore);
+        assertEq(withdrawableBlock, blockBefore + WAITING_BLOCKS);
         assertEq(extension.totalJoinedAmount(), amount);
         assertEq(extension.accountsCount(), 1);
     }
@@ -234,9 +236,14 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);
 
-        (uint256 joinedAmount, uint256 joinedBlock) = extension.joinInfo(user1);
+        (
+            uint256 joinedAmount,
+            uint256 joinedBlock,
+            uint256 withdrawableBlock
+        ) = extension.joinInfo(user1);
         assertEq(joinedAmount, 0);
         assertEq(joinedBlock, 0);
+        assertEq(withdrawableBlock, 0);
     }
 
     function test_Withdraw_EmitEvent() public {
@@ -284,7 +291,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.prank(user1);
         extension.withdraw();
 
-        (uint256 amount, ) = extension.joinInfo(user1);
+        (uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 0);
     }
 
@@ -317,7 +324,8 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
     // ============================================
 
     function test_WithdrawableBlock_Zero_NotJoined() public view {
-        assertEq(extension.withdrawableBlock(user1), 0);
+        (, , uint256 withdrawableBlock) = extension.joinInfo(user1);
+        assertEq(withdrawableBlock, 0);
     }
 
     function test_WithdrawableBlock_Correct() public {
@@ -326,10 +334,8 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(
-            extension.withdrawableBlock(user1),
-            joinBlock + WAITING_BLOCKS
-        );
+        (, , uint256 withdrawableBlock) = extension.joinInfo(user1);
+        assertEq(withdrawableBlock, joinBlock + WAITING_BLOCKS);
     }
 
     // ============================================
@@ -527,7 +533,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        (uint256 joinedAmount, ) = extension.joinInfo(user1);
+        (uint256 joinedAmount, , ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
         assertEq(extension.totalJoinedAmount(), amount);
     }

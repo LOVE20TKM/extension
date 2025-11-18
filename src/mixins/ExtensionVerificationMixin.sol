@@ -5,20 +5,11 @@ import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 
-/// @title ExtensionVerificationMixin
-/// @notice Mixin for managing verification information
-/// @dev Provides verification info storage and retrieval
 abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
     using ArrayUtils for uint256[];
 
-    // ============================================
-    // ERRORS
-    // ============================================
     error VerificationInfoLengthMismatch();
 
-    // ============================================
-    // EVENTS
-    // ============================================
     event UpdateVerificationInfo(
         address indexed tokenAddress,
         address indexed account,
@@ -28,30 +19,17 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         string verificationInfo
     );
 
-    // ============================================
-    // STATE VARIABLES
-    // ============================================
-
-    /// @dev account => verificationKey => round => verificationInfo
     mapping(address => mapping(string => mapping(uint256 => string)))
         internal _verificationInfoByRound;
 
-    /// @dev account => verificationKey => round[]
     mapping(address => mapping(string => uint256[]))
         internal _verificationInfoUpdateRounds;
 
-    // ============================================
-    // PUBLIC FUNCTIONS
-    // ============================================
-
-    /// @notice Update verification information
-    /// @param verificationInfos Array of verification information
     function updateVerificationInfo(string[] memory verificationInfos) public {
         if (verificationInfos.length == 0) {
             return;
         }
 
-        // Get verificationKeys from action info
         ActionInfo memory actionInfo = _submit.actionInfo(
             tokenAddress,
             actionId
@@ -69,9 +47,6 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         }
     }
 
-    /// @notice Get verification info for an account
-    /// @param account The account address
-    /// @param verificationKey The verification key
     function verificationInfo(
         address account,
         string calldata verificationKey
@@ -87,10 +62,6 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         return _verificationInfoByRound[account][verificationKey][latestRound];
     }
 
-    /// @notice Get verification info for an account at specific round
-    /// @param account The account address
-    /// @param verificationKey The verification key
-    /// @param round The round number
     function verificationInfoByRound(
         address account,
         string calldata verificationKey,
@@ -109,9 +80,6 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         return _verificationInfoByRound[account][verificationKey][nearestRound];
     }
 
-    /// @notice Get count of verification info update rounds
-    /// @param account The account address
-    /// @param verificationKey The verification key
     function verificationInfoUpdateRoundsCount(
         address account,
         string calldata verificationKey
@@ -119,10 +87,6 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         return _verificationInfoUpdateRounds[account][verificationKey].length;
     }
 
-    /// @notice Get verification info update round at specific index
-    /// @param account The account address
-    /// @param verificationKey The verification key
-    /// @param index The index
     function verificationInfoUpdateRoundsAtIndex(
         address account,
         string calldata verificationKey,
@@ -131,13 +95,6 @@ abstract contract ExtensionVerificationMixin is ExtensionCoreMixin {
         return _verificationInfoUpdateRounds[account][verificationKey][index];
     }
 
-    // ============================================
-    // INTERNAL FUNCTIONS
-    // ============================================
-
-    /// @dev Internal function to update verification info for a single key
-    /// @param verificationKey The verification key
-    /// @param aVerificationInfo The verification information
     function _updateVerificationInfoByKey(
         string memory verificationKey,
         string memory aVerificationInfo
