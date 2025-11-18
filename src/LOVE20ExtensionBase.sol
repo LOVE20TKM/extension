@@ -119,17 +119,19 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     // ============================================
 
     /// @inheritdoc ILOVE20Extension
-    function accounts() external view returns (address[] memory) {
+    function accounts() external view virtual returns (address[] memory) {
         return _accounts;
     }
 
     /// @inheritdoc ILOVE20Extension
-    function accountsCount() external view returns (uint256) {
+    function accountsCount() external view virtual returns (uint256) {
         return _accounts.length;
     }
 
     /// @inheritdoc ILOVE20Extension
-    function accountAtIndex(uint256 index) external view returns (address) {
+    function accountAtIndex(
+        uint256 index
+    ) external view virtual returns (address) {
         return _accounts[index];
     }
 
@@ -173,7 +175,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
     /// @dev Add an account to the internal accounts array and center registry
     /// @param account The account address to add
-    function _addAccount(address account) internal {
+    function _addAccount(address account) internal virtual {
         _accounts.push(account);
         ILOVE20ExtensionCenter(center()).addAccount(
             tokenAddress,
@@ -184,7 +186,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
     /// @dev Remove an account from the internal accounts array and center registry
     /// @param account The account address to remove
-    function _removeAccount(address account) internal {
+    function _removeAccount(address account) internal virtual {
         for (uint256 i = 0; i < _accounts.length; i++) {
             if (_accounts[i] == account) {
                 _accounts[i] = _accounts[_accounts.length - 1];
@@ -201,7 +203,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
 
     /// @dev Prepare action reward for a specific round if not already prepared
     /// @param round The round number to prepare reward for
-    function _prepareRewardIfNeeded(uint256 round) internal {
+    function _prepareRewardIfNeeded(uint256 round) internal virtual {
         if (_reward[round] > 0) {
             return;
         }
@@ -213,7 +215,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         _reward[round] = totalActionReward;
     }
 
-    function _prepareVerifyResultIfNeeded() internal virtual {}
+    function _prepareVerifyResultIfNeeded() internal virtual {
+        // do nothing
+    }
 
     /// @dev Virtual function to calculate reward for an account in a specific round
     /// @param round The round number
@@ -225,7 +229,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         address account
     ) public view virtual returns (uint256 reward, bool isMinted);
 
-    function claimReward(uint256 round) external returns (uint256 reward) {
+    function claimReward(
+        uint256 round
+    ) public virtual returns (uint256 reward) {
         // Verify phase must be finished for this round
         if (round >= _verify.currentRound()) {
             revert RoundNotFinished();
@@ -243,7 +249,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     /// @dev Internal function to claim reward for a specific round
     /// @param round The round number to claim reward for
     /// @return reward The amount of reward claimed
-    function _claimReward(uint256 round) internal returns (uint256 reward) {
+    function _claimReward(
+        uint256 round
+    ) internal virtual returns (uint256 reward) {
         // Calculate reward for the user
         bool isMinted;
         (reward, isMinted) = rewardByAccount(round, msg.sender);
@@ -268,7 +276,9 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     // ============================================
 
     /// @inheritdoc ILOVE20Extension
-    function updateVerificationInfo(string[] memory verificationInfos) public {
+    function updateVerificationInfo(
+        string[] memory verificationInfos
+    ) public virtual {
         if (verificationInfos.length == 0) {
             return;
         }
@@ -297,7 +307,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     function _updateVerificationInfoByKey(
         string memory verificationKey,
         string memory aVerificationInfo
-    ) internal {
+    ) internal virtual {
         uint256 currentRound = _join.currentRound();
         uint256[] storage rounds = _verificationInfoUpdateRounds[msg.sender][
             verificationKey
@@ -325,7 +335,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     function verificationInfo(
         address account,
         string calldata verificationKey
-    ) external view returns (string memory) {
+    ) external view virtual returns (string memory) {
         uint256[] memory rounds = _verificationInfoUpdateRounds[account][
             verificationKey
         ];
@@ -342,7 +352,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         address account,
         string calldata verificationKey,
         uint256 round
-    ) external view returns (string memory) {
+    ) external view virtual returns (string memory) {
         uint256[] storage rounds = _verificationInfoUpdateRounds[account][
             verificationKey
         ];
@@ -360,7 +370,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
     function verificationInfoUpdateRoundsCount(
         address account,
         string calldata verificationKey
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _verificationInfoUpdateRounds[account][verificationKey].length;
     }
 
@@ -369,7 +379,7 @@ abstract contract LOVE20ExtensionBase is ILOVE20Extension {
         address account,
         string calldata verificationKey,
         uint256 index
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _verificationInfoUpdateRounds[account][verificationKey][index];
     }
 }

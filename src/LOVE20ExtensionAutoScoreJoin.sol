@@ -79,7 +79,10 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     // ============================================
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
-    function join(uint256 amount, string[] memory verificationInfos) external {
+    function join(
+        uint256 amount,
+        string[] memory verificationInfos
+    ) public virtual {
         _prepareVerifyResultIfNeeded();
 
         JoinInfo storage info = _joinInfo[msg.sender];
@@ -114,7 +117,7 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
-    function withdraw() external {
+    function withdraw() public virtual {
         _prepareVerifyResultIfNeeded();
 
         JoinInfo storage info = _joinInfo[msg.sender];
@@ -148,19 +151,19 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
     function joinInfo(
         address account
-    ) external view returns (uint256 amount, uint256 joinedBlock) {
+    ) external view virtual returns (uint256 amount, uint256 joinedBlock) {
         return (_joinInfo[account].amount, _joinInfo[account].joinedBlock);
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
-    function canWithdraw(address account) external view returns (bool) {
+    function canWithdraw(address account) external view virtual returns (bool) {
         return _canWithdraw(account);
     }
 
     /// @inheritdoc ILOVE20ExtensionAutoScoreJoin
     function withdrawableBlock(
         address account
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _getWithdrawableBlock(account);
     }
 
@@ -171,7 +174,9 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @dev Check if an account can withdraw
     /// @param account The account to check
     /// @return Whether the account can withdraw
-    function _canWithdraw(address account) internal view returns (bool) {
+    function _canWithdraw(
+        address account
+    ) internal view virtual returns (bool) {
         JoinInfo storage info = _joinInfo[account];
         if (info.joinedBlock == 0) {
             return false;
@@ -184,7 +189,7 @@ abstract contract LOVE20ExtensionAutoScoreJoin is
     /// @return The withdrawable block number (0 if not joined)
     function _getWithdrawableBlock(
         address account
-    ) internal view returns (uint256) {
+    ) internal view virtual returns (uint256) {
         uint256 joinedBlock = _joinInfo[account].joinedBlock;
         if (joinedBlock == 0) {
             return 0;

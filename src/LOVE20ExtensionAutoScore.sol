@@ -203,7 +203,7 @@ abstract contract LOVE20ExtensionAutoScore is
     /// @notice Get the total score for a specific round
     /// @param round The round number
     /// @return The total score
-    function totalScore(uint256 round) external view returns (uint256) {
+    function totalScore(uint256 round) external view virtual returns (uint256) {
         return _totalScore[round];
     }
 
@@ -212,7 +212,7 @@ abstract contract LOVE20ExtensionAutoScore is
     /// @return result The array of account addresses
     function accountsByRound(
         uint256 round
-    ) external view returns (address[] memory result) {
+    ) external view virtual returns (address[] memory result) {
         result = _accountsByRound[round];
         if (result.length == 0) {
             if (round > _join.currentRound()) {
@@ -229,7 +229,7 @@ abstract contract LOVE20ExtensionAutoScore is
     /// @return The number of verified accounts
     function accountsByRoundCount(
         uint256 round
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _accountsByRound[round].length;
     }
 
@@ -240,21 +240,25 @@ abstract contract LOVE20ExtensionAutoScore is
     function accountsByRoundAtIndex(
         uint256 round,
         uint256 index
-    ) external view returns (address) {
+    ) external view virtual returns (address) {
         return _accountsByRound[round][index];
     }
 
     /// @notice Get all scores for a specific round
     /// @param round The round number
     /// @return Array of scores
-    function scores(uint256 round) external view returns (uint256[] memory) {
+    function scores(
+        uint256 round
+    ) external view virtual returns (uint256[] memory) {
         return _scores[round];
     }
 
     /// @notice Get the count of scores for a specific round
     /// @param round The round number
     /// @return The number of scores
-    function scoresCount(uint256 round) external view returns (uint256) {
+    function scoresCount(
+        uint256 round
+    ) external view virtual returns (uint256) {
         return _scores[round].length;
     }
 
@@ -265,7 +269,7 @@ abstract contract LOVE20ExtensionAutoScore is
     function scoresAtIndex(
         uint256 round,
         uint256 index
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _scores[round][index];
     }
 
@@ -276,7 +280,7 @@ abstract contract LOVE20ExtensionAutoScore is
     function scoreByAccount(
         uint256 round,
         address account
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _scoreByAccount[round][account];
     }
 }
