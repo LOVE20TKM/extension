@@ -1,67 +1,65 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionCoreMixin} from "./ExtensionCoreMixin.sol";
-import {ExtensionAccountMixin} from "./ExtensionAccountMixin.sol";
-import {ExtensionVerificationMixin} from "./ExtensionVerificationMixin.sol";
+import {ExtensionCore} from "./ExtensionCore.sol";
+import {ExtensionAccounts} from "./ExtensionAccounts.sol";
+import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @title ExtensionJoinMixin
-/// @notice Mixin providing join/withdraw functionality with token-based participation
-/// @dev Implements ITokenJoin interface with block-based waiting period mechanism
-abstract contract ExtensionJoinMixin is
-    ExtensionCoreMixin,
-    ExtensionAccountMixin,
-    ExtensionVerificationMixin
+/// @title TokenJoin
+/// @notice Base contract providing token-based join/withdraw functionality
+/// @dev Implements ITokenJoin interface with ERC20 token participation and block-based waiting period
+abstract contract TokenJoin is
+    ExtensionCore,
+    ExtensionAccounts,
+    ExtensionVerificationInfo,
+    ITokenJoin
 {
-    // Import errors, events, and struct from ITokenJoin
-    error AlreadyJoined();
-    error JoinAmountZero();
-    error NoJoinedAmount();
-    error NotEnoughWaitingBlocks();
+    // ============================================
+    // STATE VARIABLES - IMMUTABLE CONFIG
+    // ============================================
 
-    event Join(
-        address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        uint256 amount,
-        uint256 joinedBlock
-    );
-    event Withdraw(
-        address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        uint256 amount
-    );
-
-    // Use JoinInfo struct from ITokenJoin
-    struct JoinInfo {
-        uint256 amount;
-        uint256 joinedBlock;
-    }
-
+    /// @notice The token that can be joined
     address public immutable joinTokenAddress;
 
+    /// @notice Number of blocks to wait before withdrawal after joining
     uint256 public immutable waitingBlocks;
 
+    // ============================================
+    // STATE VARIABLES - JOIN STATE
+    // ============================================
+
+    /// @notice Total amount currently joined
     uint256 public totalJoinedAmount;
 
-    // account => JoinInfo
+    /// @dev Mapping from account to their join information
     mapping(address => JoinInfo) internal _joinInfo;
 
+    /// @dev ERC20 interface for the join token
     IERC20 internal _joinToken;
 
-    constructor(
-        address factory_,
-        address joinTokenAddress_,
-        uint256 waitingBlocks_
-    ) ExtensionCoreMixin(factory_) {
+    // ============================================
+    // CONSTRUCTOR
+    // ============================================
+
+    /// @notice Initialize the token join extension
+    /// @param joinTokenAddress_ The token that can be joined
+    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
+    /// @dev Note: ExtensionCore initialization happens through another inheritance path
+    constructor(address joinTokenAddress_, uint256 waitingBlocks_) {
+        // ExtensionCore will be initialized through another inheritance path
+        // We only handle join-specific initialization here
         joinTokenAddress = joinTokenAddress_;
         waitingBlocks = waitingBlocks_;
         _joinToken = IERC20(joinTokenAddress_);
     }
 
+    // ============================================
+    // ITOKENJOIN INTERFACE
+    // ============================================
+
+    /// @inheritdoc ITokenJoin
     function join(
         uint256 amount,
         string[] memory verificationInfos
@@ -91,6 +89,7 @@ abstract contract ExtensionJoinMixin is
         emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
     }
 
+    /// @inheritdoc ITokenJoin
     function withdraw() public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (!_canWithdraw(msg.sender)) {
@@ -116,15 +115,13 @@ abstract contract ExtensionJoinMixin is
         emit Withdraw(tokenAddress, msg.sender, actionId, amount);
     }
 
-    // ============================================
-    // VIEW FUNCTIONS
-    // ============================================
-
+    /// @inheritdoc ITokenJoin
     function joinInfo(
         address account
     )
         external
         view
+        virtual
         returns (uint256 amount, uint256 joinedBlock, uint256 withdrawableBlock)
     {
         return (
@@ -134,15 +131,21 @@ abstract contract ExtensionJoinMixin is
         );
     }
 
-    function canWithdraw(address account) external view returns (bool) {
+    /// @inheritdoc ITokenJoin
+    function canWithdraw(address account) external view virtual returns (bool) {
         return _canWithdraw(account);
     }
 
     // ============================================
-    // INTERNAL FUNCTIONS
+    // INTERNAL HELPER FUNCTIONS
     // ============================================
 
-    function _canWithdraw(address account) internal view returns (bool) {
+    /// @dev Check if an account can withdraw
+    /// @param account The account to check
+    /// @return Whether the account can withdraw
+    function _canWithdraw(
+        address account
+    ) internal view virtual returns (bool) {
         JoinInfo storage info = _joinInfo[account];
         if (info.joinedBlock == 0) {
             return false;
@@ -150,9 +153,12 @@ abstract contract ExtensionJoinMixin is
         return block.number >= _getWithdrawableBlock(account);
     }
 
+    /// @dev Get the block number when an account can withdraw
+    /// @param account The account to check
+    /// @return The withdrawable block number (0 if not joined)
     function _getWithdrawableBlock(
         address account
-    ) internal view returns (uint256) {
+    ) internal view virtual returns (uint256) {
         uint256 joinedBlock = _joinInfo[account].joinedBlock;
         if (joinedBlock == 0) {
             return 0;

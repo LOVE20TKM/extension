@@ -2,56 +2,15 @@
 pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionAutoScore} from "./ILOVE20ExtensionAutoScore.sol";
+import {ITokenJoin} from "./base/ITokenJoin.sol";
 
-interface ILOVE20ExtensionAutoScoreJoin is ILOVE20ExtensionAutoScore {
-    error JoinAmountZero();
-
-    error NoJoinedAmount();
-
-    error NotEnoughWaitingBlocks();
-
-    error AlreadyJoined();
-
-    event Join(
-        address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        uint256 amount,
-        uint256 joinedBlock
-    );
-
-    event Withdraw(
-        address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        uint256 amount
-    );
-
-    struct JoinInfo {
-        uint256 amount;
-        uint256 joinedBlock;
-    }
-
-    function joinTokenAddress() external view returns (address);
-
-    function waitingBlocks() external view returns (uint256);
-
-    function join(uint256 amount, string[] memory verificationInfos) external;
-
-    function withdraw() external;
-
-    function joinInfo(
-        address account
-    )
-        external
-        view
-        returns (
-            uint256 amount,
-            uint256 joinedBlock,
-            uint256 withdrawableBlock
-        );
-
-    function totalJoinedAmount() external view returns (uint256);
-
-    function canWithdraw(address account) external view returns (bool);
+/// @title ILOVE20ExtensionAutoScoreJoin
+/// @notice Interface for auto-score-based extensions with token join functionality
+/// @dev Combines auto score calculation with token-based join/withdraw mechanisms
+interface ILOVE20ExtensionAutoScoreJoin is
+    ILOVE20ExtensionAutoScore,
+    ITokenJoin
+{
+    // All join-related functionality is inherited from ITokenJoin
+    // All score-related functionality is inherited from ILOVE20ExtensionAutoScore
 }

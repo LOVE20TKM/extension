@@ -11,6 +11,7 @@ import {
 import {
     ILOVE20ExtensionAutoScoreJoin
 } from "../src/interface/ILOVE20ExtensionAutoScoreJoin.sol";
+import {ITokenJoin} from "../src/interface/base/ITokenJoin.sol";
 import {ILOVE20Extension} from "../src/interface/ILOVE20Extension.sol";
 import {IExtensionReward} from "../src/interface/base/IExtensionReward.sol";
 import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
@@ -202,7 +203,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(ILOVE20ExtensionAutoScoreJoin.JoinAmountZero.selector);
+        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -210,7 +211,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.startPrank(user1);
         extension.join(100e18, new string[](0));
 
-        vm.expectRevert(ILOVE20ExtensionAutoScoreJoin.AlreadyJoined.selector);
+        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(50e18, new string[](0));
         vm.stopPrank();
     }
@@ -264,7 +265,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
 
     function test_Withdraw_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ILOVE20ExtensionAutoScoreJoin.NoJoinedAmount.selector);
+        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
         extension.withdraw();
     }
 
@@ -276,9 +277,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         vm.roll(block.number + WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(
-            ILOVE20ExtensionAutoScoreJoin.NotEnoughWaitingBlocks.selector
-        );
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.withdraw();
     }
 
