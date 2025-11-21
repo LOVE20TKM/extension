@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ILOVE20Extension} from "./ILOVE20Extension.sol";
+import {ILOVE20ExtensionTokenJoin} from "./ILOVE20ExtensionTokenJoin.sol";
 
-interface ILOVE20ExtensionAutoScore is ILOVE20Extension {
+/// @title ILOVE20ExtensionTokenJoinAuto
+/// @notice Interface for auto score-based token join LOVE20 extensions
+/// @dev Combines token join with auto score calculation functionality
+interface ILOVE20ExtensionTokenJoinAuto is ILOVE20ExtensionTokenJoin {
+    // ============================================
+    // SCORE CALCULATION
+    // ============================================
+
     function calculateScores()
         external
         view

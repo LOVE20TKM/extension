@@ -2,17 +2,16 @@
 pragma solidity =0.8.17;
 
 import {
-    LOVE20ExtensionAutoScoreJoin
-} from "../LOVE20ExtensionAutoScoreJoin.sol";
-import {LOVE20ExtensionAutoScore} from "../LOVE20ExtensionAutoScore.sol";
+    LOVE20ExtensionTokenJoinAutoBase
+} from "../LOVE20ExtensionTokenJoinAutoBase.sol";
 import {
-    ILOVE20ExtensionAutoScore
-} from "../interface/ILOVE20ExtensionAutoScore.sol";
+    ILOVE20ExtensionTokenJoinAuto
+} from "../interface/ILOVE20ExtensionTokenJoinAuto.sol";
 
 /// @title LOVE20ExtensionSimpleJoin
-/// @notice Example implementation of LOVE20ExtensionAutoScoreJoin
+/// @notice Example implementation of LOVE20ExtensionTokenJoinAutoBase
 /// @dev Simple implementation where score equals joined amount
-contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionAutoScoreJoin {
+contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionTokenJoinAutoBase {
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -26,7 +25,7 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionAutoScoreJoin {
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        LOVE20ExtensionAutoScoreJoin(
+        LOVE20ExtensionTokenJoinAutoBase(
             factory_,
             joinTokenAddress_,
             waitingBlocks_
@@ -44,7 +43,7 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionAutoScoreJoin {
     function calculateScores()
         public
         view
-        override(LOVE20ExtensionAutoScore, ILOVE20ExtensionAutoScore)
+        override
         returns (uint256 total, uint256[] memory scores)
     {
         scores = new uint256[](_accounts.length);
@@ -66,7 +65,7 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionAutoScoreJoin {
     )
         public
         view
-        override(LOVE20ExtensionAutoScore, ILOVE20ExtensionAutoScore)
+        override
         returns (uint256 total, uint256 score)
     {
         (total, ) = calculateScores();

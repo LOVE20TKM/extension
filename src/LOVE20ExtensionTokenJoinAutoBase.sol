@@ -1,46 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
-import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
+import {LOVE20ExtensionTokenJoinBase} from "./LOVE20ExtensionTokenJoinBase.sol";
+import {TokenJoin} from "./base/TokenJoin.sol";
 import {IExtensionReward} from "./interface/base/IExtensionReward.sol";
 import {ExtensionReward} from "./base/ExtensionReward.sol";
 import {
-    ILOVE20ExtensionAutoScore
-} from "./interface/ILOVE20ExtensionAutoScore.sol";
+    ILOVE20ExtensionTokenJoinAuto
+} from "./interface/ILOVE20ExtensionTokenJoinAuto.sol";
+import {ITokenJoin} from "./interface/base/ITokenJoin.sol";
 
-/// @title LOVE20ExtensionAutoScore
-/// @notice Abstract base contract for auto score-based LOVE20 extensions
-/// @dev Provides common score calculation and reward distribution logic
-///
-/// ==================== IMPLEMENTATION GUIDE ====================
-/// To implement this contract, you MUST override the following functions:
-///
-/// 1. calculateScores() - Calculate scores for all accounts
-///    - Should iterate through _accounts array
-///    - Return total score and array of individual scores
-///
-/// 2. calculateScore(address) - Calculate score for specific account
-///    - Should calculate individual account's score
-///    - Return total score and account's score
-///
-/// Example Implementation:
-/// ```
-/// function calculateScores() public view override returns (uint256 total, uint256[] memory scores) {
-///     scores = new uint256[](_accounts.length);
-///     for (uint256 i = 0; i < _accounts.length; i++) {
-///         uint256 score = /* your scoring logic */;
-///         scores[i] = score;
-///         total += score;
-///     }
-///     return (total, scores);
-/// }
-/// ```
-/// ==============================================================
-///
-abstract contract LOVE20ExtensionAutoScore is
-    LOVE20ExtensionBase,
-    ILOVE20ExtensionAutoScore
+/// @title LOVE20ExtensionTokenJoinAutoBase
+/// @notice Abstract base contract for auto score-based token join LOVE20 extensions
+/// @dev Must implement calculateScores() and calculateScore() to define scoring logic
+abstract contract LOVE20ExtensionTokenJoinAutoBase is
+    LOVE20ExtensionTokenJoinBase,
+    ILOVE20ExtensionTokenJoinAuto
 {
     // ============================================
     // STATE VARIABLES - SCORE SYSTEM
@@ -65,61 +40,69 @@ abstract contract LOVE20ExtensionAutoScore is
     // CONSTRUCTOR
     // ============================================
 
-    constructor(address factory_) LOVE20ExtensionBase(factory_) {}
+    /// @notice Initialize the token join auto score extension
+    /// @param factory_ The factory address
+    /// @param joinTokenAddress_ The token that can be joined
+    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
+    constructor(
+        address factory_,
+        address joinTokenAddress_,
+        uint256 waitingBlocks_
+    )
+        LOVE20ExtensionTokenJoinBase(
+            factory_,
+            joinTokenAddress_,
+            waitingBlocks_
+        )
+    {
+        // LOVE20ExtensionTokenJoinBase handles all initialization
+    }
 
     // ============================================
-    // ⚠️  ABSTRACT METHODS - MUST BE IMPLEMENTED ⚠️
+    // ABSTRACT METHODS - MUST BE IMPLEMENTED
     // ============================================
-    //
-    // Child contracts MUST implement these two functions.
-    // These functions define the scoring logic for your extension.
-    //
 
-    /// @notice Calculate scores for all eligible accounts
-    /// @dev ⚠️ REQUIRED: Must be implemented by child contracts
-    ///
-    /// Implementation requirements:
-    /// - Iterate through all accounts in _accounts array
-    /// - Calculate individual score for each account based on your logic
-    /// - Sum all scores to get the total
-    /// - Return both total and array of individual scores
-    ///
-    /// @custom:must-implement Child contracts must override this function
-    /// @custom:security Ensure scores array length matches _accounts.length
-    ///
-    /// @return total The total score across all accounts
-    /// @return scores Array of individual scores (scores[i] corresponds to _accounts[i])
+    /// @notice Calculate scores for all accounts
+    /// @param total Total score across all accounts
+    /// @param scores Individual scores array (scores[i] for _accounts[i])
     function calculateScores()
         public
         view
         virtual
         returns (uint256 total, uint256[] memory scores);
 
-    /// @notice Calculate score for a specific account
-    /// @dev ⚠️ REQUIRED: Must be implemented by child contracts
-    ///
-    /// Implementation requirements:
-    /// - Calculate the score for the given account
-    /// - Calculate total score across all accounts (for proportion calculation)
-    /// - Can call calculateScores() internally and filter result
-    ///
-    /// @custom:must-implement Child contracts must override this function
-    ///
-    /// @param account The account address to calculate score for
-    /// @return total The total score across all accounts
-    /// @return score The score for the specified account
+    /// @notice Calculate score for specific account
+    /// @param account Account address
+    /// @return total Total score across all accounts
+    /// @return score Score for the specified account
     function calculateScore(
         address account
     ) public view virtual returns (uint256 total, uint256 score);
 
     // ============================================
+    // USER OPERATIONS - OVERRIDE WITH VERIFICATION
+    // ============================================
+
+    /// @inheritdoc ITokenJoin
+    function join(
+        uint256 amount,
+        string[] memory verificationInfos
+    ) public virtual override(ITokenJoin, TokenJoin) {
+        _prepareVerifyResultIfNeeded();
+        super.join(amount, verificationInfos);
+    }
+
+    /// @inheritdoc ITokenJoin
+    function withdraw() public virtual override(ITokenJoin, TokenJoin) {
+        _prepareVerifyResultIfNeeded();
+        super.withdraw();
+    }
+
+    // ============================================
     // REWARD CALCULATION - TEMPLATE METHOD
     // ============================================
 
-    /// @notice Claim reward for a specific round
-    /// @dev Override to prepare verification results before claiming
-    /// @param round The round number to claim reward from
-    /// @return reward The amount of reward claimed
+    /// @inheritdoc IExtensionReward
     function claimReward(
         uint256 round
     )
@@ -182,9 +165,7 @@ abstract contract LOVE20ExtensionAutoScore is
     // VERIFICATION - TEMPLATE METHOD
     // ============================================
 
-    /// @dev Generate verification result for current round if not already generated
-    ///      Uses calculateScores() to compute and store scores for all accounts
-    ///      Subclasses can override to customize verification logic
+    /// @dev Generate and store verification result for current round
     function _prepareVerifyResultIfNeeded() internal virtual {
         uint256 currentRound = _verify.currentRound();
 
@@ -217,16 +198,10 @@ abstract contract LOVE20ExtensionAutoScore is
     // VIEW FUNCTIONS - SCORE DATA
     // ============================================
 
-    /// @notice Get the total score for a specific round
-    /// @param round The round number
-    /// @return The total score
     function totalScore(uint256 round) external view virtual returns (uint256) {
         return _totalScore[round];
     }
 
-    /// @notice Get all accounts for a specific round
-    /// @param round The round number
-    /// @return result The array of account addresses
     function accountsByRound(
         uint256 round
     ) external view virtual returns (address[] memory result) {
@@ -241,19 +216,12 @@ abstract contract LOVE20ExtensionAutoScore is
         return result;
     }
 
-    /// @notice Get the count of verified accounts for a specific round
-    /// @param round The round number
-    /// @return The number of verified accounts
     function accountsByRoundCount(
         uint256 round
     ) external view virtual returns (uint256) {
         return _accountsByRound[round].length;
     }
 
-    /// @notice Get a verified account at a specific index for a round
-    /// @param round The round number
-    /// @param index The index in the verified accounts array
-    /// @return The account address
     function accountsByRoundAtIndex(
         uint256 round,
         uint256 index
@@ -261,28 +229,18 @@ abstract contract LOVE20ExtensionAutoScore is
         return _accountsByRound[round][index];
     }
 
-    /// @notice Get all scores for a specific round
-    /// @param round The round number
-    /// @return Array of scores
     function scores(
         uint256 round
     ) external view virtual returns (uint256[] memory) {
         return _scores[round];
     }
 
-    /// @notice Get the count of scores for a specific round
-    /// @param round The round number
-    /// @return The number of scores
     function scoresCount(
         uint256 round
     ) external view virtual returns (uint256) {
         return _scores[round].length;
     }
 
-    /// @notice Get a score at a specific index for a round
-    /// @param round The round number
-    /// @param index The index in the scores array
-    /// @return The score value
     function scoresAtIndex(
         uint256 round,
         uint256 index
@@ -290,10 +248,6 @@ abstract contract LOVE20ExtensionAutoScore is
         return _scores[round][index];
     }
 
-    /// @notice Get the score for a specific account in a round
-    /// @param round The round number
-    /// @param account The account address
-    /// @return The account's score
     function scoreByAccount(
         uint256 round,
         address account
