@@ -15,7 +15,7 @@ import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 /// RESPONSIBILITIES:
 /// - Manage reward claiming state (_reward, _claimedReward)
 /// - Provide claimReward() function with standard workflow
-/// - Define hooks for preparation (_prepareVerifyResultIfNeeded, _prepareRewardIfNeeded)
+/// - Define hooks for preparation (_prepareRewardIfNeeded)
 /// - Handle token transfers
 ///
 /// EXTENSION POINTS:
@@ -73,12 +73,11 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     /// @return reward The amount of reward claimed
     function claimReward(
         uint256 round
-    ) external virtual returns (uint256 reward) {
+    ) public virtual returns (uint256 reward) {
         if (round >= _verify.currentRound()) {
             revert RoundNotFinished();
         }
 
-        _prepareVerifyResultIfNeeded();
         _prepareRewardIfNeeded(round);
 
         return _claimReward(round);
@@ -87,10 +86,6 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     // ============================================
     // INTERNAL FUNCTIONS - HOOKS
     // ============================================
-
-    /// @dev Hook to prepare verification results before claiming
-    /// Override this in derived contracts if verification result preparation is needed
-    function _prepareVerifyResultIfNeeded() internal virtual {}
 
     /// @dev Hook to prepare reward data for a specific round
     /// Default implementation mints action reward from the mint contract

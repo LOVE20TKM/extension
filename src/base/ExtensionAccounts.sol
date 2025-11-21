@@ -69,4 +69,3 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
         );
     }
 }
-

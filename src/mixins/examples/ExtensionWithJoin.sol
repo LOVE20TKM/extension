@@ -79,6 +79,25 @@ contract ExtensionWithJoin is
     }
 
     // ============================================
+    // REWARD CLAIMING OVERRIDE
+    // ============================================
+
+    /// @notice Claim reward for a specific round
+    /// @dev Override to prepare verification results before claiming
+    /// @param round The round number to claim reward from
+    /// @return reward The amount of reward claimed
+    function claimReward(
+        uint256 round
+    )
+        public
+        override(ExtensionRewardMixin, ExtensionScoreBasedRewardMixin)
+        returns (uint256 reward)
+    {
+        _prepareVerifyResultIfNeeded();
+        return super.claimReward(round);
+    }
+
+    // ============================================
     // SCORE CALCULATION - IMPLEMENTATION
     // ============================================
 
@@ -110,16 +129,12 @@ contract ExtensionWithJoin is
     }
 
     // ============================================
-    // HOOK OVERRIDES
+    // VERIFICATION IMPLEMENTATION
     // ============================================
 
-    /// @dev Override to resolve conflict between RewardMixin and ScoreBasedRewardMixin
-    function _prepareVerifyResultIfNeeded()
-        internal
-        virtual
-        override(ExtensionRewardMixin, ExtensionScoreBasedRewardMixin)
-    {
-        ExtensionScoreBasedRewardMixin._prepareVerifyResultIfNeeded();
+    /// @dev Prepare verification results by calculating and storing scores
+    function _prepareVerifyResultIfNeeded() internal override {
+        super._prepareVerifyResultIfNeeded();
     }
 
     // ============================================

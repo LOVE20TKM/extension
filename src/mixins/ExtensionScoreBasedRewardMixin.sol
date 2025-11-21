@@ -96,6 +96,17 @@ abstract contract ExtensionScoreBasedRewardMixin is
     // REWARD CALCULATION IMPLEMENTATION
     // ============================================
 
+    /// @notice Claim reward for a specific round
+    /// @dev Override to prepare verification results before claiming
+    /// @param round The round number to claim reward from
+    /// @return reward The amount of reward claimed
+    function claimReward(
+        uint256 round
+    ) public virtual override returns (uint256 reward) {
+        _prepareVerifyResultIfNeeded();
+        return super.claimReward(round);
+    }
+
     /// @inheritdoc ExtensionRewardMixin
     /// @dev Implements proportional reward distribution based on scores
     function rewardByAccount(
@@ -139,9 +150,8 @@ abstract contract ExtensionScoreBasedRewardMixin is
     // VERIFICATION IMPLEMENTATION
     // ============================================
 
-    /// @inheritdoc ExtensionRewardMixin
     /// @dev Prepares verification result by calculating and storing scores
-    function _prepareVerifyResultIfNeeded() internal virtual override {
+    function _prepareVerifyResultIfNeeded() internal virtual {
         uint256 currentRound = _verify.currentRound();
 
         // Skip if already generated for this round

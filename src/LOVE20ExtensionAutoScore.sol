@@ -4,6 +4,7 @@ pragma solidity =0.8.17;
 import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
 import {IExtensionReward} from "./interface/base/IExtensionReward.sol";
+import {ExtensionReward} from "./base/ExtensionReward.sol";
 import {
     ILOVE20ExtensionAutoScore
 } from "./interface/ILOVE20ExtensionAutoScore.sol";
@@ -115,7 +116,23 @@ abstract contract LOVE20ExtensionAutoScore is
     // REWARD CALCULATION - TEMPLATE METHOD
     // ============================================
 
-    /// @inheritdoc LOVE20ExtensionBase
+    /// @notice Claim reward for a specific round
+    /// @dev Override to prepare verification results before claiming
+    /// @param round The round number to claim reward from
+    /// @return reward The amount of reward claimed
+    function claimReward(
+        uint256 round
+    )
+        public
+        virtual
+        override(IExtensionReward, ExtensionReward)
+        returns (uint256 reward)
+    {
+        _prepareVerifyResultIfNeeded();
+        return super.claimReward(round);
+    }
+
+    /// @inheritdoc ExtensionReward
     function rewardByAccount(
         uint256 round,
         address account
@@ -123,7 +140,7 @@ abstract contract LOVE20ExtensionAutoScore is
         public
         view
         virtual
-        override(IExtensionReward, LOVE20ExtensionBase)
+        override(IExtensionReward, ExtensionReward)
         returns (uint256 reward, bool isMinted)
     {
         // Check if already claimed
@@ -165,11 +182,10 @@ abstract contract LOVE20ExtensionAutoScore is
     // VERIFICATION - TEMPLATE METHOD
     // ============================================
 
-    /// @inheritdoc LOVE20ExtensionBase
     /// @dev Generate verification result for current round if not already generated
     ///      Uses calculateScores() to compute and store scores for all accounts
     ///      Subclasses can override to customize verification logic
-    function _prepareVerifyResultIfNeeded() internal virtual override {
+    function _prepareVerifyResultIfNeeded() internal virtual {
         uint256 currentRound = _verify.currentRound();
 
         // Skip if already generated for this round

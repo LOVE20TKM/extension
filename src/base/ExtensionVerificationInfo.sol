@@ -2,15 +2,20 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
-import {IExtensionVerification} from "../interface/base/IExtensionVerification.sol";
+import {
+    IExtensionVerification
+} from "../interface/base/IExtensionVerification.sol";
 import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 
-/// @title ExtensionVerification
+/// @title ExtensionVerificationInfo
 /// @notice Base contract providing verification information functionality
 /// @dev Implements IExtensionVerification interface with verification info storage
-abstract contract ExtensionVerification is ExtensionCore, IExtensionVerification {
+abstract contract ExtensionVerificationInfo is
+    ExtensionCore,
+    IExtensionVerification
+{
     using ArrayUtils for uint256[];
 
     // ============================================
@@ -141,4 +146,3 @@ abstract contract ExtensionVerification is ExtensionCore, IExtensionVerification
         });
     }
 }
-
