@@ -2,16 +2,16 @@
 pragma solidity =0.8.17;
 
 import {
-    LOVE20ExtensionTokenJoinAutoBase
-} from "../LOVE20ExtensionTokenJoinAutoBase.sol";
+    LOVE20ExtensionBaseTokenJoinAuto
+} from "../LOVE20ExtensionBaseTokenJoinAuto.sol";
 import {
     ILOVE20ExtensionTokenJoinAuto
 } from "../interface/ILOVE20ExtensionTokenJoinAuto.sol";
 
 /// @title LOVE20ExtensionSimpleJoin
-/// @notice Example implementation of LOVE20ExtensionTokenJoinAutoBase
+/// @notice Example implementation of LOVE20ExtensionBaseTokenJoinAuto
 /// @dev Simple implementation where score equals joined amount
-contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionTokenJoinAutoBase {
+contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionBaseTokenJoinAuto {
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -25,7 +25,7 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionTokenJoinAutoBase {
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        LOVE20ExtensionTokenJoinAutoBase(
+        LOVE20ExtensionBaseTokenJoinAuto(
             factory_,
             joinTokenAddress_,
             waitingBlocks_

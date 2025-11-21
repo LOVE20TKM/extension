@@ -7,7 +7,7 @@ import {
     ILOVE20ExtensionTokenJoin
 } from "./interface/ILOVE20ExtensionTokenJoin.sol";
 
-/// @title LOVE20ExtensionTokenJoinBase
+/// @title LOVE20ExtensionBaseTokenJoin
 /// @notice Abstract base contract for token join LOVE20 extensions
 /// @dev Combines TokenJoin with LOVE20Extension functionality
 ///
@@ -24,7 +24,7 @@ import {
 ///    - joinedValue() - get total joined value
 ///    - joinedValueByAccount() - get joined value for specific account
 ///
-abstract contract LOVE20ExtensionTokenJoinBase is
+abstract contract LOVE20ExtensionBaseTokenJoin is
     LOVE20ExtensionBase,
     TokenJoin,
     ILOVE20ExtensionTokenJoin
@@ -49,3 +49,4 @@ abstract contract LOVE20ExtensionTokenJoinBase is
         // TokenJoin handles join-specific initialization
     }
 }
+

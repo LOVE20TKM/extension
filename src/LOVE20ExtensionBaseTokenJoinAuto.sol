@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionTokenJoinBase} from "./LOVE20ExtensionTokenJoinBase.sol";
+import {LOVE20ExtensionBaseTokenJoin} from "./LOVE20ExtensionBaseTokenJoin.sol";
 import {TokenJoin} from "./base/TokenJoin.sol";
 import {IExtensionReward} from "./interface/base/IExtensionReward.sol";
 import {ExtensionReward} from "./base/ExtensionReward.sol";
@@ -10,11 +10,11 @@ import {
 } from "./interface/ILOVE20ExtensionTokenJoinAuto.sol";
 import {ITokenJoin} from "./interface/base/ITokenJoin.sol";
 
-/// @title LOVE20ExtensionTokenJoinAutoBase
+/// @title LOVE20ExtensionBaseTokenJoinAuto
 /// @notice Abstract base contract for auto score-based token join LOVE20 extensions
 /// @dev Must implement calculateScores() and calculateScore() to define scoring logic
-abstract contract LOVE20ExtensionTokenJoinAutoBase is
-    LOVE20ExtensionTokenJoinBase,
+abstract contract LOVE20ExtensionBaseTokenJoinAuto is
+    LOVE20ExtensionBaseTokenJoin,
     ILOVE20ExtensionTokenJoinAuto
 {
     // ============================================
@@ -49,13 +49,13 @@ abstract contract LOVE20ExtensionTokenJoinAutoBase is
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        LOVE20ExtensionTokenJoinBase(
+        LOVE20ExtensionBaseTokenJoin(
             factory_,
             joinTokenAddress_,
             waitingBlocks_
         )
     {
-        // LOVE20ExtensionTokenJoinBase handles all initialization
+        // LOVE20ExtensionBaseTokenJoin handles all initialization
     }
 
     // ============================================
@@ -255,3 +255,4 @@ abstract contract LOVE20ExtensionTokenJoinAutoBase is
         return _scoreByAccount[round][account];
     }
 }
+
