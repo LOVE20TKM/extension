@@ -2,6 +2,8 @@
 pragma solidity =0.8.17;
 
 import {LOVE20ExtensionBase} from "../../src/LOVE20ExtensionBase.sol";
+import {IExtensionCore} from "../../src/interface/base/IExtensionCore.sol";
+import {ExtensionCore} from "../../src/base/ExtensionCore.sol";
 
 /**
  * @title MockExtension
@@ -20,7 +22,7 @@ contract MockExtension is LOVE20ExtensionBase {
     function initialize(
         address tokenAddress_,
         uint256 actionId_
-    ) public override {
+    ) public override(IExtensionCore, ExtensionCore) {
         super.initialize(tokenAddress_, actionId_);
         if (shouldFailInitialize) {
             revert("Initialize failed");

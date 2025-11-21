@@ -12,6 +12,7 @@ import {
     ILOVE20ExtensionAutoScoreJoin
 } from "../src/interface/ILOVE20ExtensionAutoScoreJoin.sol";
 import {ILOVE20Extension} from "../src/interface/ILOVE20Extension.sol";
+import {IExtensionReward} from "../src/interface/base/IExtensionReward.sol";
 import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
 
 // Import mock contracts
@@ -448,7 +449,7 @@ contract LOVE20ExtensionSimpleJoinTest is Test {
         verify.setCurrentRound(1);
 
         vm.prank(user1);
-        vm.expectRevert(ILOVE20Extension.RoundNotFinished.selector);
+        vm.expectRevert(IExtensionReward.RoundNotFinished.selector);
         extension.claimReward(1);
     }
 

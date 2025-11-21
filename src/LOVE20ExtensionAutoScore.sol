@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 
 import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
+import {IExtensionReward} from "./interface/base/IExtensionReward.sol";
 import {
     ILOVE20ExtensionAutoScore
 } from "./interface/ILOVE20ExtensionAutoScore.sol";
@@ -122,7 +123,7 @@ abstract contract LOVE20ExtensionAutoScore is
         public
         view
         virtual
-        override(ILOVE20Extension, LOVE20ExtensionBase)
+        override(IExtensionReward, LOVE20ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         // Check if already claimed
