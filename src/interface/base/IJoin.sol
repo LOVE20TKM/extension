@@ -29,11 +29,11 @@ interface IJoin {
         uint256 indexed actionId
     );
 
-    /// @notice Emitted when an account withdraws
+    /// @notice Emitted when an account exits
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that withdrew
+    /// @param account The account that exited
     /// @param actionId The action ID this extension is associated with
-    event Withdraw(
+    event Exit(
         address indexed tokenAddress,
         address indexed account,
         uint256 indexed actionId
@@ -47,6 +47,6 @@ interface IJoin {
     /// @param verificationInfos Optional verification information array
     function join(string[] memory verificationInfos) external;
 
-    /// @notice Withdraw from the extension
-    function withdraw() external;
+    /// @notice Exit from the extension
+    function exit() external;
 }

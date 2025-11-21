@@ -8,7 +8,7 @@ import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title TokenJoin
-/// @notice Base contract providing token-based join/withdraw functionality
+/// @notice Base contract providing token-based join/exit functionality
 /// @dev Implements ITokenJoin interface with ERC20 token participation and block-based waiting period
 abstract contract TokenJoin is
     ExtensionCore,
@@ -23,7 +23,7 @@ abstract contract TokenJoin is
     /// @notice The token that can be joined
     address public immutable joinTokenAddress;
 
-    /// @notice Number of blocks to wait before withdrawal after joining
+    /// @notice Number of blocks to wait before exit after joining
     uint256 public immutable waitingBlocks;
 
     // ============================================
@@ -45,7 +45,7 @@ abstract contract TokenJoin is
 
     /// @notice Initialize the token join extension
     /// @param joinTokenAddress_ The token that can be joined
-    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
+    /// @param waitingBlocks_ Number of blocks to wait before exit
     /// @dev Note: ExtensionCore initialization happens through another inheritance path
     constructor(address joinTokenAddress_, uint256 waitingBlocks_) {
         // ExtensionCore will be initialized through another inheritance path
@@ -90,9 +90,9 @@ abstract contract TokenJoin is
     }
 
     /// @inheritdoc ITokenJoin
-    function withdraw() public virtual {
+    function exit() public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
-        if (!_canWithdraw(msg.sender)) {
+        if (!_canExit(msg.sender)) {
             if (info.joinedBlock == 0) {
                 revert NoJoinedAmount();
             }
@@ -112,7 +112,7 @@ abstract contract TokenJoin is
         // Transfer tokens back to user
         _joinToken.transfer(msg.sender, amount);
 
-        emit Withdraw(tokenAddress, msg.sender, actionId, amount);
+        emit Exit(tokenAddress, msg.sender, actionId, amount);
     }
 
     /// @inheritdoc ITokenJoin
@@ -122,41 +122,39 @@ abstract contract TokenJoin is
         external
         view
         virtual
-        returns (uint256 amount, uint256 joinedBlock, uint256 withdrawableBlock)
+        returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock)
     {
         return (
             _joinInfo[account].amount,
             _joinInfo[account].joinedBlock,
-            _getWithdrawableBlock(account)
+            _getExitableBlock(account)
         );
     }
 
     /// @inheritdoc ITokenJoin
-    function canWithdraw(address account) external view virtual returns (bool) {
-        return _canWithdraw(account);
+    function canExit(address account) external view virtual returns (bool) {
+        return _canExit(account);
     }
 
     // ============================================
     // INTERNAL HELPER FUNCTIONS
     // ============================================
 
-    /// @dev Check if an account can withdraw
+    /// @dev Check if an account can exit
     /// @param account The account to check
-    /// @return Whether the account can withdraw
-    function _canWithdraw(
-        address account
-    ) internal view virtual returns (bool) {
+    /// @return Whether the account can exit
+    function _canExit(address account) internal view virtual returns (bool) {
         JoinInfo storage info = _joinInfo[account];
         if (info.joinedBlock == 0) {
             return false;
         }
-        return block.number >= _getWithdrawableBlock(account);
+        return block.number >= _getExitableBlock(account);
     }
 
-    /// @dev Get the block number when an account can withdraw
+    /// @dev Get the block number when an account can exit
     /// @param account The account to check
-    /// @return The withdrawable block number (0 if not joined)
-    function _getWithdrawableBlock(
+    /// @return The exitable block number (0 if not joined)
+    function _getExitableBlock(
         address account
     ) internal view virtual returns (uint256) {
         uint256 joinedBlock = _joinInfo[account].joinedBlock;

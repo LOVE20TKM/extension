@@ -8,7 +8,7 @@ import {IJoin} from "../interface/base/IJoin.sol";
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 
 /// @title Join
-/// @notice Base contract providing token-free join/withdraw functionality
+/// @notice Base contract providing token-free join/exit functionality
 /// @dev Implements IJoin interface with block-based waiting period
 abstract contract Join is
     ExtensionCore,
@@ -43,7 +43,7 @@ abstract contract Join is
     }
 
     /// @inheritdoc IJoin
-    function withdraw() public virtual {
+    function exit() public virtual {
         // Check if joined via center
         if (
             !ILOVE20ExtensionCenter(center()).isAccountJoined(
@@ -58,6 +58,6 @@ abstract contract Join is
         // Remove from accounts list
         _removeAccount(msg.sender);
 
-        emit Withdraw(tokenAddress, msg.sender, actionId);
+        emit Exit(tokenAddress, msg.sender, actionId);
     }
 }

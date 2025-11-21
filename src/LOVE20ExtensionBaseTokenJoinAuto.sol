@@ -43,7 +43,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     /// @notice Initialize the token join auto score extension
     /// @param factory_ The factory address
     /// @param joinTokenAddress_ The token that can be joined
-    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
+    /// @param waitingBlocks_ Number of blocks to wait before exit
     constructor(
         address factory_,
         address joinTokenAddress_,
@@ -93,9 +93,9 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     }
 
     /// @inheritdoc ITokenJoin
-    function withdraw() public virtual override(ITokenJoin, TokenJoin) {
+    function exit() public virtual override(ITokenJoin, TokenJoin) {
         _prepareVerifyResultIfNeeded();
-        super.withdraw();
+        super.exit();
     }
 
     // ============================================

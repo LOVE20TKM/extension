@@ -15,7 +15,7 @@ interface ITokenJoin {
     /// @notice Thrown when account has no joined amount
     error NoJoinedAmount();
 
-    /// @notice Thrown when trying to withdraw before waiting period ends
+    /// @notice Thrown when trying to exit before waiting period ends
     error NotEnoughWaitingBlocks();
 
     /// @notice Thrown when account has already joined
@@ -39,12 +39,12 @@ interface ITokenJoin {
         uint256 joinedBlock
     );
 
-    /// @notice Emitted when an account withdraws
+    /// @notice Emitted when an account exits
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that withdrew
+    /// @param account The account that exited
     /// @param actionId The action ID this extension is associated with
     /// @param amount The amount of tokens withdrawn
-    event Withdraw(
+    event Exit(
         address indexed tokenAddress,
         address indexed account,
         uint256 indexed actionId,
@@ -71,7 +71,7 @@ interface ITokenJoin {
     /// @return The join token address
     function joinTokenAddress() external view returns (address);
 
-    /// @notice Get the number of blocks to wait before withdrawal
+    /// @notice Get the number of blocks to wait before exit
     /// @return The waiting period in blocks
     function waitingBlocks() external view returns (uint256);
 
@@ -83,7 +83,7 @@ interface ITokenJoin {
     /// @param account The account address to query
     /// @return amount The amount of tokens joined
     /// @return joinedBlock The block number when the join occurred
-    /// @return withdrawableBlock The block number when withdrawal becomes available
+    /// @return exitableBlock The block number when exit becomes available
     function joinInfo(
         address account
     )
@@ -92,13 +92,13 @@ interface ITokenJoin {
         returns (
             uint256 amount,
             uint256 joinedBlock,
-            uint256 withdrawableBlock
+            uint256 exitableBlock
         );
 
-    /// @notice Check if an account can withdraw
+    /// @notice Check if an account can exit
     /// @param account The account address to check
-    /// @return True if the account can withdraw
-    function canWithdraw(address account) external view returns (bool);
+    /// @return True if the account can exit
+    function canExit(address account) external view returns (bool);
 
     // ============================================
     // STATE-CHANGING FUNCTIONS
@@ -109,6 +109,6 @@ interface ITokenJoin {
     /// @param verificationInfos Optional verification information array
     function join(uint256 amount, string[] memory verificationInfos) external;
 
-    /// @notice Withdraw joined tokens after the waiting period
-    function withdraw() external;
+    /// @notice Exit and withdraw joined tokens after the waiting period
+    function exit() external;
 }

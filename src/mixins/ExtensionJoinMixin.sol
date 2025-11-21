@@ -8,7 +8,7 @@ import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title ExtensionJoinMixin
-/// @notice Mixin providing join/withdraw functionality with token-based participation
+/// @notice Mixin providing join/exit functionality with token-based participation
 /// @dev Implements ITokenJoin interface with block-based waiting period mechanism
 abstract contract ExtensionJoinMixin is
     ExtensionCoreMixin,
@@ -28,7 +28,7 @@ abstract contract ExtensionJoinMixin is
         uint256 amount,
         uint256 joinedBlock
     );
-    event Withdraw(
+    event Exit(
         address indexed tokenAddress,
         address indexed account,
         uint256 indexed actionId,
@@ -91,9 +91,9 @@ abstract contract ExtensionJoinMixin is
         emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
     }
 
-    function withdraw() public virtual {
+    function exit() public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
-        if (!_canWithdraw(msg.sender)) {
+        if (!_canExit(msg.sender)) {
             if (info.joinedBlock == 0) {
                 revert NoJoinedAmount();
             }
@@ -113,7 +113,7 @@ abstract contract ExtensionJoinMixin is
         // Transfer tokens back to user
         _joinToken.transfer(msg.sender, amount);
 
-        emit Withdraw(tokenAddress, msg.sender, actionId, amount);
+        emit Exit(tokenAddress, msg.sender, actionId, amount);
     }
 
     // ============================================
@@ -125,32 +125,32 @@ abstract contract ExtensionJoinMixin is
     )
         external
         view
-        returns (uint256 amount, uint256 joinedBlock, uint256 withdrawableBlock)
+        returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock)
     {
         return (
             _joinInfo[account].amount,
             _joinInfo[account].joinedBlock,
-            _getWithdrawableBlock(account)
+            _getExitableBlock(account)
         );
     }
 
-    function canWithdraw(address account) external view returns (bool) {
-        return _canWithdraw(account);
+    function canExit(address account) external view returns (bool) {
+        return _canExit(account);
     }
 
     // ============================================
     // INTERNAL FUNCTIONS
     // ============================================
 
-    function _canWithdraw(address account) internal view returns (bool) {
+    function _canExit(address account) internal view returns (bool) {
         JoinInfo storage info = _joinInfo[account];
         if (info.joinedBlock == 0) {
             return false;
         }
-        return block.number >= _getWithdrawableBlock(account);
+        return block.number >= _getExitableBlock(account);
     }
 
-    function _getWithdrawableBlock(
+    function _getExitableBlock(
         address account
     ) internal view returns (uint256) {
         uint256 joinedBlock = _joinInfo[account].joinedBlock;

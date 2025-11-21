@@ -61,7 +61,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         uint256 amount,
         uint256 joinedBlock
     );
-    event Withdraw(
+    event Exit(
         address indexed tokenAddress,
         address indexed account,
         uint256 indexed actionId,
@@ -170,11 +170,11 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         (
             uint256 joinedAmount,
             uint256 joinedBlock,
-            uint256 withdrawableBlock
+            uint256 exitableBlock
         ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
         assertEq(joinedBlock, blockBefore);
-        assertEq(withdrawableBlock, blockBefore + WAITING_BLOCKS);
+        assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
         assertEq(extension.totalJoinedAmount(), amount);
         assertEq(extension.accountsCount(), 1);
     }
@@ -230,10 +230,10 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
     }
 
     // ============================================
-    // WITHDRAW TESTS
+    // EXIT TESTS
     // ============================================
 
-    function test_Withdraw() public {
+    function test_Exit() public {
         uint256 amount = 100e18;
 
         vm.prank(user1);
@@ -245,7 +245,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         uint256 balanceBefore = joinToken.balanceOf(user1);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
         assertEq(extension.totalJoinedAmount(), 0);
@@ -254,14 +254,14 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         (
             uint256 joinedAmount,
             uint256 joinedBlock,
-            uint256 withdrawableBlock
+            uint256 exitableBlock
         ) = extension.joinInfo(user1);
         assertEq(joinedAmount, 0);
         assertEq(joinedBlock, 0);
-        assertEq(withdrawableBlock, 0);
+        assertEq(exitableBlock, 0);
     }
 
-    function test_Withdraw_EmitEvent() public {
+    function test_Exit_EmitEvent() public {
         uint256 amount = 100e18;
 
         vm.prank(user1);
@@ -270,19 +270,19 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.expectEmit(true, true, true, true);
-        emit Withdraw(address(token), user1, ACTION_ID, amount);
+        emit Exit(address(token), user1, ACTION_ID, amount);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
     }
 
-    function test_Withdraw_RevertIfNotJoined() public {
+    function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
         vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
-        extension.withdraw();
+        extension.exit();
     }
 
-    function test_Withdraw_RevertIfNotEnoughWaitingBlocks() public {
+    function test_Exit_RevertIfNotEnoughWaitingBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -291,10 +291,10 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
 
         vm.prank(user1);
         vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
-        extension.withdraw();
+        extension.exit();
     }
 
-    function test_Withdraw_ExactlyAtWaitingBlocks() public {
+    function test_Exit_ExactlyAtWaitingBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -302,13 +302,13 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         (uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 0);
     }
 
-    function test_Withdraw_MultipleUsersIndependently() public {
+    function test_Exit_MultipleUsersIndependently() public {
         // User1 joins at block 0
         vm.prank(user1);
         extension.join(100e18, new string[](0));
@@ -323,78 +323,78 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         // Move forward another 50 blocks (total 100 from user1's join)
         vm.roll(block.number + 50);
 
-        // User1 can withdraw now
+        // User1 can exit now
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 200e18); // Only user2's amount
         assertEq(extension.accountsCount(), 1); // Only user2
 
-        // User2 cannot withdraw yet (only 50 blocks passed since their join)
+        // User2 cannot exit yet (only 50 blocks passed since their join)
         vm.prank(user2);
         vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
-        extension.withdraw();
+        extension.exit();
 
         // Move forward another 50 blocks
         vm.roll(block.number + 50);
 
-        // Now user2 can withdraw
+        // Now user2 can exit
         vm.prank(user2);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);
     }
 
     // ============================================
-    // CAN WITHDRAW TESTS
+    // CAN EXIT TESTS
     // ============================================
 
-    function test_CanWithdraw_False_NotJoined() public view {
-        assertFalse(extension.canWithdraw(user1));
+    function test_CanExit_False_NotJoined() public view {
+        assertFalse(extension.canExit(user1));
     }
 
-    function test_CanWithdraw_False_NotEnoughBlocks() public {
+    function test_CanExit_False_NotEnoughBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.roll(block.number + WAITING_BLOCKS - 1);
-        assertFalse(extension.canWithdraw(user1));
+        assertFalse(extension.canExit(user1));
     }
 
-    function test_CanWithdraw_True_AfterWaitingBlocks() public {
+    function test_CanExit_True_AfterWaitingBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.roll(block.number + WAITING_BLOCKS);
-        assertTrue(extension.canWithdraw(user1));
+        assertTrue(extension.canExit(user1));
     }
 
-    function test_CanWithdraw_True_WellAfterWaitingBlocks() public {
+    function test_CanExit_True_WellAfterWaitingBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.roll(block.number + WAITING_BLOCKS + 1000);
-        assertTrue(extension.canWithdraw(user1));
+        assertTrue(extension.canExit(user1));
     }
 
     // ============================================
-    // WITHDRAWABLE BLOCK TESTS
+    // EXITABLE BLOCK TESTS
     // ============================================
 
-    function test_WithdrawableBlock_Zero_NotJoined() public view {
-        (, , uint256 withdrawableBlock) = extension.joinInfo(user1);
-        assertEq(withdrawableBlock, 0);
+    function test_ExitableBlock_Zero_NotJoined() public view {
+        (, , uint256 exitableBlock) = extension.joinInfo(user1);
+        assertEq(exitableBlock, 0);
     }
 
-    function test_WithdrawableBlock_Correct() public {
+    function test_ExitableBlock_Correct() public {
         uint256 joinBlock = block.number;
 
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        (, , uint256 withdrawableBlock) = extension.joinInfo(user1);
-        assertEq(withdrawableBlock, joinBlock + WAITING_BLOCKS);
+        (, , uint256 exitableBlock) = extension.joinInfo(user1);
+        assertEq(exitableBlock, joinBlock + WAITING_BLOCKS);
     }
 
     // ============================================
@@ -429,7 +429,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertEq(extension.joinedValue(), 600e18);
     }
 
-    function test_JoinedValue_AfterWithdraw() public {
+    function test_JoinedValue_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -439,7 +439,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.joinedValue(), 200e18);
     }
@@ -455,14 +455,14 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertEq(extension.joinedValueByAccount(user1), 100e18);
     }
 
-    function test_JoinedValueByAccount_AfterWithdraw() public {
+    function test_JoinedValueByAccount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.joinedValueByAccount(user1), 0);
     }
@@ -501,7 +501,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertEq(accountsList[2], user3);
     }
 
-    function test_AccountsCount_AfterWithdraw() public {
+    function test_AccountsCount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -511,7 +511,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.accountsCount(), 1);
         address[] memory accountsList = extension.accounts();
@@ -556,7 +556,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         );
     }
 
-    function test_Withdraw_TransfersTokensToUser() public {
+    function test_Exit_TransfersTokensToUser() public {
         uint256 amount = 100e18;
 
         vm.prank(user1);
@@ -570,7 +570,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         );
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(joinToken.balanceOf(user1), userBalanceBefore + amount);
         assertEq(
@@ -605,7 +605,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertEq(extension.totalJoinedAmount(), minAmount);
     }
 
-    function test_Withdraw_ImmediatelyAtThreshold() public {
+    function test_Exit_ImmediatelyAtThreshold() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -614,7 +614,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
 
         // Should be able to withdraw immediately
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
     }
@@ -646,7 +646,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + 70); // Total 100 blocks from user1's join
 
         vm.prank(user1);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 500e18);
         assertEq(extension.accountsCount(), 2);
@@ -655,7 +655,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + 20); // Total 120 blocks from user2's join (10+20+70+20)
 
         vm.prank(user2);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 300e18);
         assertEq(extension.accountsCount(), 1);
@@ -664,7 +664,7 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.roll(block.number + 10); // Total 120 blocks from user3's join
 
         vm.prank(user3);
-        extension.withdraw();
+        extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);

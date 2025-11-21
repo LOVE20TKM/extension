@@ -20,7 +20,7 @@ import {ExtensionJoinMixin} from "../ExtensionJoinMixin.sol";
 /// - ExtensionRewardMixin: Reward distribution framework
 /// - ExtensionVerificationMixin: Verification info management
 /// - ExtensionScoreBasedRewardMixin: Score-based reward calculation strategy
-/// - ExtensionJoinMixin: Join/withdraw functionality
+/// - ExtensionJoinMixin: Join/exit functionality
 ///
 contract ExtensionWithJoin is
     ExtensionCoreMixin,
@@ -36,7 +36,7 @@ contract ExtensionWithJoin is
 
     /// @param factory_ The factory contract address
     /// @param joinTokenAddress_ The token that can be joined
-    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
+    /// @param waitingBlocks_ Number of blocks to wait before exit
     constructor(
         address factory_,
         address joinTokenAddress_,
@@ -56,7 +56,7 @@ contract ExtensionWithJoin is
     }
 
     // ============================================
-    // JOIN/WITHDRAW OVERRIDES
+    // JOIN/EXIT OVERRIDES
     // ============================================
 
     /// @notice Join with tokens to participate
@@ -71,11 +71,11 @@ contract ExtensionWithJoin is
         ExtensionJoinMixin.join(amount, verificationInfos);
     }
 
-    /// @notice Withdraw joined tokens after waiting period
+    /// @notice Exit and withdraw joined tokens after waiting period
     /// @dev Override to add verification result preparation
-    function withdraw() public override {
+    function exit() public override {
         _prepareVerifyResultIfNeeded();
-        ExtensionJoinMixin.withdraw();
+        ExtensionJoinMixin.exit();
     }
 
     // ============================================
