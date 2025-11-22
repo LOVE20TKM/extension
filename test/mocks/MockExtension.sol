@@ -56,4 +56,8 @@ contract MockExtension is LOVE20ExtensionBase {
     {
         return (0, false);
     }
+
+    function exit() external pure {
+        revert("Exit not implemented in mock");
+    }
 }

@@ -36,6 +36,16 @@ contract MockSubmit {
             .whiteListAddress = whiteListAddress;
     }
 
+    function setVerificationKeys(
+        address tokenAddress,
+        uint256 actionId,
+        string[] memory verificationKeys
+    ) external {
+        _actionInfos[tokenAddress][actionId]
+            .body
+            .verificationKeys = verificationKeys;
+    }
+
     function actionInfo(
         address tokenAddress,
         uint256 actionId

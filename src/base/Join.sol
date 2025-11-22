@@ -5,6 +5,7 @@ import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {IJoin} from "../interface/base/IJoin.sol";
+import {IExtensionExit} from "../interface/base/IExtensionExit.sol";
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 
 /// @title Join
@@ -42,7 +43,7 @@ abstract contract Join is
         emit Join(tokenAddress, msg.sender, actionId);
     }
 
-    /// @inheritdoc IJoin
+    /// @inheritdoc IExtensionExit
     function exit() public virtual {
         // Check if joined via center
         if (
