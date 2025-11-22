@@ -8,15 +8,15 @@ import {
     ILOVE20ExtensionTokenJoinAuto
 } from "../interface/ILOVE20ExtensionTokenJoinAuto.sol";
 
-/// @title LOVE20ExtensionSimpleJoin
+/// @title ExampleTokenJoinAuto
 /// @notice Example implementation of LOVE20ExtensionBaseTokenJoinAuto
 /// @dev Simple implementation where score equals joined amount
-contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionBaseTokenJoinAuto {
+contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
     // ============================================
     // CONSTRUCTOR
     // ============================================
 
-    /// @notice Initialize the simple join extension
+    /// @notice Initialize the example token join auto extension
     /// @param factory_ The factory address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
@@ -62,12 +62,7 @@ contract LOVE20ExtensionSimpleJoin is LOVE20ExtensionBaseTokenJoinAuto {
     /// @return score The score for the specified account
     function calculateScore(
         address account
-    )
-        public
-        view
-        override
-        returns (uint256 total, uint256 score)
-    {
+    ) public view override returns (uint256 total, uint256 score) {
         (total, ) = calculateScores();
         score = _joinInfo[account].amount;
         return (total, score);

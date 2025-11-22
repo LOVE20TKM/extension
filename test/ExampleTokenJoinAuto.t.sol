@@ -2,15 +2,13 @@
 pragma solidity =0.8.17;
 
 import {Test, console} from "forge-std/Test.sol";
+import {ExampleTokenJoinAuto} from "../src/examples/ExampleTokenJoinAuto.sol";
 import {
-    LOVE20ExtensionSimpleTokenJoin
-} from "../src/examples/LOVE20ExtensionSimpleTokenJoin.sol";
+    ExampleFactoryTokenJoinAuto
+} from "../src/examples/ExampleFactoryTokenJoinAuto.sol";
 import {
-    LOVE20ExtensionFactorySimpleTokenJoin
-} from "../src/examples/LOVE20ExtensionFactorySimpleTokenJoin.sol";
-import {
-    ILOVE20ExtensionTokenJoin
-} from "../src/interface/ILOVE20ExtensionTokenJoin.sol";
+    ILOVE20ExtensionTokenJoinAuto
+} from "../src/interface/ILOVE20ExtensionTokenJoinAuto.sol";
 import {ITokenJoin} from "../src/interface/base/ITokenJoin.sol";
 import {ILOVE20Extension} from "../src/interface/ILOVE20Extension.sol";
 import {IExtensionReward} from "../src/interface/base/IExtensionReward.sol";
@@ -29,12 +27,12 @@ import {MockRandom} from "./mocks/MockRandom.sol";
 import {MockUniswapV2Factory} from "./mocks/MockUniswapV2Factory.sol";
 
 /**
- * @title LOVE20ExtensionTokenJoinBase Test Suite
- * @notice Comprehensive tests for LOVE20ExtensionTokenJoinBase implementation
+ * @title ExampleTokenJoinAuto Test Suite
+ * @notice Comprehensive tests for ExampleTokenJoinAuto implementation
  */
-contract LOVE20ExtensionTokenJoinBaseTest is Test {
-    LOVE20ExtensionFactorySimpleTokenJoin public factory;
-    LOVE20ExtensionSimpleTokenJoin public extension;
+contract ExampleTokenJoinAutoTest is Test {
+    ExampleFactoryTokenJoinAuto public factory;
+    ExampleTokenJoinAuto public extension;
     LOVE20ExtensionCenter public center;
     MockERC20 public token;
     MockERC20 public joinToken;
@@ -101,10 +99,10 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         );
 
         // Deploy factory
-        factory = new LOVE20ExtensionFactorySimpleTokenJoin(address(center));
+        factory = new ExampleFactoryTokenJoinAuto(address(center));
 
         // Create extension through factory
-        extension = LOVE20ExtensionSimpleTokenJoin(
+        extension = ExampleTokenJoinAuto(
             factory.createExtension(address(joinToken), WAITING_BLOCKS)
         );
 
@@ -122,16 +120,21 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
             ACTION_ID
         );
 
-        // Setup users with tokens
-        _setupUser(user1, 1000e18);
-        _setupUser(user2, 2000e18);
-        _setupUser(user3, 3000e18);
+        // Setup users with tokens and governance votes
+        _setupUser(user1, 1000e18, 10e18);
+        _setupUser(user2, 2000e18, 20e18);
+        _setupUser(user3, 3000e18, 30e18);
     }
 
-    function _setupUser(address user, uint256 joinAmount) internal {
+    function _setupUser(
+        address user,
+        uint256 joinAmount,
+        uint256 govVotes
+    ) internal {
         joinToken.mint(user, joinAmount);
         vm.prank(user);
         joinToken.approve(address(extension), type(uint256).max);
+        stake.setValidGovVotes(address(token), user, govVotes);
     }
 
     // ============================================
@@ -141,19 +144,12 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
     function test_ImmutableVariables() public view {
         assertEq(extension.joinTokenAddress(), address(joinToken));
         assertEq(extension.waitingBlocks(), WAITING_BLOCKS);
+        // factory is MockExtensionFactory, not center
         assertTrue(extension.factory() != address(0));
     }
 
     function test_Center() public view {
         assertEq(extension.center(), address(center));
-    }
-
-    function test_TokenAddress() public view {
-        assertEq(extension.tokenAddress(), address(token));
-    }
-
-    function test_ActionId() public view {
-        assertEq(extension.actionId(), ACTION_ID);
     }
 
     // ============================================
@@ -216,17 +212,6 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(50e18, new string[](0));
         vm.stopPrank();
-    }
-
-    function test_Join_WithVerificationInfo() public {
-        string[] memory verificationInfos = new string[](0);
-
-        vm.prank(user1);
-        extension.join(100e18, verificationInfos);
-
-        // Verification info functionality requires action setup with verification keys
-        // which is beyond the scope of this basic test
-        assertEq(extension.totalJoinedAmount(), 100e18);
     }
 
     // ============================================
@@ -308,44 +293,6 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertEq(amount, 0);
     }
 
-    function test_Exit_MultipleUsersIndependently() public {
-        // User1 joins at block 0
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        // Move forward 50 blocks
-        vm.roll(block.number + 50);
-
-        // User2 joins at block 50
-        vm.prank(user2);
-        extension.join(200e18, new string[](0));
-
-        // Move forward another 50 blocks (total 100 from user1's join)
-        vm.roll(block.number + 50);
-
-        // User1 can exit now
-        vm.prank(user1);
-        extension.exit();
-
-        assertEq(extension.totalJoinedAmount(), 200e18); // Only user2's amount
-        assertEq(extension.accountsCount(), 1); // Only user2
-
-        // User2 cannot exit yet (only 50 blocks passed since their join)
-        vm.prank(user2);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
-        extension.exit();
-
-        // Move forward another 50 blocks
-        vm.roll(block.number + 50);
-
-        // Now user2 can exit
-        vm.prank(user2);
-        extension.exit();
-
-        assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
-    }
-
     // ============================================
     // CAN EXIT TESTS
     // ============================================
@@ -370,14 +317,6 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         assertTrue(extension.canExit(user1));
     }
 
-    function test_CanExit_True_WellAfterWaitingBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        vm.roll(block.number + WAITING_BLOCKS + 1000);
-        assertTrue(extension.canExit(user1));
-    }
-
     // ============================================
     // EXITABLE BLOCK TESTS
     // ============================================
@@ -398,25 +337,26 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
     }
 
     // ============================================
-    // JOINED VALUE CALCULATION TESTS
+    // SCORE CALCULATION TESTS
     // ============================================
 
-    function test_IsJoinedValueCalculated() public view {
-        assertTrue(extension.isJoinedValueCalculated());
+    function test_CalculateScores_EmptyAccounts() public view {
+        (uint256 total, uint256[] memory scores) = extension.calculateScores();
+        assertEq(total, 0);
+        assertEq(scores.length, 0);
     }
 
-    function test_JoinedValue_Empty() public view {
-        assertEq(extension.joinedValue(), 0);
-    }
-
-    function test_JoinedValue_SingleUser() public {
+    function test_CalculateScores_SingleUser() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 100e18);
+        (uint256 total, uint256[] memory scores) = extension.calculateScores();
+        assertEq(total, 100e18);
+        assertEq(scores.length, 1);
+        assertEq(scores[0], 100e18);
     }
 
-    function test_JoinedValue_MultipleUsers() public {
+    function test_CalculateScores_MultipleUsers() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -426,247 +366,211 @@ contract LOVE20ExtensionTokenJoinBaseTest is Test {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 600e18);
+        (uint256 total, uint256[] memory scores) = extension.calculateScores();
+        assertEq(total, 600e18);
+        assertEq(scores.length, 3);
+        assertEq(scores[0], 100e18);
+        assertEq(scores[1], 200e18);
+        assertEq(scores[2], 300e18);
     }
 
-    function test_JoinedValue_AfterExit() public {
+    function test_CalculateScore_ExistingAccount() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        vm.roll(block.number + WAITING_BLOCKS);
-
-        vm.prank(user1);
-        extension.exit();
-
-        assertEq(extension.joinedValue(), 200e18);
+        (uint256 total, uint256 score) = extension.calculateScore(user1);
+        assertEq(total, 300e18);
+        assertEq(score, 100e18);
     }
 
-    function test_JoinedValueByAccount_NotJoined() public view {
-        assertEq(extension.joinedValueByAccount(user1), 0);
-    }
-
-    function test_JoinedValueByAccount_Joined() public {
+    function test_CalculateScore_NonExistentAccount() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValueByAccount(user1), 100e18);
-    }
-
-    function test_JoinedValueByAccount_AfterExit() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        vm.roll(block.number + WAITING_BLOCKS);
-
-        vm.prank(user1);
-        extension.exit();
-
-        assertEq(extension.joinedValueByAccount(user1), 0);
+        (uint256 total, uint256 score) = extension.calculateScore(user2);
+        assertEq(total, 100e18);
+        assertEq(score, 0);
     }
 
     // ============================================
     // ACCOUNTS TESTS
     // ============================================
 
-    function test_AccountsCount_Empty() public view {
+    function test_Accounts() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        address[] memory accounts = extension.accounts();
+        assertEq(accounts.length, 2);
+        assertEq(accounts[0], user1);
+        assertEq(accounts[1], user2);
+    }
+
+    function test_AccountsCount() public {
         assertEq(extension.accountsCount(), 0);
-    }
 
-    function test_AccountsCount_SingleUser() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
-
         assertEq(extension.accountsCount(), 1);
-        address[] memory accountsList = extension.accounts();
-        assertEq(accountsList[0], user1);
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+        assertEq(extension.accountsCount(), 2);
     }
 
-    function test_AccountsCount_MultipleUsers() public {
+    function test_AccountAtIndex() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        vm.prank(user3);
-        extension.join(300e18, new string[](0));
-
-        assertEq(extension.accountsCount(), 3);
-        address[] memory accountsList = extension.accounts();
-        assertEq(accountsList[0], user1);
-        assertEq(accountsList[1], user2);
-        assertEq(accountsList[2], user3);
+        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountAtIndex(1), user2);
     }
 
-    function test_AccountsCount_AfterExit() public {
+    // ============================================
+    // REWARD TESTS
+    // ============================================
+
+    function test_ClaimReward_RevertIfRoundNotFinished() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        vm.prank(user2);
-        extension.join(200e18, new string[](0));
-
-        vm.roll(block.number + WAITING_BLOCKS);
+        verify.setCurrentRound(1);
 
         vm.prank(user1);
-        extension.exit();
+        vm.expectRevert(IExtensionReward.RoundNotFinished.selector);
+        extension.claimReward(1);
+    }
 
+    // ============================================
+    // COMPLEX SCENARIOS
+    // ============================================
+
+    function test_JoinExitJoinCycle() public {
+        // First join
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        assertEq(extension.totalJoinedAmount(), 100e18);
         assertEq(extension.accountsCount(), 1);
-        address[] memory accountsList = extension.accounts();
-        assertEq(accountsList[0], user2);
-    }
 
-    // ============================================
-    // VERIFICATION INFO TESTS
-    // ============================================
-    // Note: Comprehensive verification info tests would require action setup
-    // with verification keys configured in the action. These tests focus on
-    // the basic join functionality accepting verification infos.
-
-    function test_UpdateVerificationInfo_Empty() public {
-        string[] memory verificationInfos = new string[](0);
-
-        vm.prank(user1);
-        extension.updateVerificationInfo(verificationInfos);
-
-        // Empty verification info should succeed without error
-        assertTrue(true);
-    }
-
-    // ============================================
-    // TOKEN TRANSFER TESTS
-    // ============================================
-
-    function test_Join_TransfersTokensFromUser() public {
-        uint256 amount = 100e18;
-        uint256 userBalanceBefore = joinToken.balanceOf(user1);
-        uint256 extensionBalanceBefore = joinToken.balanceOf(
-            address(extension)
-        );
-
-        vm.prank(user1);
-        extension.join(amount, new string[](0));
-
-        assertEq(joinToken.balanceOf(user1), userBalanceBefore - amount);
-        assertEq(
-            joinToken.balanceOf(address(extension)),
-            extensionBalanceBefore + amount
-        );
-    }
-
-    function test_Exit_TransfersTokensToUser() public {
-        uint256 amount = 100e18;
-
-        vm.prank(user1);
-        extension.join(amount, new string[](0));
-
+        // Exit
         vm.roll(block.number + WAITING_BLOCKS);
-
-        uint256 userBalanceBefore = joinToken.balanceOf(user1);
-        uint256 extensionBalanceBefore = joinToken.balanceOf(
-            address(extension)
-        );
-
-        vm.prank(user1);
-        extension.exit();
-
-        assertEq(joinToken.balanceOf(user1), userBalanceBefore + amount);
-        assertEq(
-            joinToken.balanceOf(address(extension)),
-            extensionBalanceBefore - amount
-        );
-    }
-
-    // ============================================
-    // EDGE CASE TESTS
-    // ============================================
-
-    function test_Join_LargeAmount() public {
-        uint256 largeAmount = 1e30; // 1 billion tokens with 18 decimals
-        joinToken.mint(user1, largeAmount);
-
-        vm.prank(user1);
-        joinToken.approve(address(extension), largeAmount);
-
-        vm.prank(user1);
-        extension.join(largeAmount, new string[](0));
-
-        assertEq(extension.totalJoinedAmount(), largeAmount);
-    }
-
-    function test_Join_MinAmount() public {
-        uint256 minAmount = 1;
-
-        vm.prank(user1);
-        extension.join(minAmount, new string[](0));
-
-        assertEq(extension.totalJoinedAmount(), minAmount);
-    }
-
-    function test_Exit_ImmediatelyAtThreshold() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        // Roll exactly to the threshold
-        vm.roll(block.number + WAITING_BLOCKS);
-
-        // Should be able to withdraw immediately
         vm.prank(user1);
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.accountsCount(), 0);
+
+        // Join again
+        vm.prank(user1);
+        extension.join(200e18, new string[](0));
+
+        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.accountsCount(), 1);
     }
 
-    // ============================================
-    // INTEGRATION TESTS
-    // ============================================
-
-    function test_Integration_FullLifecycle() public {
-        // Multiple users join at different times
+    function test_MultipleUsersComplexScenario() public {
+        // User1 joins
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        vm.roll(block.number + 10);
-
+        // User2 joins
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        vm.roll(block.number + 20);
+        assertEq(extension.totalJoinedAmount(), 300e18);
+        assertEq(extension.accountsCount(), 2);
 
-        vm.prank(user3);
-        extension.join(300e18, new string[](0));
+        // Fast forward
+        vm.roll(block.number + WAITING_BLOCKS);
 
-        // Check total
-        assertEq(extension.totalJoinedAmount(), 600e18);
-        assertEq(extension.accountsCount(), 3);
-
-        // Move forward enough for user1 to withdraw
-        vm.roll(block.number + 70); // Total 100 blocks from user1's join
-
+        // User1 exits
         vm.prank(user1);
         extension.exit();
+
+        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.accountsCount(), 1);
+
+        // User3 joins
+        vm.prank(user3);
+        extension.join(300e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 500e18);
         assertEq(extension.accountsCount(), 2);
 
-        // Move forward for user2
-        vm.roll(block.number + 20); // Total 120 blocks from user2's join (10+20+70+20)
+        // Fast forward again
+        vm.roll(block.number + WAITING_BLOCKS);
 
+        // User2 and User3 exit
         vm.prank(user2);
         extension.exit();
-
-        assertEq(extension.totalJoinedAmount(), 300e18);
-        assertEq(extension.accountsCount(), 1);
-
-        // Move forward for user3
-        vm.roll(block.number + 10); // Total 120 blocks from user3's join
 
         vm.prank(user3);
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);
+    }
+
+    // ============================================
+    // FUZZ TESTS
+    // ============================================
+
+    function testFuzz_Join(uint256 amount) public {
+        amount = bound(amount, 1, 1000e18);
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        (uint256 joinedAmount, , ) = extension.joinInfo(user1);
+        assertEq(joinedAmount, amount);
+        assertEq(extension.totalJoinedAmount(), amount);
+    }
+
+    function testFuzz_Exit(uint256 amount, uint256 extraBlocks) public {
+        amount = bound(amount, 1, 1000e18);
+        extraBlocks = bound(extraBlocks, 0, 10000);
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        vm.roll(block.number + WAITING_BLOCKS + extraBlocks);
+
+        uint256 balanceBefore = joinToken.balanceOf(user1);
+
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
+    }
+
+    function testFuzz_TotalJoinedAmount_MultipleUsers(
+        uint256 amount1,
+        uint256 amount2,
+        uint256 amount3
+    ) public {
+        amount1 = bound(amount1, 1, 333e18);
+        amount2 = bound(amount2, 1, 333e18);
+        amount3 = bound(amount3, 1, 333e18);
+
+        vm.prank(user1);
+        extension.join(amount1, new string[](0));
+
+        vm.prank(user2);
+        extension.join(amount2, new string[](0));
+
+        vm.prank(user3);
+        extension.join(amount3, new string[](0));
+
+        assertEq(extension.totalJoinedAmount(), amount1 + amount2 + amount3);
     }
 }

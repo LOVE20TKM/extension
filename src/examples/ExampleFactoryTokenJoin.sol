@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {
-    LOVE20ExtensionSimpleTokenJoin
-} from "./LOVE20ExtensionSimpleTokenJoin.sol";
+import {ExampleTokenJoin} from "./ExampleTokenJoin.sol";
 import {LOVE20ExtensionFactoryBase} from "../LOVE20ExtensionFactoryBase.sol";
 
-/// @title LOVE20ExtensionFactorySimpleTokenJoin
-/// @notice Factory contract for creating LOVE20ExtensionSimpleTokenJoin instances
-contract LOVE20ExtensionFactorySimpleTokenJoin is LOVE20ExtensionFactoryBase {
+/// @title ExampleFactoryTokenJoin
+/// @notice Factory contract for creating ExampleTokenJoin instances
+contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -20,7 +18,7 @@ contract LOVE20ExtensionFactorySimpleTokenJoin is LOVE20ExtensionFactoryBase {
     // STRUCTS
     // ============================================
 
-    /// @notice Parameters for SimpleTokenJoin extension
+    /// @notice Parameters for ExampleTokenJoin extension
     struct ExtensionParams {
         address joinTokenAddress;
         uint256 waitingBlocks;
@@ -38,7 +36,7 @@ contract LOVE20ExtensionFactorySimpleTokenJoin is LOVE20ExtensionFactoryBase {
     // FACTORY FUNCTIONS
     // ============================================
 
-    /// @notice Create a new SimpleTokenJoin extension
+    /// @notice Create a new ExampleTokenJoin extension
     /// @param joinTokenAddress_ The token to join with
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
     /// @return The address of the created extension
@@ -46,11 +44,11 @@ contract LOVE20ExtensionFactorySimpleTokenJoin is LOVE20ExtensionFactoryBase {
         address joinTokenAddress_,
         uint256 waitingBlocks_
     ) external returns (address) {
-        LOVE20ExtensionSimpleTokenJoin extension = new LOVE20ExtensionSimpleTokenJoin(
-                address(this),
-                joinTokenAddress_,
-                waitingBlocks_
-            );
+        ExampleTokenJoin extension = new ExampleTokenJoin(
+            address(this),
+            joinTokenAddress_,
+            waitingBlocks_
+        );
 
         _extensionParams[address(extension)] = ExtensionParams({
             joinTokenAddress: joinTokenAddress_,

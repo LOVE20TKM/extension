@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionSimpleJoin} from "./LOVE20ExtensionSimpleJoin.sol";
+import {ExampleTokenJoinAuto} from "./ExampleTokenJoinAuto.sol";
 import {LOVE20ExtensionFactoryBase} from "../LOVE20ExtensionFactoryBase.sol";
 
-/// @title LOVE20ExtensionFactorySimpleJoin
-/// @notice Factory contract for creating LOVE20ExtensionSimpleJoin instances
-contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
+/// @title ExampleFactoryTokenJoinAuto
+/// @notice Factory contract for creating ExampleTokenJoinAuto instances
+contract ExampleFactoryTokenJoinAuto is LOVE20ExtensionFactoryBase {
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -18,7 +18,7 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     // STRUCTS
     // ============================================
 
-    /// @notice Parameters for SimpleJoin extension
+    /// @notice Parameters for ExampleTokenJoinAuto extension
     struct ExtensionParams {
         address joinTokenAddress;
         uint256 waitingBlocks;
@@ -36,7 +36,7 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     // FACTORY FUNCTIONS
     // ============================================
 
-    /// @notice Create a new SimpleJoin extension
+    /// @notice Create a new ExampleTokenJoinAuto extension
     /// @param joinTokenAddress_ The token to join with
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
     /// @return The address of the created extension
@@ -44,7 +44,7 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
         address joinTokenAddress_,
         uint256 waitingBlocks_
     ) external returns (address) {
-        LOVE20ExtensionSimpleJoin extension = new LOVE20ExtensionSimpleJoin(
+        ExampleTokenJoinAuto extension = new ExampleTokenJoinAuto(
             address(this),
             joinTokenAddress_,
             waitingBlocks_
@@ -66,18 +66,8 @@ contract LOVE20ExtensionFactorySimpleJoin is LOVE20ExtensionFactoryBase {
     /// @return waitingBlocks The waiting blocks
     function extensionParams(
         address extension_
-    )
-        external
-        view
-        returns (
-            address joinTokenAddress,
-            uint256 waitingBlocks
-        )
-    {
+    ) external view returns (address joinTokenAddress, uint256 waitingBlocks) {
         ExtensionParams memory params = _extensionParams[extension_];
-        return (
-            params.joinTokenAddress,
-            params.waitingBlocks
-        );
+        return (params.joinTokenAddress, params.waitingBlocks);
     }
 }

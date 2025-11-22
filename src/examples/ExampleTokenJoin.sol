@@ -7,15 +7,15 @@ import {
 import {ExtensionReward} from "../base/ExtensionReward.sol";
 import {IExtensionReward} from "../interface/base/IExtensionReward.sol";
 
-/// @title LOVE20ExtensionSimpleTokenJoin
+/// @title ExampleTokenJoin
 /// @notice Example implementation of LOVE20ExtensionBaseTokenJoin
 /// @dev Simple implementation where joined value equals joined amount
-contract LOVE20ExtensionSimpleTokenJoin is LOVE20ExtensionBaseTokenJoin {
+contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
     // ============================================
     // CONSTRUCTOR
     // ============================================
 
-    /// @notice Initialize the simple token join extension
+    /// @notice Initialize the example token join extension
     /// @param factory_ The factory address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
@@ -76,8 +76,22 @@ contract LOVE20ExtensionSimpleTokenJoin is LOVE20ExtensionBaseTokenJoin {
         override(ExtensionReward, IExtensionReward)
         returns (uint256 reward, bool isMinted)
     {
-        // Simple implementation returns 0 reward
-        // In a real implementation, this would calculate rewards based on joined amounts
-        return (0, false);
+        (uint256 totalActionReward, ) = _mint.actionRewardByActionIdByAccount(
+            tokenAddress,
+            round,
+            actionId,
+            address(this)
+        );
+
+        // check if minted for this round
+        uint256 claimedReward = _claimedReward[round][account];
+        if (claimedReward > 0) {
+            return (claimedReward, true);
+        }
+
+        reward =
+            (totalActionReward * _joinInfo[account].amount) /
+            totalJoinedAmount;
+        return (reward, false);
     }
 }
