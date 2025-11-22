@@ -5,6 +5,7 @@ import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
+import {IExtensionExit} from "../interface/base/IExtensionExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title TokenJoin
@@ -89,7 +90,7 @@ abstract contract TokenJoin is
         emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
     }
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionExit
     function exit() public virtual {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (!_canExit(msg.sender)) {

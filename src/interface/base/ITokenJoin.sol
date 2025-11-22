@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
+import {IExtensionExit} from "./IExtensionExit.sol";
+
 /// @title ITokenJoin
 /// @notice Interface for token-based join functionality
 /// @dev Defines join/withdraw operations with ERC20 token-based participation and block-delayed withdrawal
-interface ITokenJoin {
+interface ITokenJoin is IExtensionExit {
     // ============================================
     // ERRORS
     // ============================================
@@ -89,11 +91,7 @@ interface ITokenJoin {
     )
         external
         view
-        returns (
-            uint256 amount,
-            uint256 joinedBlock,
-            uint256 exitableBlock
-        );
+        returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock);
 
     /// @notice Check if an account can exit
     /// @param account The account address to check
@@ -108,7 +106,4 @@ interface ITokenJoin {
     /// @param amount The amount of tokens to join with
     /// @param verificationInfos Optional verification information array
     function join(uint256 amount, string[] memory verificationInfos) external;
-
-    /// @notice Exit and withdraw joined tokens after the waiting period
-    function exit() external;
 }

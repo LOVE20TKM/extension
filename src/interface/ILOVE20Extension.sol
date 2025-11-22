@@ -6,14 +6,16 @@ import "./base/IExtensionJoinedValue.sol";
 import "./base/IExtensionAccounts.sol";
 import "./base/IExtensionReward.sol";
 import "./base/IExtensionVerification.sol";
+import "./base/IExtensionExit.sol";
 
 interface ILOVE20Extension is 
     IExtensionCore,
     IExtensionJoinedValue,
     IExtensionAccounts,
     IExtensionReward,
-    IExtensionVerification 
+    IExtensionVerification,
+    IExtensionExit
 {
     // ------ user operation ------
-    // join&remove action should be implemented in the extension with different input params
+    // join&exit actions should be implemented in the extension with different input params
 }

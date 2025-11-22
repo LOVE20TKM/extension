@@ -9,6 +9,7 @@ import {
     ILOVE20ExtensionTokenJoinAuto
 } from "./interface/ILOVE20ExtensionTokenJoinAuto.sol";
 import {ITokenJoin} from "./interface/base/ITokenJoin.sol";
+import {IExtensionExit} from "./interface/base/IExtensionExit.sol";
 
 /// @title LOVE20ExtensionBaseTokenJoinAuto
 /// @notice Abstract base contract for auto score-based token join LOVE20 extensions
@@ -92,8 +93,8 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         super.join(amount, verificationInfos);
     }
 
-    /// @inheritdoc ITokenJoin
-    function exit() public virtual override(ITokenJoin, TokenJoin) {
+    /// @inheritdoc IExtensionExit
+    function exit() public virtual override(IExtensionExit, TokenJoin) {
         _prepareVerifyResultIfNeeded();
         super.exit();
     }
@@ -255,4 +256,3 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         return _scoreByAccount[round][account];
     }
 }
-
