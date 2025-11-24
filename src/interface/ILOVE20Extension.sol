@@ -5,7 +5,7 @@ import "./base/IExtensionCore.sol";
 import "./base/IExtensionJoinedValue.sol";
 import "./base/IExtensionAccounts.sol";
 import "./base/IExtensionReward.sol";
-import "./base/IExtensionVerification.sol";
+import "./base/IExtensionVerificationInfo.sol";
 import "./base/IExtensionExit.sol";
 
 interface ILOVE20Extension is 
@@ -13,7 +13,7 @@ interface ILOVE20Extension is
     IExtensionJoinedValue,
     IExtensionAccounts,
     IExtensionReward,
-    IExtensionVerification,
+    IExtensionVerificationInfo,
     IExtensionExit
 {
     // ------ user operation ------

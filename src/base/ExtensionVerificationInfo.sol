@@ -3,18 +3,18 @@ pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {
-    IExtensionVerification
-} from "../interface/base/IExtensionVerification.sol";
+    IExtensionVerificationInfo
+} from "../interface/base/IExtensionVerificationInfo.sol";
 import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 
 /// @title ExtensionVerificationInfo
 /// @notice Base contract providing verification information functionality
-/// @dev Implements IExtensionVerification interface with verification info storage
+/// @dev Implements IExtensionVerificationInfo interface with verification info storage
 abstract contract ExtensionVerificationInfo is
     ExtensionCore,
-    IExtensionVerification
+    IExtensionVerificationInfo
 {
     using ArrayUtils for uint256[];
 
@@ -34,7 +34,7 @@ abstract contract ExtensionVerificationInfo is
     // IEXTENSIONVERIFICATION INTERFACE
     // ============================================
 
-    /// @inheritdoc IExtensionVerification
+    /// @inheritdoc IExtensionVerificationInfo
     function updateVerificationInfo(
         string[] memory verificationInfos
     ) public virtual {
@@ -60,7 +60,7 @@ abstract contract ExtensionVerificationInfo is
         }
     }
 
-    /// @inheritdoc IExtensionVerification
+    /// @inheritdoc IExtensionVerificationInfo
     function verificationInfo(
         address account,
         string calldata verificationKey
@@ -76,7 +76,7 @@ abstract contract ExtensionVerificationInfo is
         return _verificationInfoByRound[account][verificationKey][latestRound];
     }
 
-    /// @inheritdoc IExtensionVerification
+    /// @inheritdoc IExtensionVerificationInfo
     function verificationInfoByRound(
         address account,
         string calldata verificationKey,
@@ -95,7 +95,7 @@ abstract contract ExtensionVerificationInfo is
         return _verificationInfoByRound[account][verificationKey][nearestRound];
     }
 
-    /// @inheritdoc IExtensionVerification
+    /// @inheritdoc IExtensionVerificationInfo
     function verificationInfoUpdateRoundsCount(
         address account,
         string calldata verificationKey
@@ -103,7 +103,7 @@ abstract contract ExtensionVerificationInfo is
         return _verificationInfoUpdateRounds[account][verificationKey].length;
     }
 
-    /// @inheritdoc IExtensionVerification
+    /// @inheritdoc IExtensionVerificationInfo
     function verificationInfoUpdateRoundsAtIndex(
         address account,
         string calldata verificationKey,
