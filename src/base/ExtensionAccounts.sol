@@ -4,17 +4,22 @@ pragma solidity =0.8.17;
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {IExtensionAccounts} from "../interface/base/IExtensionAccounts.sol";
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /// @title ExtensionAccounts
 /// @notice Base contract providing account management functionality
-/// @dev Implements IExtensionAccounts interface with internal account tracking
+/// @dev Implements IExtensionAccounts interface with O(1) account operations using EnumerableSet
 abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     // ============================================
     // STATE VARIABLES
     // ============================================
 
-    /// @dev Array of accounts participating in this extension
-    address[] internal _accounts;
+    /// @dev Set of accounts participating in this extension
+    EnumerableSet.AddressSet internal _accounts;
 
     // ============================================
     // IEXTENSIONACCOUNTS INTERFACE
@@ -22,29 +27,29 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
 
     /// @inheritdoc IExtensionAccounts
     function accounts() external view virtual returns (address[] memory) {
-        return _accounts;
+        return _accounts.values();
     }
 
     /// @inheritdoc IExtensionAccounts
     function accountsCount() external view virtual returns (uint256) {
-        return _accounts.length;
+        return _accounts.length();
     }
 
     /// @inheritdoc IExtensionAccounts
     function accountAtIndex(
         uint256 index
     ) external view virtual returns (address) {
-        return _accounts[index];
+        return _accounts.at(index);
     }
 
     // ============================================
     // INTERNAL HELPER FUNCTIONS
     // ============================================
 
-    /// @dev Add an account to the internal accounts array and center registry
+    /// @dev Add an account to the internal accounts set and center registry
     /// @param account The account address to add
     function _addAccount(address account) internal virtual {
-        _accounts.push(account);
+        _accounts.add(account);
         ILOVE20ExtensionCenter(center()).addAccount(
             tokenAddress,
             actionId,
@@ -52,15 +57,12 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
         );
     }
 
-    /// @dev Remove an account from the internal accounts array and center registry
+    /// @dev Remove an account from the internal accounts set and center registry
     /// @param account The account address to remove
+    /// @dev Reverts with AccountNotFound if account doesn't exist
     function _removeAccount(address account) internal virtual {
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            if (_accounts[i] == account) {
-                _accounts[i] = _accounts[_accounts.length - 1];
-                _accounts.pop();
-                break;
-            }
+        if (!_accounts.remove(account)) {
+            revert IExtensionAccounts.AccountNotFound();
         }
         ILOVE20ExtensionCenter(center()).removeAccount(
             tokenAddress,

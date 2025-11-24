@@ -29,15 +29,14 @@ interface IExtensionCore {
 
     /// @notice Get the token address for this extension
     /// @return The token address
-    function tokenAddress() external returns (address);
+    function tokenAddress() external view returns (address);
 
     /// @notice Get the action ID for this extension
     /// @return The action ID
-    function actionId() external returns (uint256);
+    function actionId() external view returns (uint256);
 
     /// @notice Initialize the extension (can only be called once by Center)
     /// @param tokenAddress The token address to associate with this extension
     /// @param actionId The action ID to associate with this extension
     function initialize(address tokenAddress, uint256 actionId) external;
 }
-

@@ -7,6 +7,9 @@ import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IExtensionExit} from "../interface/base/IExtensionExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {
+    ReentrancyGuard
+} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @title TokenJoin
 /// @notice Base contract providing token-based join/exit functionality
@@ -15,6 +18,7 @@ abstract contract TokenJoin is
     ExtensionCore,
     ExtensionAccounts,
     ExtensionVerificationInfo,
+    ReentrancyGuard,
     ITokenJoin
 {
     // ============================================
@@ -49,6 +53,9 @@ abstract contract TokenJoin is
     /// @param waitingBlocks_ Number of blocks to wait before exit
     /// @dev Note: ExtensionCore initialization happens through another inheritance path
     constructor(address joinTokenAddress_, uint256 waitingBlocks_) {
+        if (joinTokenAddress_ == address(0)) {
+            revert ITokenJoin.InvalidJoinTokenAddress();
+        }
         // ExtensionCore will be initialized through another inheritance path
         // We only handle join-specific initialization here
         joinTokenAddress = joinTokenAddress_;
@@ -64,7 +71,7 @@ abstract contract TokenJoin is
     function join(
         uint256 amount,
         string[] memory verificationInfos
-    ) public virtual {
+    ) public virtual nonReentrant {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (info.joinedBlock != 0) {
             revert AlreadyJoined();
@@ -91,7 +98,7 @@ abstract contract TokenJoin is
     }
 
     /// @inheritdoc IExtensionExit
-    function exit() public virtual {
+    function exit() public virtual nonReentrant {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (!_canExit(msg.sender)) {
             if (info.joinedBlock == 0) {

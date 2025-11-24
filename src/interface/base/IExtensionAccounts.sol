@@ -3,6 +3,13 @@ pragma solidity =0.8.17;
 
 interface IExtensionAccounts {
     // ============================================
+    // ERRORS
+    // ============================================
+
+    /// @notice Thrown when trying to remove an account that doesn't exist
+    error AccountNotFound();
+
+    // ============================================
     // FUNCTIONS - Account Status
     // ============================================
 
@@ -19,4 +26,3 @@ interface IExtensionAccounts {
     /// @return The account address
     function accountAtIndex(uint256 index) external view returns (address);
 }
-

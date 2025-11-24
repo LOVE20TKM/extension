@@ -3,7 +3,9 @@ pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 import {IExtensionCore} from "../interface/base/IExtensionCore.sol";
-import {ILOVE20ExtensionFactory} from "../interface/ILOVE20ExtensionFactory.sol";
+import {
+    ILOVE20ExtensionFactory
+} from "../interface/ILOVE20ExtensionFactory.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
@@ -14,12 +16,18 @@ import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
 
-uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
-
 /// @title ExtensionCore
 /// @notice Core base contract providing fundamental extension functionality
 /// @dev Implements IExtensionCore interface with factory/center references and initialization
 abstract contract ExtensionCore is IExtensionCore {
+    // ============================================
+    // CONSTANTS
+    // ============================================
+
+    /// @notice Default amount of tokens to join with during initialization
+    /// @dev Set to 1 token (1e18 wei)
+    uint256 internal constant DEFAULT_JOIN_AMOUNT = 1e18;
+
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -30,11 +38,11 @@ abstract contract ExtensionCore is IExtensionCore {
     /// @notice The token address this extension is associated with
     address public tokenAddress;
 
-    /// @notice The action ID this extension is associated with
-    uint256 public actionId;
-
     /// @notice Whether the extension has been initialized
     bool public initialized;
+
+    /// @notice The action ID this extension is associated with
+    uint256 public actionId;
 
     /// @notice The launch contract address
     ILOVE20Launch internal immutable _launch;
@@ -124,4 +132,3 @@ abstract contract ExtensionCore is IExtensionCore {
         join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
     }
 }
-

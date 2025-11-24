@@ -11,6 +11,9 @@ interface ITokenJoin is IExtensionExit {
     // ERRORS
     // ============================================
 
+    /// @notice Thrown when join token address is invalid (zero address)
+    error InvalidJoinTokenAddress();
+
     /// @notice Thrown when trying to join with zero amount
     error JoinAmountZero();
 

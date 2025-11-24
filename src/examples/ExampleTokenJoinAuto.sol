@@ -7,11 +7,15 @@ import {
 import {
     ILOVE20ExtensionTokenJoinAuto
 } from "../interface/ILOVE20ExtensionTokenJoinAuto.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /// @title ExampleTokenJoinAuto
 /// @notice Example implementation of LOVE20ExtensionBaseTokenJoinAuto
 /// @dev Simple implementation where score equals joined amount
 contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
+    using EnumerableSet for EnumerableSet.AddressSet;
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -46,9 +50,10 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
         override
         returns (uint256 total, uint256[] memory scores)
     {
-        scores = new uint256[](_accounts.length);
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            uint256 score = _joinInfo[_accounts[i]].amount;
+        uint256 accountsCount = _accounts.length();
+        scores = new uint256[](accountsCount);
+        for (uint256 i = 0; i < accountsCount; i++) {
+            uint256 score = _joinInfo[_accounts.at(i)].amount;
             scores[i] = score;
             total += score;
         }

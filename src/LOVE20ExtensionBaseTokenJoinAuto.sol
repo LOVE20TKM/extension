@@ -8,6 +8,9 @@ import {ExtensionReward} from "./base/ExtensionReward.sol";
 import {
     ILOVE20ExtensionTokenJoinAuto
 } from "./interface/ILOVE20ExtensionTokenJoinAuto.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ITokenJoin} from "./interface/base/ITokenJoin.sol";
 import {IExtensionExit} from "./interface/base/IExtensionExit.sol";
 
@@ -18,6 +21,8 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     LOVE20ExtensionBaseTokenJoin,
     ILOVE20ExtensionTokenJoinAuto
 {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     // ============================================
     // STATE VARIABLES - SCORE SYSTEM
     // ============================================
@@ -187,11 +192,14 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         _scores[currentRound] = scoresCalculated;
 
         // Save accounts snapshot for current round
-        _accountsByRound[currentRound] = _accounts;
+        address[] memory currentAccounts = _accounts.values();
+        _accountsByRound[currentRound] = currentAccounts;
 
         // Build score lookup mapping for current round
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            _scoreByAccount[currentRound][_accounts[i]] = scoresCalculated[i];
+        for (uint256 i = 0; i < currentAccounts.length; i++) {
+            _scoreByAccount[currentRound][
+                currentAccounts[i]
+            ] = scoresCalculated[i];
         }
     }
 
@@ -206,125 +214,90 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     function accountsByRound(
         uint256 round
     ) external view virtual returns (address[] memory result) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _accountsByRound[round];
         }
-
-        // Fallback: if no snapshot exists and round is in the future, return empty
-        if (round > _join.currentRound()) {
-            return new address[](0);
+        if (round == _verify.currentRound()) {
+            return _accounts.values();
         }
-
-        // Fallback: if no snapshot exists and round <= current, return current accounts
-        return _accounts;
+        return new address[](0);
     }
 
     function accountsByRoundCount(
         uint256 round
     ) external view virtual returns (uint256) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _accountsByRound[round].length;
         }
-
-        // Fallback: if no snapshot exists and round is in the future, return 0
-        if (round > _join.currentRound()) {
-            return 0;
+        if (round == _verify.currentRound()) {
+            return _accounts.length();
         }
-
-        // Fallback: if no snapshot exists and round <= current, return current count
-        return _accounts.length;
+        return 0;
     }
 
     function accountsByRoundAtIndex(
         uint256 round,
         uint256 index
     ) external view virtual returns (address) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _accountsByRound[round][index];
         }
-
-        // Fallback: if no snapshot exists and round is in the future, revert
-        if (round > _join.currentRound()) {
-            revert NoSnapshotForFutureRound();
+        if (round == _verify.currentRound()) {
+            return _accounts.at(index);
         }
-
-        // Fallback: if no snapshot exists and round <= current, return from current accounts
-        return _accounts[index];
+        revert NoSnapshotForFutureRound();
     }
 
     function scores(
         uint256 round
     ) external view virtual returns (uint256[] memory) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _scores[round];
         }
-
-        // Fallback: if no snapshot exists, calculate on-the-fly
-        if (round > _join.currentRound()) {
-            return new uint256[](0);
+        if (round == _verify.currentRound()) {
+            (, uint256[] memory currentScores) = calculateScores();
+            return currentScores;
         }
-
-        // Return current scores calculation
-        (, uint256[] memory currentScores) = calculateScores();
-        return currentScores;
+        return new uint256[](0);
     }
 
     function scoresCount(
         uint256 round
     ) external view virtual returns (uint256) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _scores[round].length;
         }
-
-        // Fallback: if no snapshot exists and round is in the future, return 0
-        if (round > _join.currentRound()) {
-            return 0;
+        if (round == _verify.currentRound()) {
+            return _accounts.length();
         }
-
-        // Fallback: return current accounts count (scores count = accounts count)
-        return _accounts.length;
+        return 0;
     }
 
     function scoresAtIndex(
         uint256 round,
         uint256 index
     ) external view virtual returns (uint256) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _scores[round][index];
         }
-
-        // Fallback: if no snapshot exists and round is in the future, revert
-        if (round > _join.currentRound()) {
-            revert NoSnapshotForFutureRound();
+        if (round == _verify.currentRound()) {
+            (, uint256[] memory currentScores) = calculateScores();
+            return currentScores[index];
         }
-
-        // Fallback: calculate current score for the account at this index
-        (, uint256[] memory currentScores) = calculateScores();
-        return currentScores[index];
+        revert NoSnapshotForFutureRound();
     }
 
     function scoreByAccount(
         uint256 round,
         address account
     ) external view virtual returns (uint256) {
-        // Check if verification was generated for this round
         if (_verificationGenerated[round]) {
             return _scoreByAccount[round][account];
         }
-
-        // Fallback: if no snapshot exists and round is in the future, return 0
-        if (round > _join.currentRound()) {
-            return 0;
+        if (round == _verify.currentRound()) {
+            (, uint256 score) = calculateScore(account);
+            return score;
         }
-
-        // Fallback: calculate current score for the account
-        (, uint256 score) = calculateScore(account);
-        return score;
+        return 0;
     }
 }
