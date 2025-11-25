@@ -243,30 +243,22 @@ abstract contract PoolRewardMixin is
     // REWARD CALCULATION (Override ExtensionRewardMixin)
     // ============================================
 
-    /// @inheritdoc ExtensionRewardMixin
-    /// @dev Implements pool-specific reward calculation with auto-detection of miner's pool
-    function rewardByAccount(
+    /// @dev Calculate reward for an account in a specific round
+    function _calculateReward(
         uint256 round,
         address account
-    ) public view virtual override returns (uint256 reward, bool isMinted) {
-        // Check if already claimed (from parent's _claimedReward mapping)
-        uint256 claimedReward = _claimedReward[round][account];
-        if (claimedReward > 0) {
-            return (claimedReward, true);
-        }
-
+    ) internal view virtual override returns (uint256 reward) {
         // Get historical pool ID using efficient binary search
         // This finds which pool the miner was in during that round
         uint256 poolId = getMinerPoolByRound(account, round);
 
         // If not in any pool during that round, no reward
         if (poolId == 0) {
-            return (0, false);
+            return 0;
         }
 
         // Calculate reward from the historical pool
-        reward = calculateMinerReward(poolId, round, account);
-        return (reward, false);
+        return calculateMinerReward(poolId, round, account);
     }
 
     /// @notice Claim pool service fee (pool owner only)

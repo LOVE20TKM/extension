@@ -38,8 +38,7 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
         return _claimReward(round);
     }
 
-    /// @dev Virtual function to calculate reward for an account in a specific round
-    /// @dev Must be implemented by child contracts
+    /// @notice Get reward information for an account in a specific round
     /// @param round The round number
     /// @param account The account address
     /// @return reward The amount of reward for the account
@@ -47,11 +46,30 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 reward, bool isMinted);
+    ) public view virtual returns (uint256 reward, bool isMinted) {
+        // Check if already claimed
+        uint256 claimedReward = _claimedReward[round][account];
+        if (claimedReward > 0) {
+            return (claimedReward, true);
+        }
+
+        // Calculate reward using child contract implementation
+        return (_calculateReward(round, account), false);
+    }
 
     // ============================================
     // INTERNAL HELPER FUNCTIONS
     // ============================================
+
+    /// @dev Calculate reward for an account in a specific round
+    /// @dev Must be implemented by child contracts
+    /// @param round The round number
+    /// @param account The account address
+    /// @return reward The amount of reward for the account
+    function _calculateReward(
+        uint256 round,
+        address account
+    ) internal view virtual returns (uint256 reward);
 
     /// @dev Prepare action reward for a specific round if not already prepared
     /// @param round The round number to prepare reward for

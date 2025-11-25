@@ -122,25 +122,14 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     }
 
     /// @inheritdoc ExtensionReward
-    function rewardByAccount(
+    /// @dev Calculate reward for an account in a specific round
+    function _calculateReward(
         uint256 round,
         address account
-    )
-        public
-        view
-        virtual
-        override(IExtensionReward, ExtensionReward)
-        returns (uint256 reward, bool isMinted)
-    {
-        // Check if already claimed
-        uint256 claimedReward = _claimedReward[round][account];
-        if (claimedReward > 0) {
-            return (claimedReward, true);
-        }
-
+    ) internal view virtual override returns (uint256 reward) {
         // Can't know the reward if verify phase is not finished
         if (round >= _verify.currentRound()) {
-            return (0, false);
+            return 0;
         }
 
         // Get total action reward for this round
@@ -157,14 +146,14 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         uint256 total = _totalScore[round];
         if (total == 0) {
             // No verification result generated for this round, return 0 reward
-            return (0, false);
+            return 0;
         }
 
         // Scores already verified and stored
         uint256 score = _scoreByAccount[round][account];
 
         // Calculate proportional reward
-        return ((totalActionReward * score) / total, false);
+        return (totalActionReward * score) / total;
     }
 
     // ============================================

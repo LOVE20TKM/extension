@@ -61,21 +61,11 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
     // REWARD CALCULATION - REQUIRED IMPLEMENTATION
     // ============================================
 
-    /// @notice Get reward information for an account in a specific round
-    /// @param round The round number
-    /// @param account The account address
-    /// @return reward The reward amount (0 for this simple implementation)
-    /// @return isMinted Whether the reward has been minted
-    function rewardByAccount(
+    /// @dev Calculate reward for an account in a specific round
+    function _calculateReward(
         uint256 round,
         address account
-    )
-        public
-        view
-        virtual
-        override(ExtensionReward, IExtensionReward)
-        returns (uint256 reward, bool isMinted)
-    {
+    ) internal view virtual override returns (uint256 reward) {
         (uint256 totalActionReward, ) = _mint.actionRewardByActionIdByAccount(
             tokenAddress,
             round,
@@ -83,15 +73,9 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
             address(this)
         );
 
-        // check if minted for this round
-        uint256 claimedReward = _claimedReward[round][account];
-        if (claimedReward > 0) {
-            return (claimedReward, true);
-        }
-
         reward =
             (totalActionReward * _joinInfo[account].amount) /
             totalJoinedAmount;
-        return (reward, false);
+        return reward;
     }
 }

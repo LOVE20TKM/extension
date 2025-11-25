@@ -62,7 +62,26 @@ abstract contract ExtensionRewardMixin is ExtensionCoreMixin {
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 reward, bool isMinted);
+    ) public view virtual returns (uint256 reward, bool isMinted) {
+        // Check if already claimed
+        uint256 claimedReward = _claimedReward[round][account];
+        if (claimedReward > 0) {
+            return (claimedReward, true);
+        }
+
+        // Calculate reward using child contract implementation
+        return (_calculateReward(round, account), false);
+    }
+
+    /// @dev Calculate reward for an account in a specific round
+    /// @dev Must be implemented by child contracts
+    /// @param round The round number
+    /// @param account The account address
+    /// @return reward The amount of reward for the account
+    function _calculateReward(
+        uint256 round,
+        address account
+    ) internal view virtual returns (uint256 reward);
 
     // ============================================
     // PUBLIC FUNCTIONS
