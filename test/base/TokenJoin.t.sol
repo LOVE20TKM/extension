@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
+import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
 import {
     LOVE20ExtensionBaseTokenJoin
-} from "../src/LOVE20ExtensionBaseTokenJoin.sol";
-import {ITokenJoin} from "../src/interface/base/ITokenJoin.sol";
-import {IExtensionExit} from "../src/interface/base/IExtensionExit.sol";
-import {IExtensionReward} from "../src/interface/base/IExtensionReward.sol";
-import {ExtensionReward} from "../src/base/ExtensionReward.sol";
-import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
+} from "../../src/LOVE20ExtensionBaseTokenJoin.sol";
+import {ITokenJoin} from "../../src/interface/base/ITokenJoin.sol";
+import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
+import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
+import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
 
 /**
- * @title MockLOVE20ExtensionBaseTokenJoin
- * @notice LOVE20ExtensionBaseTokenJoin 的具体实现，用于测试
+ * @title MockExtensionForTokenJoin
+ * @notice Mock extension for testing TokenJoin
  */
-contract MockLOVE20ExtensionBaseTokenJoin is LOVE20ExtensionBaseTokenJoin {
+contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
     constructor(
         address factory_,
         address joinTokenAddress_,
@@ -28,7 +27,6 @@ contract MockLOVE20ExtensionBaseTokenJoin is LOVE20ExtensionBaseTokenJoin {
         )
     {}
 
-    // 实现 ILOVE20Extension 的抽象方法
     function isJoinedValueCalculated() external pure override returns (bool) {
         return true;
     }
@@ -44,7 +42,6 @@ contract MockLOVE20ExtensionBaseTokenJoin is LOVE20ExtensionBaseTokenJoin {
         return amount;
     }
 
-    // 实现 IExtensionReward 的抽象方法
     function rewardByAccount(
         uint256,
         address
@@ -66,15 +63,14 @@ contract MockLOVE20ExtensionBaseTokenJoin is LOVE20ExtensionBaseTokenJoin {
 }
 
 /**
- * @title LOVE20ExtensionBaseTokenJoinTest
- * @notice LOVE20ExtensionBaseTokenJoin 的测试套件
- * @dev 测试基于代币的 join/exit 功能
+ * @title TokenJoinTest
+ * @notice Test suite for TokenJoin (token-based join/exit)
+ * @dev Tests join with tokens, waiting period, exit, and reentrancy
  */
-contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
+contract TokenJoinTest is BaseExtensionTest {
     MockExtensionFactory public mockFactory;
-    MockLOVE20ExtensionBaseTokenJoin public extension;
+    MockExtensionForTokenJoin public extension;
 
-    // 事件定义
     event Join(
         address indexed tokenAddress,
         address indexed account,
@@ -92,23 +88,16 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     function setUp() public {
         setUpBase();
 
-        // 部署 mock factory
         mockFactory = new MockExtensionFactory(address(center));
-
-        // 部署扩展
-        extension = new MockLOVE20ExtensionBaseTokenJoin(
+        extension = new MockExtensionForTokenJoin(
             address(mockFactory),
             address(joinToken),
             WAITING_BLOCKS
         );
 
-        // 注册 factory
         registerFactory(address(token), address(mockFactory));
-
-        // 将扩展注册到 factory
         mockFactory.registerExtension(address(extension));
 
-        // 初始化扩展
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
         center.initializeExtension(
@@ -117,14 +106,14 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
             ACTION_ID
         );
 
-        // 为用户设置代币
+        // Setup users with tokens
         setupUser(user1, 1000e18, address(extension));
         setupUser(user2, 2000e18, address(extension));
         setupUser(user3, 3000e18, address(extension));
     }
 
     // ============================================
-    // 构造函数和不可变变量测试
+    // Constructor Tests
     // ============================================
 
     function test_Constructor_ImmutableVariables() public view {
@@ -138,8 +127,17 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(extension.accountsCount(), 0);
     }
 
+    function test_Constructor_RevertsOnZeroJoinTokenAddress() public {
+        vm.expectRevert(ITokenJoin.InvalidJoinTokenAddress.selector);
+        new MockExtensionForTokenJoin(
+            address(mockFactory),
+            address(0),
+            WAITING_BLOCKS
+        );
+    }
+
     // ============================================
-    // Join 功能测试
+    // Join Tests
     // ============================================
 
     function test_Join_Success() public {
@@ -149,7 +147,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        // 验证 joinInfo
         (
             uint256 joinedAmount,
             uint256 joinedBlock,
@@ -158,11 +155,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(joinedAmount, amount);
         assertEq(joinedBlock, blockBefore);
         assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
-
-        // 验证总金额
         assertEq(extension.totalJoinedAmount(), amount);
-
-        // 验证账户计数
         assertEq(extension.accountsCount(), 1);
     }
 
@@ -239,7 +232,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // Exit 功能测试
+    // Exit Tests
     // ============================================
 
     function test_Exit_Success() public {
@@ -248,7 +241,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        // 前进区块
         advanceBlocks(WAITING_BLOCKS);
 
         uint256 balanceBefore = joinToken.balanceOf(user1);
@@ -260,7 +252,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);
 
-        // 验证 joinInfo 被清除
         (
             uint256 joinedAmount,
             uint256 joinedBlock,
@@ -296,7 +287,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        // 不足的等待区块
         advanceBlocks(WAITING_BLOCKS - 1);
 
         vm.prank(user1);
@@ -308,7 +298,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        // 正好等待区块数
         advanceBlocks(WAITING_BLOCKS);
 
         vm.prank(user1);
@@ -319,36 +308,31 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     function test_Exit_MultipleUsersIndependently() public {
-        // User1 在区块 0 加入
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        // 前进 50 区块
         advanceBlocks(50);
 
-        // User2 在区块 50 加入
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        // 再前进 50 区块 (user1 总共 100 区块)
         advanceBlocks(50);
 
-        // User1 可以退出
+        // User1 can exit
         vm.prank(user1);
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 200e18);
         assertEq(extension.accountsCount(), 1);
 
-        // User2 还不能退出（只过了 50 区块）
+        // User2 cannot exit yet
         vm.prank(user2);
         vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
-        // 再前进 50 区块
         advanceBlocks(50);
 
-        // 现在 user2 可以退出
+        // Now user2 can exit
         vm.prank(user2);
         extension.exit();
 
@@ -357,7 +341,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // CanExit 测试
+    // CanExit Tests
     // ============================================
 
     function test_CanExit_False_NotJoined() public view {
@@ -389,7 +373,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // JoinInfo 测试
+    // JoinInfo Tests
     // ============================================
 
     function test_JoinInfo_NotJoined() public view {
@@ -415,7 +399,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // JoinedValue 测试
+    // JoinedValue Tests
     // ============================================
 
     function test_JoinedValue_EmptyAtStart() public view {
@@ -485,42 +469,70 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // 账户列表测试
+    // Zero Waiting Blocks Tests
     // ============================================
 
-    function test_Accounts_EmptyAtStart() public view {
-        address[] memory accounts = extension.accounts();
-        assertEq(accounts.length, 0);
-        assertEq(extension.accountsCount(), 0);
+    function test_ZeroWaitingBlocks_ExitInSameBlock() public {
+        MockExtensionForTokenJoin extensionNoWait = new MockExtensionForTokenJoin(
+                address(mockFactory),
+                address(joinToken),
+                0
+            );
+
+        mockFactory.registerExtension(address(extensionNoWait));
+        submit.setActionInfo(
+            address(token),
+            ACTION_ID + 1,
+            address(extensionNoWait)
+        );
+        token.mint(address(extensionNoWait), 1e18);
+        center.initializeExtension(
+            address(extensionNoWait),
+            address(token),
+            ACTION_ID + 1
+        );
+
+        vm.prank(user1);
+        joinToken.approve(address(extensionNoWait), type(uint256).max);
+
+        vm.prank(user1);
+        extensionNoWait.join(100e18, new string[](0));
+
+        vm.prank(user1);
+        extensionNoWait.exit();
+
+        assertEq(extensionNoWait.totalJoinedAmount(), 0);
     }
 
-    function test_Accounts_AfterJoin() public {
+    // ============================================
+    // Reentrancy Tests
+    // ============================================
+
+    function test_Reentrancy_JoinCannotReenter() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        address[] memory accounts = extension.accounts();
-        assertEq(accounts.length, 1);
-        assertEq(accounts[0], user1);
+        vm.prank(user1);
+        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
+        extension.join(100e18, new string[](0));
     }
 
-    function test_Accounts_AfterExit() public {
+    function test_Reentrancy_ExitCannotReenter() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
-        vm.prank(user2);
-        extension.join(200e18, new string[](0));
 
         advanceBlocks(WAITING_BLOCKS);
 
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 1);
-        address[] memory accounts = extension.accounts();
-        assertEq(accounts[0], user2);
+        vm.prank(user1);
+        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
+        extension.exit();
     }
 
     // ============================================
-    // 边缘情况测试
+    // Edge Cases
     // ============================================
 
     function test_EdgeCase_LargeAmount() public {
@@ -546,11 +558,10 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // 集成测试
+    // Full Lifecycle Test
     // ============================================
 
     function test_Integration_FullLifecycle() public {
-        // 多个用户在不同时间加入
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -564,11 +575,9 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        // 检查总额
         assertEq(extension.totalJoinedAmount(), 600e18);
         assertEq(extension.accountsCount(), 3);
 
-        // 前进足够让 user1 退出
         advanceBlocks(70);
 
         vm.prank(user1);
@@ -577,7 +586,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(extension.totalJoinedAmount(), 500e18);
         assertEq(extension.accountsCount(), 2);
 
-        // 前进让 user2 退出
         advanceBlocks(20);
 
         vm.prank(user2);
@@ -586,7 +594,6 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(extension.totalJoinedAmount(), 300e18);
         assertEq(extension.accountsCount(), 1);
 
-        // 前进让 user3 退出
         advanceBlocks(10);
 
         vm.prank(user3);
@@ -597,7 +604,7 @@ contract LOVE20ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // 模糊测试
+    // Fuzz Tests
     // ============================================
 
     function testFuzz_Join(uint256 amount) public {
