@@ -59,7 +59,7 @@ abstract contract ExtensionCore is IExtensionCore {
     /// @notice The mint contract address
     ILOVE20Mint internal immutable _mint;
     /// @notice The random contract address
-    ILOVE20Random internal _random;
+    ILOVE20Random internal immutable _random;
 
     // ============================================
     // MODIFIERS
@@ -122,13 +122,14 @@ abstract contract ExtensionCore is IExtensionCore {
 
         // Approve token to joinAddress before joining
         ILOVE20Token token = ILOVE20Token(tokenAddress);
-        ILOVE20Join join = ILOVE20Join(
-            ILOVE20ExtensionCenter(ILOVE20ExtensionFactory(factory).center())
-                .joinAddress()
-        );
-        token.approve(address(join), DEFAULT_JOIN_AMOUNT);
+        token.approve(address(_join), DEFAULT_JOIN_AMOUNT);
 
         // Join the action
-        join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
+        _join.join(
+            tokenAddress,
+            actionId,
+            DEFAULT_JOIN_AMOUNT,
+            new string[](0)
+        );
     }
 }

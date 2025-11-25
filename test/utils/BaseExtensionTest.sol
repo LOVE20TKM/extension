@@ -195,7 +195,7 @@ abstract contract BaseExtensionTest is Test {
         address[] memory actual,
         address[] memory expected,
         string memory message
-    ) internal {
+    ) internal pure {
         assertEq(
             actual.length,
             expected.length,
@@ -224,7 +224,7 @@ abstract contract BaseExtensionTest is Test {
         uint256[] memory actual,
         uint256[] memory expected,
         string memory message
-    ) internal {
+    ) internal pure {
         assertEq(
             actual.length,
             expected.length,

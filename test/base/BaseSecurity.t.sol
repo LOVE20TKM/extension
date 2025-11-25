@@ -433,7 +433,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         assertEq(extensionNoWait.totalJoinedAmount(), 0);
     }
 
-    function test_EdgeCase_StorageLayoutOptimization() public {
+    function test_EdgeCase_StorageLayoutOptimization() public view {
         // Verify that tokenAddress and initialized are packed in same slot
         // This is a compile-time optimization, but we can verify the values are correct
         assertEq(extension.tokenAddress(), address(token));
