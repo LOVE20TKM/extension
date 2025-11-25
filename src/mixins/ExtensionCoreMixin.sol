@@ -41,6 +41,7 @@ abstract contract ExtensionCoreMixin {
     // ============================================
 
     address public immutable factory;
+    ILOVE20ExtensionCenter internal immutable _center;
     address public tokenAddress;
     uint256 public actionId;
     bool public initialized;
@@ -55,7 +56,7 @@ abstract contract ExtensionCoreMixin {
     ILOVE20Random internal _random;
 
     modifier onlyCenter() {
-        if (msg.sender != ILOVE20ExtensionFactory(factory).center()) {
+        if (msg.sender != address(_center)) {
             revert OnlyCenterCanCall();
         }
         _;
@@ -63,21 +64,21 @@ abstract contract ExtensionCoreMixin {
 
     constructor(address factory_) {
         factory = factory_;
-        ILOVE20ExtensionCenter c = ILOVE20ExtensionCenter(
+        _center = ILOVE20ExtensionCenter(
             ILOVE20ExtensionFactory(factory_).center()
         );
-        _launch = ILOVE20Launch(c.launchAddress());
-        _stake = ILOVE20Stake(c.stakeAddress());
-        _submit = ILOVE20Submit(c.submitAddress());
-        _vote = ILOVE20Vote(c.voteAddress());
-        _join = ILOVE20Join(c.joinAddress());
-        _verify = ILOVE20Verify(c.verifyAddress());
-        _mint = ILOVE20Mint(c.mintAddress());
-        _random = ILOVE20Random(c.randomAddress());
+        _launch = ILOVE20Launch(_center.launchAddress());
+        _stake = ILOVE20Stake(_center.stakeAddress());
+        _submit = ILOVE20Submit(_center.submitAddress());
+        _vote = ILOVE20Vote(_center.voteAddress());
+        _join = ILOVE20Join(_center.joinAddress());
+        _verify = ILOVE20Verify(_center.verifyAddress());
+        _mint = ILOVE20Mint(_center.mintAddress());
+        _random = ILOVE20Random(_center.randomAddress());
     }
 
     function center() public view returns (address) {
-        return ILOVE20ExtensionFactory(factory).center();
+        return address(_center);
     }
 
     function initialize(
@@ -96,11 +97,12 @@ abstract contract ExtensionCoreMixin {
         actionId = actionId_;
 
         ILOVE20Token token = ILOVE20Token(tokenAddress);
-        ILOVE20Join join = ILOVE20Join(
-            ILOVE20ExtensionCenter(ILOVE20ExtensionFactory(factory).center())
-                .joinAddress()
+        token.approve(address(_join), DEFAULT_JOIN_AMOUNT);
+        _join.join(
+            tokenAddress,
+            actionId,
+            DEFAULT_JOIN_AMOUNT,
+            new string[](0)
         );
-        token.approve(address(join), DEFAULT_JOIN_AMOUNT);
-        join.join(tokenAddress, actionId, DEFAULT_JOIN_AMOUNT, new string[](0));
     }
 }

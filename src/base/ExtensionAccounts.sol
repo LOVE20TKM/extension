@@ -50,11 +50,7 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
     /// @param account The account address to add
     function _addAccount(address account) internal virtual {
         _accounts.add(account);
-        ILOVE20ExtensionCenter(center()).addAccount(
-            tokenAddress,
-            actionId,
-            account
-        );
+        _center.addAccount(tokenAddress, actionId, account);
     }
 
     /// @dev Remove an account from the internal accounts set and center registry
@@ -64,10 +60,6 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
         if (!_accounts.remove(account)) {
             revert IExtensionAccounts.AccountNotFound();
         }
-        ILOVE20ExtensionCenter(center()).removeAccount(
-            tokenAddress,
-            actionId,
-            account
-        );
+        _center.removeAccount(tokenAddress, actionId, account);
     }
 }

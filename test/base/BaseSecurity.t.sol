@@ -59,6 +59,13 @@ contract MockExtensionForSecurity is LOVE20ExtensionBaseTokenJoin {
     {
         return (0, false);
     }
+
+    function _calculateReward(
+        uint256,
+        address
+    ) internal pure override returns (uint256) {
+        return 0;
+    }
 }
 
 /**

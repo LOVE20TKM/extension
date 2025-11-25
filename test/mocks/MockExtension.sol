@@ -57,6 +57,13 @@ contract MockExtension is LOVE20ExtensionBase {
         return (0, false);
     }
 
+    function _calculateReward(
+        uint256 /*round*/,
+        address /*account*/
+    ) internal pure override returns (uint256) {
+        return 0;
+    }
+
     function exit() external pure {
         revert("Exit not implemented in mock");
     }

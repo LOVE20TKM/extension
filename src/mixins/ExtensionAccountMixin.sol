@@ -34,21 +34,13 @@ abstract contract ExtensionAccountMixin is
 
     function _addAccount(address account) internal {
         _accounts.add(account);
-        ILOVE20ExtensionCenter(center()).addAccount(
-            tokenAddress,
-            actionId,
-            account
-        );
+        _center.addAccount(tokenAddress, actionId, account);
     }
 
     function _removeAccount(address account) internal {
         if (!_accounts.remove(account)) {
             revert IExtensionAccounts.AccountNotFound();
         }
-        ILOVE20ExtensionCenter(center()).removeAccount(
-            tokenAddress,
-            actionId,
-            account
-        );
+        _center.removeAccount(tokenAddress, actionId, account);
     }
 }

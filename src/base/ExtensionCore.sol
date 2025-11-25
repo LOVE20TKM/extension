@@ -35,6 +35,9 @@ abstract contract ExtensionCore is IExtensionCore {
     /// @notice The factory contract address
     address public immutable factory;
 
+    /// @notice The center contract address
+    ILOVE20ExtensionCenter internal immutable _center;
+
     /// @notice The token address this extension is associated with
     address public tokenAddress;
 
@@ -67,7 +70,7 @@ abstract contract ExtensionCore is IExtensionCore {
 
     /// @dev Restricts function access to center contract only
     modifier onlyCenter() {
-        if (msg.sender != ILOVE20ExtensionFactory(factory).center()) {
+        if (msg.sender != address(_center)) {
             revert OnlyCenterCanCall();
         }
         _;
@@ -80,17 +83,17 @@ abstract contract ExtensionCore is IExtensionCore {
     /// @param factory_ The factory contract address
     constructor(address factory_) {
         factory = factory_;
-        ILOVE20ExtensionCenter c = ILOVE20ExtensionCenter(
+        _center = ILOVE20ExtensionCenter(
             ILOVE20ExtensionFactory(factory_).center()
         );
-        _launch = ILOVE20Launch(c.launchAddress());
-        _stake = ILOVE20Stake(c.stakeAddress());
-        _submit = ILOVE20Submit(c.submitAddress());
-        _vote = ILOVE20Vote(c.voteAddress());
-        _join = ILOVE20Join(c.joinAddress());
-        _verify = ILOVE20Verify(c.verifyAddress());
-        _mint = ILOVE20Mint(c.mintAddress());
-        _random = ILOVE20Random(c.randomAddress());
+        _launch = ILOVE20Launch(_center.launchAddress());
+        _stake = ILOVE20Stake(_center.stakeAddress());
+        _submit = ILOVE20Submit(_center.submitAddress());
+        _vote = ILOVE20Vote(_center.voteAddress());
+        _join = ILOVE20Join(_center.joinAddress());
+        _verify = ILOVE20Verify(_center.verifyAddress());
+        _mint = ILOVE20Mint(_center.mintAddress());
+        _random = ILOVE20Random(_center.randomAddress());
     }
 
     // ============================================
@@ -99,7 +102,7 @@ abstract contract ExtensionCore is IExtensionCore {
 
     /// @inheritdoc IExtensionCore
     function center() public view returns (address) {
-        return ILOVE20ExtensionFactory(factory).center();
+        return address(_center);
     }
 
     /// @inheritdoc IExtensionCore

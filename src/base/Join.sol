@@ -24,13 +24,7 @@ abstract contract Join is
     /// @inheritdoc IJoin
     function join(string[] memory verificationInfos) public virtual {
         // Check if already joined via center
-        if (
-            ILOVE20ExtensionCenter(center()).isAccountJoined(
-                tokenAddress,
-                actionId,
-                msg.sender
-            )
-        ) {
+        if (_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {
             revert AlreadyJoined();
         }
 
@@ -46,13 +40,7 @@ abstract contract Join is
     /// @inheritdoc IExtensionExit
     function exit() public virtual {
         // Check if joined via center
-        if (
-            !ILOVE20ExtensionCenter(center()).isAccountJoined(
-                tokenAddress,
-                actionId,
-                msg.sender
-            )
-        ) {
+        if (!_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {
             revert NotJoined();
         }
 
