@@ -148,15 +148,19 @@ contract BaseSecurityTest is BaseExtensionTest {
     // Reentrancy Protection Tests
     // ============================================
 
-    function test_ReentrancyProtection_JoinCannotReenter() public {
+    function test_Join_AddMore_Success() public {
         // Join with user1
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        // Try to join again in same transaction should work (different call)
+        // Add more tokens
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(100e18, new string[](0));
+
+        (uint256 amount, , ) = extension.joinInfo(user1);
+        assertEq(amount, 200e18);
+        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.accountsCount(), 1);
     }
 
     function test_ReentrancyProtection_ExitCannotReenter() public {
@@ -396,13 +400,28 @@ contract BaseSecurityTest is BaseExtensionTest {
         extension.exit();
     }
 
-    function test_EdgeCase_JoinAfterAlreadyJoined() public {
+    function test_EdgeCase_JoinAddMore_ResetsWaitingPeriod() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
+        // Advance blocks but not enough to exit
+        vm.roll(block.number + WAITING_BLOCKS - 1);
+
+        // Add more tokens
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(200e18, new string[](0));
+
+        // Cannot exit immediately after adding more
+        vm.prank(user1);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        extension.exit();
+
+        // Need to wait full waiting period again
+        vm.roll(block.number + WAITING_BLOCKS);
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(extension.totalJoinedAmount(), 0);
     }
 
     function test_EdgeCase_WaitingBlocksZero() public {

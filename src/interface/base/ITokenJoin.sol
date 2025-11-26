@@ -23,9 +23,6 @@ interface ITokenJoin is IExtensionExit {
     /// @notice Thrown when trying to exit before waiting period ends
     error NotEnoughWaitingBlocks();
 
-    /// @notice Thrown when account has already joined
-    error AlreadyJoined();
-
     // ============================================
     // EVENTS
     // ============================================

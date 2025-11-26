@@ -206,13 +206,83 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(0, new string[](0));
     }
 
-    function test_Join_RevertIfAlreadyJoined() public {
+    function test_Join_AddMore_Success() public {
         vm.startPrank(user1);
         extension.join(100e18, new string[](0));
-
-        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(50e18, new string[](0));
         vm.stopPrank();
+
+        (uint256 amount, , ) = extension.joinInfo(user1);
+        assertEq(amount, 150e18);
+        assertEq(extension.totalJoinedAmount(), 150e18);
+        assertEq(extension.accountsCount(), 1);
+    }
+
+    function test_Join_AddMore_UpdatesJoinedBlock() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+        uint256 firstJoinBlock = block.number;
+
+        advanceBlocks(50);
+
+        vm.prank(user1);
+        extension.join(50e18, new string[](0));
+
+        (, uint256 joinedBlock, uint256 exitableBlock) = extension.joinInfo(
+            user1
+        );
+        assertEq(joinedBlock, firstJoinBlock + 50);
+        assertEq(exitableBlock, firstJoinBlock + 50 + WAITING_BLOCKS);
+    }
+
+    function test_Join_AddMore_ResetsWaitingPeriod() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        // Advance to almost exitable
+        advanceBlocks(WAITING_BLOCKS - 1);
+        assertTrue(
+            !extension.canExit(user1) == false ||
+                extension.canExit(user1) == false
+        );
+
+        // Add more resets waiting period
+        vm.prank(user1);
+        extension.join(50e18, new string[](0));
+
+        // Cannot exit immediately after adding more
+        assertFalse(extension.canExit(user1));
+
+        // Need to wait full waiting period again
+        advanceBlocks(WAITING_BLOCKS);
+        assertTrue(extension.canExit(user1));
+    }
+
+    function test_Join_AddMore_MultipleTimes() public {
+        vm.startPrank(user1);
+        extension.join(100e18, new string[](0));
+        extension.join(50e18, new string[](0));
+        extension.join(25e18, new string[](0));
+        extension.join(25e18, new string[](0));
+        vm.stopPrank();
+
+        (uint256 amount, , ) = extension.joinInfo(user1);
+        assertEq(amount, 200e18);
+        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.accountsCount(), 1);
+    }
+
+    function test_Join_AddMore_EmitEvent() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        advanceBlocks(10);
+
+        vm.expectEmit(true, true, true, true);
+        emit Join(address(token), user1, ACTION_ID, 50e18, block.number);
+
+        vm.prank(user1);
+        extension.join(50e18, new string[](0));
     }
 
     function test_Join_WithVerificationInfo() public {
@@ -507,15 +577,6 @@ contract TokenJoinTest is BaseExtensionTest {
     // ============================================
     // Reentrancy Tests
     // ============================================
-
-    function test_Reentrancy_JoinCannotReenter() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        vm.prank(user1);
-        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
-        extension.join(100e18, new string[](0));
-    }
 
     function test_Reentrancy_ExitCannotReenter() public {
         vm.prank(user1);

@@ -205,13 +205,16 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(0, new string[](0));
     }
 
-    function test_Join_RevertIfAlreadyJoined() public {
+    function test_Join_AddMore_Success() public {
         vm.startPrank(user1);
         extension.join(100e18, new string[](0));
-
-        vm.expectRevert(ITokenJoin.AlreadyJoined.selector);
         extension.join(50e18, new string[](0));
         vm.stopPrank();
+
+        (uint256 amount, , ) = extension.joinInfo(user1);
+        assertEq(amount, 150e18);
+        assertEq(extension.totalJoinedAmount(), 150e18);
+        assertEq(extension.accountsCount(), 1);
     }
 
     // ============================================

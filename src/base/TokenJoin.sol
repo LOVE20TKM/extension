@@ -72,21 +72,22 @@ abstract contract TokenJoin is
         uint256 amount,
         string[] memory verificationInfos
     ) public virtual nonReentrant {
-        JoinInfo storage info = _joinInfo[msg.sender];
-        if (info.joinedBlock != 0) {
-            revert AlreadyJoined();
-        }
         if (amount == 0) {
             revert JoinAmountZero();
         }
 
+        JoinInfo storage info = _joinInfo[msg.sender];
+        bool isFirstJoin = info.joinedBlock == 0;
+
         // Update state
-        info.amount = amount;
+        info.amount += amount;
         info.joinedBlock = block.number;
         totalJoinedAmount += amount;
 
-        // Add to accounts list
-        _addAccount(msg.sender);
+        // Add to accounts list only on first join
+        if (isFirstJoin) {
+            _addAccount(msg.sender);
+        }
 
         // Transfer tokens from user
         _joinToken.transferFrom(msg.sender, address(this), amount);
