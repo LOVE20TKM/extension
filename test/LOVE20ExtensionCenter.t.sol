@@ -82,6 +82,10 @@ contract LOVE20ExtensionCenterTest is Test {
         // Deploy mock token used by base initialize approve
         MockToken token = new MockToken();
         tokenAddress = address(token);
+
+        // Prepare tokens for factory registration
+        token.mint(address(this), 1000e18);
+        token.approve(address(mockFactory), type(uint256).max);
     }
 
     // ------ Constructor tests ------

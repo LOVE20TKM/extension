@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
+import {
+    ILOVE20ExtensionFactory,
+    DEFAULT_JOIN_AMOUNT
+} from "./interface/ILOVE20ExtensionFactory.sol";
+import {
+    IERC20
+} from "lib/core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 /// @title LOVE20ExtensionFactoryBase
 /// @notice Abstract base contract for LOVE20 extension factories
@@ -59,10 +65,19 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     // INTERNAL HELPER FUNCTIONS
     // ============================================
 
-    /// @dev Register a new extension
+    /// @dev Register extension and transfer initial tokens for auto-initialization
     /// @param extension The extension address to register
-    function _registerExtension(address extension) internal {
+    /// @param tokenAddress The token address to transfer
+    function _registerExtension(
+        address extension,
+        address tokenAddress
+    ) internal {
         _extensions.push(extension);
         _isExtension[extension] = true;
+        IERC20(tokenAddress).transferFrom(
+            msg.sender,
+            extension,
+            DEFAULT_JOIN_AMOUNT
+        );
     }
 }

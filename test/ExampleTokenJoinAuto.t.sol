@@ -101,6 +101,10 @@ contract ExampleTokenJoinAutoTest is Test {
         // Deploy factory
         factory = new ExampleFactoryTokenJoinAuto(address(center));
 
+        // Prepare tokens for factory registration
+        token.mint(address(this), 1e18);
+        token.approve(address(factory), type(uint256).max);
+
         // Create extension through factory
         extension = ExampleTokenJoinAuto(
             factory.createExtension(

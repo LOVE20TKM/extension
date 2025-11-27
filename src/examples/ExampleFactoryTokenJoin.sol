@@ -60,7 +60,7 @@ contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
             waitingBlocks: waitingBlocks_
         });
 
-        _registerExtension(address(extension));
+        _registerExtension(address(extension), tokenAddress_);
 
         return address(extension);
     }

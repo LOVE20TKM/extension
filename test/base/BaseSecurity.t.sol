@@ -127,7 +127,8 @@ contract BaseSecurityTest is BaseExtensionTest {
         );
 
         registerFactory(address(token), address(mockFactory));
-        mockFactory.registerExtension(address(extension));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extension), address(token));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
@@ -343,7 +344,8 @@ contract BaseSecurityTest is BaseExtensionTest {
             WAITING_BLOCKS
         );
 
-        mockFactory.registerExtension(address(newExtension));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(newExtension), address(token));
         submit.setActionInfo(
             address(token),
             ACTION_ID + 2,
@@ -428,7 +430,8 @@ contract BaseSecurityTest is BaseExtensionTest {
             0 // No waiting period
         );
 
-        mockFactory.registerExtension(address(extensionNoWait));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extensionNoWait), address(token));
         submit.setActionInfo(
             address(token),
             ACTION_ID + 3,

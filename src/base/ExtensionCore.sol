@@ -2,12 +2,10 @@
 pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
+import {IExtensionCore} from "../interface/base/IExtensionCore.sol";
 import {
-    IExtensionCore,
+    ILOVE20ExtensionFactory,
     DEFAULT_JOIN_AMOUNT
-} from "../interface/base/IExtensionCore.sol";
-import {
-    ILOVE20ExtensionFactory
 } from "../interface/ILOVE20ExtensionFactory.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";

@@ -4,7 +4,8 @@ pragma solidity =0.8.17;
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Extension} from "../interface/ILOVE20Extension.sol";
 import {
-    ILOVE20ExtensionFactory
+    ILOVE20ExtensionFactory,
+    DEFAULT_JOIN_AMOUNT
 } from "../interface/ILOVE20ExtensionFactory.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
@@ -15,10 +16,7 @@ import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
-import {
-    IExtensionCore,
-    DEFAULT_JOIN_AMOUNT
-} from "../interface/base/IExtensionCore.sol";
+import {IExtensionCore} from "../interface/base/IExtensionCore.sol";
 
 /// @title ExtensionCoreMixin
 /// @notice Core mixin providing fundamental extension functionality

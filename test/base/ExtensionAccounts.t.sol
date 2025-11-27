@@ -78,7 +78,8 @@ contract ExtensionAccountsTest is BaseExtensionTest {
         );
 
         registerFactory(address(token), address(mockFactory));
-        mockFactory.registerExtension(address(extension));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extension), address(token));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);

@@ -76,7 +76,8 @@ contract ExtensionCoreTest is BaseExtensionTest {
         );
 
         registerFactory(address(token), address(mockFactory));
-        mockFactory.registerExtension(address(extension));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extension), address(token));
     }
 
     // ============================================
@@ -214,7 +215,8 @@ contract ExtensionCoreTest is BaseExtensionTest {
             address(mockFactory),
             address(token)
         );
-        mockFactory.registerExtension(address(extension2));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extension2), address(token));
 
         // Setup first extension
         submit.setActionInfo(address(token), ACTION_ID, address(extension));

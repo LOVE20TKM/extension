@@ -99,7 +99,8 @@ contract TokenJoinTest is BaseExtensionTest {
         );
 
         registerFactory(address(token), address(mockFactory));
-        mockFactory.registerExtension(address(extension));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extension), address(token));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
@@ -550,7 +551,8 @@ contract TokenJoinTest is BaseExtensionTest {
                 0
             );
 
-        mockFactory.registerExtension(address(extensionNoWait));
+        prepareFactoryRegistration(address(mockFactory), address(token));
+        mockFactory.registerExtension(address(extensionNoWait), address(token));
         submit.setActionInfo(
             address(token),
             ACTION_ID + 1,

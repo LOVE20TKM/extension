@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-// Default amount of tokens to join with during initialization (1 token)
-uint256 constant DEFAULT_JOIN_AMOUNT = 1e18;
-
 interface IExtensionCore {
     // ============================================
     // ERRORS

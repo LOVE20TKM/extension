@@ -42,6 +42,13 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         registerFactory(address(token), address(factoryTokenJoin));
         registerFactory(address(token), address(factoryTokenJoinAuto));
 
+        // 准备代币用于 factory 注册
+        prepareFactoryRegistration(address(factoryTokenJoin), address(token));
+        prepareFactoryRegistration(
+            address(factoryTokenJoinAuto),
+            address(token)
+        );
+
         // 创建扩展
         extensionTokenJoin = ExampleTokenJoin(
             factoryTokenJoin.createExtension(
@@ -363,6 +370,9 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
     }
 
     function test_Factory_CreateMultipleExtensions() public {
+        // 准备代币用于 factory 注册
+        prepareFactoryRegistration(address(factoryTokenJoin), address(token));
+
         // 创建第二个 TokenJoin 扩展
         ExampleTokenJoin extension2 = ExampleTokenJoin(
             factoryTokenJoin.createExtension(

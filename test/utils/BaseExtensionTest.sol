@@ -164,6 +164,19 @@ abstract contract BaseExtensionTest is Test {
     }
 
     /**
+     * @notice 准备 factory 注册 extension 所需的代币
+     * @param factory factory 地址
+     * @param tokenAddr 代币地址
+     */
+    function prepareFactoryRegistration(
+        address factory,
+        address tokenAddr
+    ) internal virtual {
+        MockERC20(tokenAddr).mint(address(this), 1e18);
+        MockERC20(tokenAddr).approve(factory, type(uint256).max);
+    }
+
+    /**
      * @notice 准备扩展初始化（设置 mock 数据，实际初始化在首次 join 时自动完成）
      * @param extensionAddress 扩展地址
      * @param tokenAddr 代币地址

@@ -17,11 +17,14 @@ contract MockExtensionFactory is LOVE20ExtensionFactoryBase {
         address tokenAddress_
     ) external returns (address extension) {
         extension = address(new MockExtension(address(this), tokenAddress_));
-        _registerExtension(extension);
+        _registerExtension(extension, tokenAddress_);
     }
 
     // Helper function for tests to register external extensions
-    function registerExtension(address extension) external {
-        _registerExtension(extension);
+    function registerExtension(
+        address extension,
+        address tokenAddress_
+    ) external {
+        _registerExtension(extension, tokenAddress_);
     }
 }
