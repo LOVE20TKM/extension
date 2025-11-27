@@ -164,21 +164,24 @@ abstract contract BaseExtensionTest is Test {
     }
 
     /**
-     * @notice 初始化扩展
+     * @notice 准备扩展初始化（设置 mock 数据，实际初始化在首次 join 时自动完成）
      * @param extensionAddress 扩展地址
      * @param tokenAddr 代币地址
      * @param actionId 动作 ID
      */
-    function initializeExtension(
+    function prepareExtensionInit(
         address extensionAddress,
         address tokenAddr,
         uint256 actionId
     ) internal virtual {
-        // 设置动作信息
+        // 设置动作信息（白名单）
         submit.setActionInfo(tokenAddr, actionId, extensionAddress);
 
-        // 通过 center 初始化扩展
-        center.initializeExtension(extensionAddress, tokenAddr, actionId);
+        // 设置 vote 返回的 actionId 列表
+        vote.setVotedActionIds(tokenAddr, join.currentRound(), actionId);
+
+        // 给 extension mint token 以便初始化时 join
+        token.mint(extensionAddress, 1e18);
     }
 
     // ============================================

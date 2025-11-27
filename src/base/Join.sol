@@ -23,6 +23,9 @@ abstract contract Join is
 
     /// @inheritdoc IJoin
     function join(string[] memory verificationInfos) public virtual {
+        // Auto-initialize if not initialized
+        _autoInitialize();
+
         // Check if already joined via center
         if (_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {
             revert AlreadyJoined();

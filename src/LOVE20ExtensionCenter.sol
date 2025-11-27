@@ -126,12 +126,21 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ extensions management ------
-    function initializeExtension(
-        address extensionAddress,
-        address tokenAddress,
-        uint256 actionId
-    ) external {
+
+    /// @notice Register extension to Center (called by extension itself after auto-initialization)
+    function registerExtension() external {
+        address extensionAddress = msg.sender;
         ILOVE20Extension ext = ILOVE20Extension(extensionAddress);
+
+        // check if extension is initialized
+        if (!ext.initialized()) {
+            revert ExtensionNotInitialized();
+        }
+
+        // get tokenAddress and actionId from extension
+        address tokenAddress = ext.tokenAddress();
+        uint256 actionId = ext.actionId();
+
         // check if extension already exists for this tokenAddress and actionId
         if (_extension[tokenAddress][actionId] != address(0)) {
             revert ExtensionAlreadyExists();
@@ -155,32 +164,27 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         if (actionInfo.body.whiteListAddress != extensionAddress)
             revert InvalidWhiteListAddress();
 
-        // initialize the extension
-        try ext.initialize(tokenAddress, actionId) {
-            // check if already successfully joined through joinAddress
-            ILOVE20Join join = ILOVE20Join(joinAddress);
-            if (
-                join.amountByActionIdByAccount(
-                    tokenAddress,
-                    actionId,
-                    extensionAddress
-                ) == 0
-            ) {
-                revert ExtensionNotJoinedAction();
-            }
-
-            // register extension
-            _extension[tokenAddress][actionId] = extensionAddress;
-            _extensionInfos[extensionAddress] = ExtensionInfo({
-                tokenAddress: tokenAddress,
-                actionId: actionId
-            });
-            _extensions[tokenAddress].push(extensionAddress);
-
-            emit ExtensionInitialized(tokenAddress, actionId, extensionAddress);
-        } catch {
-            revert InitializeFailed();
+        // check if already successfully joined through joinAddress
+        ILOVE20Join join = ILOVE20Join(joinAddress);
+        if (
+            join.amountByActionIdByAccount(
+                tokenAddress,
+                actionId,
+                extensionAddress
+            ) == 0
+        ) {
+            revert ExtensionNotJoinedAction();
         }
+
+        // register extension
+        _extension[tokenAddress][actionId] = extensionAddress;
+        _extensionInfos[extensionAddress] = ExtensionInfo({
+            tokenAddress: tokenAddress,
+            actionId: actionId
+        });
+        _extensions[tokenAddress].push(extensionAddress);
+
+        emit ExtensionInitialized(tokenAddress, actionId, extensionAddress);
     }
 
     function extension(

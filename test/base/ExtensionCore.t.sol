@@ -18,7 +18,10 @@ import {
 contract MockExtensionForCore is LOVE20ExtensionBaseJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(address factory_) LOVE20ExtensionBaseJoin(factory_) {}
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) LOVE20ExtensionBaseJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueCalculated() external pure override returns (bool) {
         return false;
@@ -67,7 +70,10 @@ contract ExtensionCoreTest is BaseExtensionTest {
         setUpBase();
 
         mockFactory = new MockExtensionFactory(address(center));
-        extension = new MockExtensionForCore(address(mockFactory));
+        extension = new MockExtensionForCore(
+            address(mockFactory),
+            address(token)
+        );
 
         registerFactory(address(token), address(mockFactory));
         mockFactory.registerExtension(address(extension));
@@ -100,11 +106,11 @@ contract ExtensionCoreTest is BaseExtensionTest {
         );
     }
 
-    function test_Constructor_TokenAddressZero() public view {
+    function test_Constructor_TokenAddressSet() public view {
         assertEq(
             extension.tokenAddress(),
-            address(0),
-            "Token address should be zero before init"
+            address(token),
+            "Token address should be set at construction"
         );
     }
 
@@ -123,12 +129,11 @@ contract ExtensionCoreTest is BaseExtensionTest {
     function test_Initialize_Success() public {
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        // Trigger auto-initialization by joining
+        vm.prank(user1);
+        extension.join(new string[](0));
 
         assertTrue(extension.initialized(), "Should be initialized");
         assertEq(
@@ -137,32 +142,6 @@ contract ExtensionCoreTest is BaseExtensionTest {
             "Token address should be set"
         );
         assertEq(extension.actionId(), ACTION_ID, "Action ID should be set");
-    }
-
-    function test_Initialize_RevertIfNotCenter() public {
-        vm.expectRevert(IExtensionCore.OnlyCenterCanCall.selector);
-        extension.initialize(address(token), ACTION_ID);
-    }
-
-    function test_Initialize_RevertIfAlreadyInitialized() public {
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
-        token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
-
-        submit.setActionInfo(address(token), ACTION_ID + 1, address(extension));
-        vm.expectRevert(IExtensionCore.AlreadyInitialized.selector);
-        vm.prank(address(center));
-        extension.initialize(address(token), ACTION_ID + 1);
-    }
-
-    function test_Initialize_RevertIfInvalidTokenAddress() public {
-        vm.expectRevert(IExtensionCore.InvalidTokenAddress.selector);
-        vm.prank(address(center));
-        extension.initialize(address(0), ACTION_ID);
     }
 
     // ============================================
@@ -177,18 +156,19 @@ contract ExtensionCoreTest is BaseExtensionTest {
         assertEq(extension.factory(), address(mockFactory));
     }
 
-    function test_TokenAddress_BeforeInit() public view {
-        assertEq(extension.tokenAddress(), address(0));
+    function test_TokenAddress_SetAtConstruction() public view {
+        // tokenAddress is now set at construction, not at initialization
+        assertEq(extension.tokenAddress(), address(token));
     }
 
     function test_TokenAddress_AfterInit() public {
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        // Trigger auto-initialization by joining
+        vm.prank(user1);
+        extension.join(new string[](0));
 
         assertEq(extension.tokenAddress(), address(token));
     }
@@ -200,11 +180,11 @@ contract ExtensionCoreTest is BaseExtensionTest {
     function test_ActionId_AfterInit() public {
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        // Trigger auto-initialization by joining
+        vm.prank(user1);
+        extension.join(new string[](0));
 
         assertEq(extension.actionId(), ACTION_ID);
     }
@@ -216,11 +196,11 @@ contract ExtensionCoreTest is BaseExtensionTest {
     function test_Initialized_AfterInit() public {
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        // Trigger auto-initialization by joining
+        vm.prank(user1);
+        extension.join(new string[](0));
 
         assertTrue(extension.initialized());
     }
@@ -231,31 +211,36 @@ contract ExtensionCoreTest is BaseExtensionTest {
 
     function test_MultipleExtensions_IndependentInit() public {
         MockExtensionForCore extension2 = new MockExtensionForCore(
-            address(mockFactory)
+            address(mockFactory),
+            address(token)
         );
         mockFactory.registerExtension(address(extension2));
 
-        // Init first extension
+        // Setup first extension
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
-        // Init second extension with different action ID
+        // Setup second extension with different action ID
         submit.setActionInfo(
             address(token),
             ACTION_ID + 1,
             address(extension2)
         );
         token.mint(address(extension2), 1e18);
-        center.initializeExtension(
-            address(extension2),
+        vote.setVotedActionIds(
             address(token),
+            join.currentRound(),
             ACTION_ID + 1
         );
+
+        // First extension auto-initializes when user joins
+        vm.prank(user1);
+        extension.join(new string[](0));
+
+        // Second extension auto-initializes when user joins
+        vm.prank(user1);
+        extension2.join(new string[](0));
 
         // Verify both are independently initialized
         assertTrue(extension.initialized());

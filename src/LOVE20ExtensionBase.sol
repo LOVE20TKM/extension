@@ -22,5 +22,9 @@ abstract contract LOVE20ExtensionBase is
     // ============================================
 
     /// @param factory_ The factory contract address
-    constructor(address factory_) ExtensionCore(factory_) {}
+    /// @param tokenAddress_ The token address
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) ExtensionCore(factory_, tokenAddress_) {}
 }

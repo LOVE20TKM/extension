@@ -17,15 +17,18 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
 
     /// @notice Initialize the example token join extension
     /// @param factory_ The factory address
+    /// @param tokenAddress_ The token address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
     constructor(
         address factory_,
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
         LOVE20ExtensionBaseTokenJoin(
             factory_,
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         )

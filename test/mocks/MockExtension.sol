@@ -12,23 +12,15 @@ import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
  * @dev Mock Extension contract for unit testing
  */
 contract MockExtension is LOVE20ExtensionBase {
-    bool public shouldFailInitialize;
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) LOVE20ExtensionBase(factory_, tokenAddress_) {}
 
-    constructor(address factory_) LOVE20ExtensionBase(factory_) {}
-
-    function setShouldFailInitialize(bool value) external {
-        shouldFailInitialize = value;
-    }
-
-    /// @dev Override initialize to add test-specific logic
-    function initialize(
-        address tokenAddress_,
-        uint256 actionId_
-    ) public override(IExtensionCore, ExtensionCore) {
-        super.initialize(tokenAddress_, actionId_);
-        if (shouldFailInitialize) {
-            revert("Initialize failed");
-        }
+    /// @dev Test helper to simulate initialization without going through _doInitialize
+    function mockInitialize(uint256 actionId_) external {
+        initialized = true;
+        actionId = actionId_;
     }
 
     function isJoinedValueCalculated() external pure returns (bool) {

@@ -48,7 +48,7 @@ interface ILOVE20ExtensionCenter {
     error OnlyExtensionCanCall();
     error AccountAlreadyJoined();
     error AccountNotJoined();
-    error InitializeFailed();
+    error ExtensionNotInitialized();
 
     // ------ core system addresses ------
     function uniswapV2FactoryAddress() external view returns (address);
@@ -85,12 +85,8 @@ interface ILOVE20ExtensionCenter {
     ) external view returns (address);
     // ------ all the extensions that successfully joined actions ------
 
-    // will call extension's initialize() to  join the action, sucess: add extension to Center
-    function initializeExtension(
-        address extension,
-        address tokenAddress,
-        uint256 actionId
-    ) external;
+    // register extension to Center (called by extension itself after auto-initialization)
+    function registerExtension() external;
 
     function extension(
         address tokenAddress,

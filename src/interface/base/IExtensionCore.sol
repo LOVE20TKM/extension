@@ -6,14 +6,17 @@ interface IExtensionCore {
     // ERRORS
     // ============================================
 
-    /// @notice Thrown when a function is called by non-center address
-    error OnlyCenterCanCall();
-
     /// @notice Thrown when trying to initialize an already initialized extension
     error AlreadyInitialized();
 
     /// @notice Thrown when an invalid token address is provided
     error InvalidTokenAddress();
+
+    /// @notice Thrown when no matching action ID is found during auto-initialization
+    error ActionIdNotFound();
+
+    /// @notice Thrown when multiple matching action IDs are found during auto-initialization
+    error MultipleActionIdsFound();
 
     // ============================================
     // FUNCTIONS - Core
@@ -35,8 +38,7 @@ interface IExtensionCore {
     /// @return The action ID
     function actionId() external view returns (uint256);
 
-    /// @notice Initialize the extension (can only be called once by Center)
-    /// @param tokenAddress The token address to associate with this extension
-    /// @param actionId The action ID to associate with this extension
-    function initialize(address tokenAddress, uint256 actionId) external;
+    /// @notice Check if the extension has been initialized
+    /// @return True if initialized, false otherwise
+    function initialized() external view returns (bool);
 }

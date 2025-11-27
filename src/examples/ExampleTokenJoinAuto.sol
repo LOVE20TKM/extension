@@ -22,15 +22,18 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
 
     /// @notice Initialize the example token join auto extension
     /// @param factory_ The factory address
+    /// @param tokenAddress_ The token address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
     constructor(
         address factory_,
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
         LOVE20ExtensionBaseTokenJoinAuto(
             factory_,
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         )

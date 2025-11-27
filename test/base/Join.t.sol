@@ -18,7 +18,10 @@ import {
 contract MockExtensionForJoin is LOVE20ExtensionBaseJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(address factory_) LOVE20ExtensionBaseJoin(factory_) {}
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) LOVE20ExtensionBaseJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueCalculated() external pure override returns (bool) {
         return true;
@@ -78,18 +81,17 @@ contract JoinTest is BaseExtensionTest {
         setUpBase();
 
         mockFactory = new MockExtensionFactory(address(center));
-        extension = new MockExtensionForJoin(address(mockFactory));
+        extension = new MockExtensionForJoin(
+            address(mockFactory),
+            address(token)
+        );
 
         registerFactory(address(token), address(mockFactory));
         mockFactory.registerExtension(address(extension));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
     }
 
     // ============================================

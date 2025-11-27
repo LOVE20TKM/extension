@@ -33,7 +33,9 @@ abstract contract LOVE20ExtensionBaseJoin is
 
     /// @notice Initialize the join extension
     /// @param factory_ The factory address
-    constructor(address factory_) LOVE20ExtensionBase(factory_) {
-        // LOVE20ExtensionBase handles ExtensionCore initialization with factory_
-    }
+    /// @param tokenAddress_ The token address
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) LOVE20ExtensionBase(factory_, tokenAddress_) {}
 }

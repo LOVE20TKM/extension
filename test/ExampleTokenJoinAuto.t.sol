@@ -103,7 +103,11 @@ contract ExampleTokenJoinAutoTest is Test {
 
         // Create extension through factory
         extension = ExampleTokenJoinAuto(
-            factory.createExtension(address(joinToken), WAITING_BLOCKS)
+            factory.createExtension(
+                address(token),
+                address(joinToken),
+                WAITING_BLOCKS
+            )
         );
 
         // Register factory to center (needs canSubmit permission)
@@ -113,12 +117,11 @@ contract ExampleTokenJoinAutoTest is Test {
         // Set action info whiteListAddress to extension address
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
 
-        // Initialize extension through center
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        // Set vote mock to return actionId for auto-initialization
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        // Give extension tokens for auto-initialization join
+        token.mint(address(extension), 1e18);
 
         // Setup users with tokens and governance votes
         _setupUser(user1, 1000e18, 10e18);

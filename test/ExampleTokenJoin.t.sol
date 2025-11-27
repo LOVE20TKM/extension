@@ -103,7 +103,11 @@ contract ExampleTokenJoinTest is Test {
 
         // Create extension through factory
         extension = ExampleTokenJoin(
-            factory.createExtension(address(joinToken), WAITING_BLOCKS)
+            factory.createExtension(
+                address(token),
+                address(joinToken),
+                WAITING_BLOCKS
+            )
         );
 
         // Register factory to center (needs canSubmit permission)
@@ -113,12 +117,11 @@ contract ExampleTokenJoinTest is Test {
         // Set action info whiteListAddress to extension address
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
 
-        // Initialize extension through center
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        // Set vote mock to return actionId for auto-initialization
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        // Give extension tokens for auto-initialization join
+        token.mint(address(extension), 1e18);
 
         // Setup users with tokens
         _setupUser(user1, 1000e18);
@@ -150,7 +153,10 @@ contract ExampleTokenJoinTest is Test {
         assertEq(extension.tokenAddress(), address(token));
     }
 
-    function test_ActionId() public view {
+    function test_ActionId() public {
+        // Trigger auto-initialization by joining
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
         assertEq(extension.actionId(), ACTION_ID);
     }
 

@@ -20,6 +20,7 @@ contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
 
     /// @notice Parameters for ExampleTokenJoin extension
     struct ExtensionParams {
+        address tokenAddress;
         address joinTokenAddress;
         uint256 waitingBlocks;
     }
@@ -37,20 +38,24 @@ contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
     // ============================================
 
     /// @notice Create a new ExampleTokenJoin extension
+    /// @param tokenAddress_ The token address
     /// @param joinTokenAddress_ The token to join with
     /// @param waitingBlocks_ Number of blocks to wait before withdrawal
     /// @return The address of the created extension
     function createExtension(
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     ) external returns (address) {
         ExampleTokenJoin extension = new ExampleTokenJoin(
             address(this),
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         );
 
         _extensionParams[address(extension)] = ExtensionParams({
+            tokenAddress: tokenAddress_,
             joinTokenAddress: joinTokenAddress_,
             waitingBlocks: waitingBlocks_
         });
@@ -62,12 +67,25 @@ contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
 
     /// @notice Get the parameters of an extension
     /// @param extension_ The extension address
+    /// @return tokenAddress The token address
     /// @return joinTokenAddress The join token address
     /// @return waitingBlocks The waiting blocks
     function extensionParams(
         address extension_
-    ) external view returns (address joinTokenAddress, uint256 waitingBlocks) {
+    )
+        external
+        view
+        returns (
+            address tokenAddress,
+            address joinTokenAddress,
+            uint256 waitingBlocks
+        )
+    {
         ExtensionParams memory params = _extensionParams[extension_];
-        return (params.joinTokenAddress, params.waitingBlocks);
+        return (
+            params.tokenAddress,
+            params.joinTokenAddress,
+            params.waitingBlocks
+        );
     }
 }

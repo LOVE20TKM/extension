@@ -9,7 +9,7 @@ import {
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
-import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
@@ -65,24 +65,17 @@ abstract contract ExtensionCore is IExtensionCore {
     ILOVE20Random internal immutable _random;
 
     // ============================================
-    // MODIFIERS
-    // ============================================
-
-    /// @dev Restricts function access to center contract only
-    modifier onlyCenter() {
-        if (msg.sender != address(_center)) {
-            revert OnlyCenterCanCall();
-        }
-        _;
-    }
-
-    // ============================================
     // CONSTRUCTOR
     // ============================================
 
     /// @param factory_ The factory contract address
-    constructor(address factory_) {
+    /// @param tokenAddress_ The token address (required, cannot be address(0))
+    constructor(address factory_, address tokenAddress_) {
+        if (tokenAddress_ == address(0)) {
+            revert InvalidTokenAddress();
+        }
         factory = factory_;
+        tokenAddress = tokenAddress_;
         _center = ILOVE20ExtensionCenter(
             ILOVE20ExtensionFactory(factory_).center()
         );
@@ -105,22 +98,17 @@ abstract contract ExtensionCore is IExtensionCore {
         return address(_center);
     }
 
-    /// @inheritdoc IExtensionCore
-    /// @dev Base implementation handles common validation and state updates
-    /// Subclasses can override this function and call super.initialize() for custom logic
-    function initialize(
-        address tokenAddress_,
-        uint256 actionId_
-    ) public virtual onlyCenter {
+    // ============================================
+    // INTERNAL FUNCTIONS
+    // ============================================
+
+    /// @dev Core initialization logic shared by initialize() and _autoInitialize()
+    function _doInitialize(uint256 actionId_) internal {
         if (initialized) {
             revert AlreadyInitialized();
         }
-        if (tokenAddress_ == address(0)) {
-            revert InvalidTokenAddress();
-        }
 
         initialized = true;
-        tokenAddress = tokenAddress_;
         actionId = actionId_;
 
         // Approve token to joinAddress before joining
@@ -134,5 +122,38 @@ abstract contract ExtensionCore is IExtensionCore {
             DEFAULT_JOIN_AMOUNT,
             new string[](0)
         );
+
+        // Register to center
+        _center.registerExtension();
+    }
+
+    /// @dev Auto-initialize by scanning voted actions to find matching actionId
+    function _autoInitialize() internal {
+        if (initialized) {
+            return;
+        }
+
+        // Get current round from join phase (action phase)
+        uint256 currentRound = _join.currentRound();
+        uint256 count = _vote.votedActionIdsCount(tokenAddress, currentRound);
+        uint256 foundActionId = 0;
+        bool found = false;
+
+        for (uint256 i = 0; i < count; i++) {
+            uint256 aid = _vote.votedActionIdsAtIndex(
+                tokenAddress,
+                currentRound,
+                i
+            );
+            ActionInfo memory info = _submit.actionInfo(tokenAddress, aid);
+            if (info.body.whiteListAddress == address(this)) {
+                if (found) revert MultipleActionIdsFound();
+                foundActionId = aid;
+                found = true;
+            }
+        }
+        if (!found) revert ActionIdNotFound();
+
+        _doInitialize(foundActionId);
     }
 }

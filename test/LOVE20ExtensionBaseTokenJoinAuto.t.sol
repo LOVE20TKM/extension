@@ -23,11 +23,13 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
     using EnumerableSet for EnumerableSet.AddressSet;
     constructor(
         address factory_,
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
         LOVE20ExtensionBaseTokenJoinAuto(
             factory_,
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         )
@@ -94,6 +96,7 @@ contract LOVE20ExtensionBaseTokenJoinAutoTest is BaseExtensionTest {
         // 部署扩展
         extension = new MockLOVE20ExtensionBaseTokenJoinAuto(
             address(mockFactory),
+            address(token),
             address(joinToken),
             WAITING_BLOCKS
         );
@@ -107,11 +110,7 @@ contract LOVE20ExtensionBaseTokenJoinAutoTest is BaseExtensionTest {
         // 初始化扩展
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
         // 为用户设置代币
         setupUser(user1, 1000e18, address(extension));

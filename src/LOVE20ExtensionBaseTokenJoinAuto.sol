@@ -48,21 +48,22 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
 
     /// @notice Initialize the token join auto score extension
     /// @param factory_ The factory address
+    /// @param tokenAddress_ The token address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before exit
     constructor(
         address factory_,
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
         LOVE20ExtensionBaseTokenJoin(
             factory_,
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         )
-    {
-        // LOVE20ExtensionBaseTokenJoin handles all initialization
-    }
+    {}
 
     // ============================================
     // ABSTRACT METHODS - MUST BE IMPLEMENTED

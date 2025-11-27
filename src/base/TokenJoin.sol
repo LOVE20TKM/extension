@@ -72,6 +72,9 @@ abstract contract TokenJoin is
         uint256 amount,
         string[] memory verificationInfos
     ) public virtual nonReentrant {
+        // Auto-initialize if not initialized
+        _autoInitialize();
+
         if (amount == 0) {
             revert JoinAmountZero();
         }

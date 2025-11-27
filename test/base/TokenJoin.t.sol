@@ -17,11 +17,13 @@ import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
 contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
     constructor(
         address factory_,
+        address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
         LOVE20ExtensionBaseTokenJoin(
             factory_,
+            tokenAddress_,
             joinTokenAddress_,
             waitingBlocks_
         )
@@ -91,6 +93,7 @@ contract TokenJoinTest is BaseExtensionTest {
         mockFactory = new MockExtensionFactory(address(center));
         extension = new MockExtensionForTokenJoin(
             address(mockFactory),
+            address(token),
             address(joinToken),
             WAITING_BLOCKS
         );
@@ -100,11 +103,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
         // Setup users with tokens
         setupUser(user1, 1000e18, address(extension));
@@ -131,6 +130,7 @@ contract TokenJoinTest is BaseExtensionTest {
         vm.expectRevert(ITokenJoin.InvalidJoinTokenAddress.selector);
         new MockExtensionForTokenJoin(
             address(mockFactory),
+            address(token),
             address(0),
             WAITING_BLOCKS
         );
@@ -545,6 +545,7 @@ contract TokenJoinTest is BaseExtensionTest {
     function test_ZeroWaitingBlocks_ExitInSameBlock() public {
         MockExtensionForTokenJoin extensionNoWait = new MockExtensionForTokenJoin(
                 address(mockFactory),
+                address(token),
                 address(joinToken),
                 0
             );
@@ -555,16 +556,17 @@ contract TokenJoinTest is BaseExtensionTest {
             ACTION_ID + 1,
             address(extensionNoWait)
         );
-        token.mint(address(extensionNoWait), 1e18);
-        center.initializeExtension(
-            address(extensionNoWait),
+        vote.setVotedActionIds(
             address(token),
+            join.currentRound(),
             ACTION_ID + 1
         );
+        token.mint(address(extensionNoWait), 1e18);
 
         vm.prank(user1);
         joinToken.approve(address(extensionNoWait), type(uint256).max);
 
+        // Join triggers auto-initialization
         vm.prank(user1);
         extensionNoWait.join(100e18, new string[](0));
 

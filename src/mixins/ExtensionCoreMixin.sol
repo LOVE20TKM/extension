@@ -9,7 +9,7 @@ import {
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
-import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
@@ -32,9 +32,10 @@ abstract contract ExtensionCoreMixin {
     // ============================================
     // ERRORS
     // ============================================
-    error OnlyCenterCanCall();
     error AlreadyInitialized();
     error InvalidTokenAddress();
+    error ActionIdNotFound();
+    error MultipleActionIdsFound();
 
     // ============================================
     // STATE VARIABLES
@@ -55,15 +56,12 @@ abstract contract ExtensionCoreMixin {
     ILOVE20Mint internal immutable _mint;
     ILOVE20Random internal _random;
 
-    modifier onlyCenter() {
-        if (msg.sender != address(_center)) {
-            revert OnlyCenterCanCall();
+    constructor(address factory_, address tokenAddress_) {
+        if (tokenAddress_ == address(0)) {
+            revert InvalidTokenAddress();
         }
-        _;
-    }
-
-    constructor(address factory_) {
         factory = factory_;
+        tokenAddress = tokenAddress_;
         _center = ILOVE20ExtensionCenter(
             ILOVE20ExtensionFactory(factory_).center()
         );
@@ -81,19 +79,13 @@ abstract contract ExtensionCoreMixin {
         return address(_center);
     }
 
-    function initialize(
-        address tokenAddress_,
-        uint256 actionId_
-    ) public virtual onlyCenter {
+    /// @dev Core initialization logic
+    function _doInitialize(uint256 actionId_) internal {
         if (initialized) {
             revert AlreadyInitialized();
         }
-        if (tokenAddress_ == address(0)) {
-            revert InvalidTokenAddress();
-        }
 
         initialized = true;
-        tokenAddress = tokenAddress_;
         actionId = actionId_;
 
         ILOVE20Token token = ILOVE20Token(tokenAddress);
@@ -104,5 +96,38 @@ abstract contract ExtensionCoreMixin {
             DEFAULT_JOIN_AMOUNT,
             new string[](0)
         );
+
+        // Register to center
+        _center.registerExtension();
+    }
+
+    /// @dev Auto-initialize by scanning voted actions to find matching actionId
+    function _autoInitialize() internal {
+        if (initialized) {
+            return;
+        }
+
+        // Get current round from join phase (action phase)
+        uint256 currentRound = _join.currentRound();
+        uint256 count = _vote.votedActionIdsCount(tokenAddress, currentRound);
+        uint256 foundActionId = 0;
+        bool found = false;
+
+        for (uint256 i = 0; i < count; i++) {
+            uint256 aid = _vote.votedActionIdsAtIndex(
+                tokenAddress,
+                currentRound,
+                i
+            );
+            ActionInfo memory info = _submit.actionInfo(tokenAddress, aid);
+            if (info.body.whiteListAddress == address(this)) {
+                if (found) revert MultipleActionIdsFound();
+                foundActionId = aid;
+                found = true;
+            }
+        }
+        if (!found) revert ActionIdNotFound();
+
+        _doInitialize(foundActionId);
     }
 }

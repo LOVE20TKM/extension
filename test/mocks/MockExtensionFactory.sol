@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionFactoryBase} from "../../src/LOVE20ExtensionFactoryBase.sol";
+import {
+    LOVE20ExtensionFactoryBase
+} from "../../src/LOVE20ExtensionFactoryBase.sol";
 import {MockExtension} from "./MockExtension.sol";
 
 /**
@@ -11,8 +13,10 @@ import {MockExtension} from "./MockExtension.sol";
 contract MockExtensionFactory is LOVE20ExtensionFactoryBase {
     constructor(address center_) LOVE20ExtensionFactoryBase(center_) {}
 
-    function createExtension() external returns (address extension) {
-        extension = address(new MockExtension(address(this)));
+    function createExtension(
+        address tokenAddress_
+    ) external returns (address extension) {
+        extension = address(new MockExtension(address(this), tokenAddress_));
         _registerExtension(extension);
     }
 

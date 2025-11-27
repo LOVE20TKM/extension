@@ -22,7 +22,10 @@ contract MockExtensionForReward is LOVE20ExtensionBaseJoin {
     mapping(address => uint256) public customRewardByAccount;
     bool public useCustomReward;
 
-    constructor(address factory_) LOVE20ExtensionBaseJoin(factory_) {}
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) LOVE20ExtensionBaseJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueCalculated() external pure override returns (bool) {
         return true;
@@ -100,18 +103,17 @@ contract ExtensionRewardTest is BaseExtensionTest {
         setUpBase();
 
         mockFactory = new MockExtensionFactory(address(center));
-        extension = new MockExtensionForReward(address(mockFactory));
+        extension = new MockExtensionForReward(
+            address(mockFactory),
+            address(token)
+        );
 
         registerFactory(address(token), address(mockFactory));
         mockFactory.registerExtension(address(extension));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
         token.mint(address(extension), 1000e18);
-        center.initializeExtension(
-            address(extension),
-            address(token),
-            ACTION_ID
-        );
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
         // Setup default reward
         extension.setRewardPerAccount(100e18);
