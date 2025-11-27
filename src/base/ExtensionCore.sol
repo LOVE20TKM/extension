@@ -2,7 +2,10 @@
 pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
-import {IExtensionCore} from "../interface/base/IExtensionCore.sol";
+import {
+    IExtensionCore,
+    DEFAULT_JOIN_AMOUNT
+} from "../interface/base/IExtensionCore.sol";
 import {
     ILOVE20ExtensionFactory
 } from "../interface/ILOVE20ExtensionFactory.sol";
@@ -20,14 +23,6 @@ import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
 /// @notice Core base contract providing fundamental extension functionality
 /// @dev Implements IExtensionCore interface with factory/center references and initialization
 abstract contract ExtensionCore is IExtensionCore {
-    // ============================================
-    // CONSTANTS
-    // ============================================
-
-    /// @notice Default amount of tokens to join with during initialization
-    /// @dev Set to 1 token (1e18 wei)
-    uint256 internal constant DEFAULT_JOIN_AMOUNT = 1e18;
-
     // ============================================
     // STATE VARIABLES
     // ============================================

@@ -15,8 +15,10 @@ import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
-
-uint256 constant DEFAULT_JOIN_AMOUNT = 1000000000000000000; // 1 token
+import {
+    IExtensionCore,
+    DEFAULT_JOIN_AMOUNT
+} from "../interface/base/IExtensionCore.sol";
 
 /// @title ExtensionCoreMixin
 /// @notice Core mixin providing fundamental extension functionality
