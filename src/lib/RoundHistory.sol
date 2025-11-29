@@ -50,14 +50,6 @@ library RoundHistory {
         History storage self,
         uint256 round
     ) internal view returns (uint256) {
-        uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
-        if (round > latestRound) {
-            return 0;
-        }
-        if (round == latestRound) {
-            return self.valueByRound[round];
-        }
-
         (bool found, uint256 nearestRound) = self
             .changeRounds
             .findLeftNearestOrEqualValue(round);

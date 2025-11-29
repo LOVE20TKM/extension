@@ -224,7 +224,10 @@ contract RoundStringHistoryTest is Test {
     function test_Value_ManyRounds() public {
         // Record values at rounds 10, 20, 30, ..., 100
         for (uint256 i = 1; i <= 10; i++) {
-            consumer.record(i * 10, string(abi.encodePacked("round_", vm.toString(i * 10))));
+            consumer.record(
+                i * 10,
+                string(abi.encodePacked("round_", vm.toString(i * 10)))
+            );
         }
 
         assertEq(consumer.changeRoundsCount(), 10);
@@ -253,7 +256,10 @@ contract RoundStringHistoryTest is Test {
 
         // Add many rounds
         for (uint256 i = 2; i <= 100; i++) {
-            consumer.record(i, string(abi.encodePacked("value_", vm.toString(i))));
+            consumer.record(
+                i,
+                string(abi.encodePacked("value_", vm.toString(i)))
+            );
         }
 
         gas2 = gasleft();
@@ -267,7 +273,10 @@ contract RoundStringHistoryTest is Test {
     function test_Gas_ValueQueryIsLogarithmic() public {
         // Add 100 rounds
         for (uint256 i = 1; i <= 100; i++) {
-            consumer.record(i * 10, string(abi.encodePacked("value_", vm.toString(i))));
+            consumer.record(
+                i * 10,
+                string(abi.encodePacked("value_", vm.toString(i)))
+            );
         }
 
         uint256 gas1 = gasleft();
@@ -289,4 +298,3 @@ contract RoundStringHistoryTest is Test {
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
     }
 }
-
