@@ -2,16 +2,16 @@
 pragma solidity =0.8.17;
 
 import "forge-std/Test.sol";
-import {RoundHistory} from "../../src/lib/RoundHistory.sol";
+import {RoundUint256History} from "../../src/lib/RoundUint256History.sol";
 
-using RoundHistory for RoundHistory.History;
+using RoundUint256History for RoundUint256History.History;
 
 /**
- * @title MockRoundHistoryConsumer
- * @notice Mock contract to test RoundHistory library
+ * @title MockRoundUint256HistoryConsumer
+ * @notice Mock contract to test RoundUint256History library
  */
-contract MockRoundHistoryConsumer {
-    RoundHistory.History internal _history;
+contract MockRoundUint256HistoryConsumer {
+    RoundUint256History.History internal _history;
 
     function record(uint256 round, uint256 newValue) external {
         _history.record(round, newValue);
@@ -35,14 +35,14 @@ contract MockRoundHistoryConsumer {
 }
 
 /**
- * @title RoundHistoryTest
- * @notice Test suite for RoundHistory library
+ * @title RoundUint256HistoryTest
+ * @notice Test suite for RoundUint256History library
  */
-contract RoundHistoryTest is Test {
-    MockRoundHistoryConsumer public consumer;
+contract RoundUint256HistoryTest is Test {
+    MockRoundUint256HistoryConsumer public consumer;
 
     function setUp() public {
-        consumer = new MockRoundHistoryConsumer();
+        consumer = new MockRoundUint256HistoryConsumer();
     }
 
     // ============================================
@@ -248,4 +248,3 @@ contract RoundHistoryTest is Test {
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
     }
 }
-

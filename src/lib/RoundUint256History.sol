@@ -3,10 +3,10 @@ pragma solidity =0.8.17;
 
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
-/// @title RoundHistory
+/// @title RoundUint256History
 /// @notice Library for tracking historical values across rounds with efficient binary search lookup
 /// @dev Provides functions to record values at specific rounds and query historical values
-library RoundHistory {
+library RoundUint256History {
     using ArrayUtils for uint256[];
 
     // ============================================
