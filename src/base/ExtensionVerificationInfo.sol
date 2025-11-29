@@ -6,8 +6,8 @@ import {
     IExtensionVerificationInfo
 } from "../interface/base/IExtensionVerificationInfo.sol";
 import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
-import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
+import {RoundStringHistory} from "../lib/RoundStringHistory.sol";
 
 /// @title ExtensionVerificationInfo
 /// @notice Base contract providing verification information functionality
@@ -16,19 +16,15 @@ abstract contract ExtensionVerificationInfo is
     ExtensionCore,
     IExtensionVerificationInfo
 {
-    using ArrayUtils for uint256[];
+    using RoundStringHistory for RoundStringHistory.History;
 
     // ============================================
     // STATE VARIABLES
     // ============================================
 
-    /// @dev account => verificationKey => round => verificationInfo
-    mapping(address => mapping(string => mapping(uint256 => string)))
-        internal _verificationInfoByRound;
-
-    /// @dev account => verificationKey => round[]
-    mapping(address => mapping(string => uint256[]))
-        internal _verificationInfoUpdateRounds;
+    /// @dev account => verificationKey => History
+    mapping(address => mapping(string => RoundStringHistory.History))
+        internal _verificationInfoHistory;
 
     // ============================================
     // IEXTENSIONVERIFICATION INTERFACE
@@ -65,15 +61,7 @@ abstract contract ExtensionVerificationInfo is
         address account,
         string calldata verificationKey
     ) external view virtual returns (string memory) {
-        uint256[] memory rounds = _verificationInfoUpdateRounds[account][
-            verificationKey
-        ];
-        if (rounds.length == 0) {
-            return "";
-        }
-
-        uint256 latestRound = rounds[rounds.length - 1];
-        return _verificationInfoByRound[account][verificationKey][latestRound];
+        return _verificationInfoHistory[account][verificationKey].latestValue();
     }
 
     /// @inheritdoc IExtensionVerificationInfo
@@ -82,17 +70,7 @@ abstract contract ExtensionVerificationInfo is
         string calldata verificationKey,
         uint256 round
     ) external view virtual returns (string memory) {
-        uint256[] storage rounds = _verificationInfoUpdateRounds[account][
-            verificationKey
-        ];
-
-        (bool found, uint256 nearestRound) = rounds.findLeftNearestOrEqualValue(
-            round
-        );
-        if (!found) {
-            return "";
-        }
-        return _verificationInfoByRound[account][verificationKey][nearestRound];
+        return _verificationInfoHistory[account][verificationKey].value(round);
     }
 
     /// @inheritdoc IExtensionVerificationInfo
@@ -100,7 +78,9 @@ abstract contract ExtensionVerificationInfo is
         address account,
         string calldata verificationKey
     ) external view virtual returns (uint256) {
-        return _verificationInfoUpdateRounds[account][verificationKey].length;
+        return
+            _verificationInfoHistory[account][verificationKey]
+                .changeRoundsCount();
     }
 
     /// @inheritdoc IExtensionVerificationInfo
@@ -109,7 +89,9 @@ abstract contract ExtensionVerificationInfo is
         string calldata verificationKey,
         uint256 index
     ) external view virtual returns (uint256) {
-        return _verificationInfoUpdateRounds[account][verificationKey][index];
+        return
+            _verificationInfoHistory[account][verificationKey]
+                .changeRoundAtIndex(index);
     }
 
     // ============================================
@@ -124,17 +106,10 @@ abstract contract ExtensionVerificationInfo is
         string memory aVerificationInfo
     ) internal virtual {
         uint256 currentRound = _join.currentRound();
-        uint256[] storage rounds = _verificationInfoUpdateRounds[msg.sender][
-            verificationKey
-        ];
-
-        if (rounds.length == 0 || rounds[rounds.length - 1] != currentRound) {
-            rounds.push(currentRound);
-        }
-
-        _verificationInfoByRound[msg.sender][verificationKey][
-            currentRound
-        ] = aVerificationInfo;
+        _verificationInfoHistory[msg.sender][verificationKey].record(
+            currentRound,
+            aVerificationInfo
+        );
 
         emit UpdateVerificationInfo({
             tokenAddress: tokenAddress,
