@@ -14,9 +14,6 @@ interface ILOVE20ExtensionTokenJoinAuto is ILOVE20ExtensionTokenJoin {
     /// @notice Thrown when trying to access snapshot data for a future round
     error NoSnapshotForFutureRound();
 
-    /// @notice Thrown when trying to access array index out of bounds
-    error IndexOutOfBounds();
-
     // ============================================
     // SCORE CALCULATION
     // ============================================
