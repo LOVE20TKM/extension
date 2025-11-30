@@ -104,10 +104,10 @@ abstract contract TokenJoin is
     /// @inheritdoc IExtensionExit
     function exit() public virtual nonReentrant {
         JoinInfo storage info = _joinInfo[msg.sender];
-        if (!_canExit(msg.sender)) {
-            if (info.joinedBlock == 0) {
-                revert NoJoinedAmount();
-            }
+        if (info.joinedBlock == 0) {
+            revert NoJoinedAmount();
+        }
+        if (block.number < info.joinedBlock + waitingBlocks) {
             revert NotEnoughWaitingBlocks();
         }
 
@@ -136,43 +136,11 @@ abstract contract TokenJoin is
         virtual
         returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock)
     {
-        return (
-            _joinInfo[account].amount,
-            _joinInfo[account].joinedBlock,
-            _getExitableBlock(account)
-        );
-    }
-
-    /// @inheritdoc ITokenJoin
-    function canExit(address account) external view virtual returns (bool) {
-        return _canExit(account);
-    }
-
-    // ============================================
-    // INTERNAL HELPER FUNCTIONS
-    // ============================================
-
-    /// @dev Check if an account can exit
-    /// @param account The account to check
-    /// @return Whether the account can exit
-    function _canExit(address account) internal view virtual returns (bool) {
         JoinInfo storage info = _joinInfo[account];
-        if (info.joinedBlock == 0) {
-            return false;
-        }
-        return block.number >= _getExitableBlock(account);
-    }
-
-    /// @dev Get the block number when an account can exit
-    /// @param account The account to check
-    /// @return The exitable block number (0 if not joined)
-    function _getExitableBlock(
-        address account
-    ) internal view virtual returns (uint256) {
-        uint256 joinedBlock = _joinInfo[account].joinedBlock;
-        if (joinedBlock == 0) {
-            return 0;
-        }
-        return joinedBlock + waitingBlocks;
+        return (
+            info.amount,
+            info.joinedBlock,
+            info.joinedBlock == 0 ? 0 : info.joinedBlock + waitingBlocks
+        );
     }
 }

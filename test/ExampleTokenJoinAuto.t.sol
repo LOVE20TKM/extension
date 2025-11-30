@@ -304,30 +304,6 @@ contract ExampleTokenJoinAutoTest is Test {
     }
 
     // ============================================
-    // CAN EXIT TESTS
-    // ============================================
-
-    function test_CanExit_False_NotJoined() public view {
-        assertFalse(extension.canExit(user1));
-    }
-
-    function test_CanExit_False_NotEnoughBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        vm.roll(block.number + WAITING_BLOCKS - 1);
-        assertFalse(extension.canExit(user1));
-    }
-
-    function test_CanExit_True_AfterWaitingBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        vm.roll(block.number + WAITING_BLOCKS);
-        assertTrue(extension.canExit(user1));
-    }
-
-    // ============================================
     // EXITABLE BLOCK TESTS
     // ============================================
 

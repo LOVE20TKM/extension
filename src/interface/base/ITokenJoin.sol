@@ -93,11 +93,6 @@ interface ITokenJoin is IExtensionExit {
         view
         returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock);
 
-    /// @notice Check if an account can exit
-    /// @param account The account address to check
-    /// @return True if the account can exit
-    function canExit(address account) external view returns (bool);
-
     // ============================================
     // STATE-CHANGING FUNCTIONS
     // ============================================

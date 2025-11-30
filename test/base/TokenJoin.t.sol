@@ -242,21 +242,21 @@ contract TokenJoinTest is BaseExtensionTest {
 
         // Advance to almost exitable
         advanceBlocks(WAITING_BLOCKS - 1);
-        assertTrue(
-            !extension.canExit(user1) == false ||
-                extension.canExit(user1) == false
-        );
+        (, , uint256 exitableBlock1) = extension.joinInfo(user1);
+        assertTrue(block.number < exitableBlock1);
 
         // Add more resets waiting period
         vm.prank(user1);
         extension.join(50e18, new string[](0));
 
         // Cannot exit immediately after adding more
-        assertFalse(extension.canExit(user1));
+        (, , uint256 exitableBlock2) = extension.joinInfo(user1);
+        assertTrue(block.number < exitableBlock2);
 
         // Need to wait full waiting period again
         advanceBlocks(WAITING_BLOCKS);
-        assertTrue(extension.canExit(user1));
+        (, , uint256 exitableBlock3) = extension.joinInfo(user1);
+        assertTrue(block.number >= exitableBlock3);
     }
 
     function test_Join_AddMore_MultipleTimes() public {
@@ -409,38 +409,6 @@ contract TokenJoinTest is BaseExtensionTest {
 
         assertEq(extension.totalJoinedAmount(), 0);
         assertEq(extension.accountsCount(), 0);
-    }
-
-    // ============================================
-    // CanExit Tests
-    // ============================================
-
-    function test_CanExit_False_NotJoined() public view {
-        assertFalse(extension.canExit(user1));
-    }
-
-    function test_CanExit_False_NotEnoughBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        advanceBlocks(WAITING_BLOCKS - 1);
-        assertFalse(extension.canExit(user1));
-    }
-
-    function test_CanExit_True_AfterWaitingBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        advanceBlocks(WAITING_BLOCKS);
-        assertTrue(extension.canExit(user1));
-    }
-
-    function test_CanExit_True_WellAfterWaitingBlocks() public {
-        vm.prank(user1);
-        extension.join(100e18, new string[](0));
-
-        advanceBlocks(WAITING_BLOCKS + 1000);
-        assertTrue(extension.canExit(user1));
     }
 
     // ============================================
