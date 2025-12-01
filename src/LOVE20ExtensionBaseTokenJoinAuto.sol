@@ -40,7 +40,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     mapping(uint256 => mapping(address => uint256)) internal _scoreByAccount;
 
     /// @dev round => bool - whether verification result has been generated for this round
-    mapping(uint256 => bool) internal _verificationGenerated;
+    mapping(uint256 => bool) internal _verifyResultGenerated;
 
     // ============================================
     // CONSTRUCTOR
@@ -166,12 +166,12 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         uint256 currentRound = _verify.currentRound();
 
         // Skip if already generated for this round
-        if (_verificationGenerated[currentRound]) {
+        if (_verifyResultGenerated[currentRound]) {
             return;
         }
 
         // Mark as generated before calculating
-        _verificationGenerated[currentRound] = true;
+        _verifyResultGenerated[currentRound] = true;
 
         // Calculate and store scores for current round
         (
@@ -204,7 +204,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     function accountsByRound(
         uint256 round
     ) external view virtual returns (address[] memory result) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _accountsByRound[round];
         }
         if (round == _verify.currentRound()) {
@@ -216,7 +216,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     function accountsByRoundCount(
         uint256 round
     ) external view virtual returns (uint256) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _accountsByRound[round].length;
         }
         if (round == _verify.currentRound()) {
@@ -229,7 +229,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         uint256 round,
         uint256 index
     ) external view virtual returns (address) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _accountsByRound[round][index];
         }
         if (round == _verify.currentRound()) {
@@ -241,7 +241,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     function scores(
         uint256 round
     ) external view virtual returns (uint256[] memory) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _scores[round];
         }
         if (round == _verify.currentRound()) {
@@ -254,7 +254,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
     function scoresCount(
         uint256 round
     ) external view virtual returns (uint256) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _scores[round].length;
         }
         if (round == _verify.currentRound()) {
@@ -267,7 +267,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         uint256 round,
         uint256 index
     ) external view virtual returns (uint256) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _scores[round][index];
         }
         if (round == _verify.currentRound()) {
@@ -281,7 +281,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         uint256 round,
         address account
     ) external view virtual returns (uint256) {
-        if (_verificationGenerated[round]) {
+        if (_verifyResultGenerated[round]) {
             return _scoreByAccount[round][account];
         }
         if (round == _verify.currentRound()) {
