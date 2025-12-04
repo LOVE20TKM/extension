@@ -48,4 +48,3 @@ abstract contract LOVE20ExtensionBaseTokenJoin is
         TokenJoin(joinTokenAddress_, waitingBlocks_)
     {}
 }
-

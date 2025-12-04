@@ -51,13 +51,10 @@ abstract contract TokenJoin is
     /// @notice Initialize the token join extension
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before exit
-    /// @dev Note: ExtensionCore initialization happens through another inheritance path
     constructor(address joinTokenAddress_, uint256 waitingBlocks_) {
         if (joinTokenAddress_ == address(0)) {
             revert ITokenJoin.InvalidJoinTokenAddress();
         }
-        // ExtensionCore will be initialized through another inheritance path
-        // We only handle join-specific initialization here
         joinTokenAddress = joinTokenAddress_;
         waitingBlocks = waitingBlocks_;
         _joinToken = IERC20(joinTokenAddress_);

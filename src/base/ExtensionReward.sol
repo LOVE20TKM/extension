@@ -10,6 +10,15 @@ import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 /// @dev Implements IExtensionReward interface with reward storage and claiming logic
 abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     // ============================================
+    // CONSTRUCTOR
+    // ============================================
+
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) ExtensionCore(factory_, tokenAddress_) {}
+
+    // ============================================
     // STATE VARIABLES
     // ============================================
 
