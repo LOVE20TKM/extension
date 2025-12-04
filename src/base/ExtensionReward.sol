@@ -68,7 +68,16 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
 
     /// @inheritdoc IExtensionReward
     function reward(uint256 round) external view virtual returns (uint256) {
-        return _reward[round];
+        if (_reward[round] > 0) {
+            return _reward[round];
+        }
+        (uint256 expectedReward, ) = _mint.actionRewardByActionIdByAccount(
+            tokenAddress,
+            round,
+            actionId,
+            address(this)
+        );
+        return expectedReward;
     }
 
     // ============================================
