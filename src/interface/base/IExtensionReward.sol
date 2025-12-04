@@ -43,5 +43,9 @@ interface IExtensionReward {
     /// @param round The round number
     /// @return reward The claimed reward amount
     function claimReward(uint256 round) external returns (uint256 reward);
-}
 
+    /// @notice Get total reward for a specific round
+    /// @param round The round number
+    /// @return Total reward amount for the round
+    function reward(uint256 round) external view returns (uint256);
+}

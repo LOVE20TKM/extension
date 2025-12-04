@@ -57,6 +57,11 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
         return (_calculateReward(round, account), false);
     }
 
+    /// @inheritdoc IExtensionReward
+    function reward(uint256 round) external view virtual returns (uint256) {
+        return _reward[round];
+    }
+
     // ============================================
     // INTERNAL HELPER FUNCTIONS
     // ============================================
