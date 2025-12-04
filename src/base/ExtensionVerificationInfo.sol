@@ -7,7 +7,7 @@ import {
 } from "../interface/base/IExtensionVerificationInfo.sol";
 import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
-import {RoundStringHistory} from "../lib/RoundStringHistory.sol";
+import {RoundHistoryString} from "../lib/RoundHistoryString.sol";
 
 /// @title ExtensionVerificationInfo
 /// @notice Base contract providing verification information functionality
@@ -16,14 +16,14 @@ abstract contract ExtensionVerificationInfo is
     ExtensionCore,
     IExtensionVerificationInfo
 {
-    using RoundStringHistory for RoundStringHistory.History;
+    using RoundHistoryString for RoundHistoryString.History;
 
     // ============================================
     // STATE VARIABLES
     // ============================================
 
     /// @dev account => verificationKey => History
-    mapping(address => mapping(string => RoundStringHistory.History))
+    mapping(address => mapping(string => RoundHistoryString.History))
         internal _verificationInfoHistory;
 
     // ============================================

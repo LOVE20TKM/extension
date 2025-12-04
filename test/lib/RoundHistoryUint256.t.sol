@@ -2,16 +2,16 @@
 pragma solidity =0.8.17;
 
 import "forge-std/Test.sol";
-import {RoundUint256History} from "../../src/lib/RoundUint256History.sol";
+import {RoundHistoryUint256} from "../../src/lib/RoundHistoryUint256.sol";
 
-using RoundUint256History for RoundUint256History.History;
+using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /**
- * @title MockRoundUint256HistoryConsumer
- * @notice Mock contract to test RoundUint256History library
+ * @title MockRoundHistoryUint256Consumer
+ * @notice Mock contract to test RoundHistoryUint256 library
  */
-contract MockRoundUint256HistoryConsumer {
-    RoundUint256History.History internal _history;
+contract MockRoundHistoryUint256Consumer {
+    RoundHistoryUint256.History internal _history;
 
     function record(uint256 round, uint256 newValue) external {
         _history.record(round, newValue);
@@ -35,14 +35,14 @@ contract MockRoundUint256HistoryConsumer {
 }
 
 /**
- * @title RoundUint256HistoryTest
- * @notice Test suite for RoundUint256History library
+ * @title RoundHistoryUint256Test
+ * @notice Test suite for RoundHistoryUint256 library
  */
-contract RoundUint256HistoryTest is Test {
-    MockRoundUint256HistoryConsumer public consumer;
+contract RoundHistoryUint256Test is Test {
+    MockRoundHistoryUint256Consumer public consumer;
 
     function setUp() public {
-        consumer = new MockRoundUint256HistoryConsumer();
+        consumer = new MockRoundHistoryUint256Consumer();
     }
 
     // ============================================

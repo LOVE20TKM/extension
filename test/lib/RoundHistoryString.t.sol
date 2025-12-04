@@ -2,16 +2,16 @@
 pragma solidity =0.8.17;
 
 import "forge-std/Test.sol";
-import {RoundStringHistory} from "../../src/lib/RoundStringHistory.sol";
+import {RoundHistoryString} from "../../src/lib/RoundHistoryString.sol";
 
-using RoundStringHistory for RoundStringHistory.History;
+using RoundHistoryString for RoundHistoryString.History;
 
 /**
- * @title MockRoundStringHistoryConsumer
- * @notice Mock contract to test RoundStringHistory library
+ * @title MockRoundHistoryStringConsumer
+ * @notice Mock contract to test RoundHistoryString library
  */
-contract MockRoundStringHistoryConsumer {
-    RoundStringHistory.History internal _history;
+contract MockRoundHistoryStringConsumer {
+    RoundHistoryString.History internal _history;
 
     function record(uint256 round, string memory newValue) external {
         _history.record(round, newValue);
@@ -35,14 +35,14 @@ contract MockRoundStringHistoryConsumer {
 }
 
 /**
- * @title RoundStringHistoryTest
- * @notice Test suite for RoundStringHistory library
+ * @title RoundHistoryStringTest
+ * @notice Test suite for RoundHistoryString library
  */
-contract RoundStringHistoryTest is Test {
-    MockRoundStringHistoryConsumer public consumer;
+contract RoundHistoryStringTest is Test {
+    MockRoundHistoryStringConsumer public consumer;
 
     function setUp() public {
-        consumer = new MockRoundStringHistoryConsumer();
+        consumer = new MockRoundHistoryStringConsumer();
     }
 
     // ============================================
