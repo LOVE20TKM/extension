@@ -12,7 +12,7 @@ interface IExtensionReward {
         address indexed account,
         uint256 indexed actionId,
         uint256 round,
-        uint256 reward
+        uint256 amount
     );
 
     // ============================================

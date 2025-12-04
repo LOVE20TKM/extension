@@ -26,7 +26,7 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     /// @inheritdoc IExtensionReward
     function claimReward(
         uint256 round
-    ) public virtual returns (uint256 reward) {
+    ) public virtual returns (uint256 amount) {
         // Verify phase must be finished for this round
         if (round >= _verify.currentRound()) {
             revert RoundNotFinished();
@@ -41,12 +41,12 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     /// @notice Get reward information for an account in a specific round
     /// @param round The round number
     /// @param account The account address
-    /// @return reward The amount of reward for the account
+    /// @return amount The amount of reward for the account
     /// @return isMinted Whether the reward has already been minted
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 reward, bool isMinted) {
+    ) public view virtual returns (uint256 amount, bool isMinted) {
         // Check if already claimed
         uint256 claimedReward = _claimedReward[round][account];
         if (claimedReward > 0) {
@@ -70,11 +70,11 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     /// @dev Must be implemented by child contracts
     /// @param round The round number
     /// @param account The account address
-    /// @return reward The amount of reward for the account
+    /// @return The amount of reward for the account
     function _calculateReward(
         uint256 round,
         address account
-    ) internal view virtual returns (uint256 reward);
+    ) internal view virtual returns (uint256);
 
     /// @dev Prepare action reward for a specific round if not already prepared
     /// @param round The round number to prepare reward for
@@ -92,26 +92,26 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
 
     /// @dev Internal function to claim reward for a specific round
     /// @param round The round number to claim reward for
-    /// @return reward The amount of reward claimed
+    /// @return amount The amount of reward claimed
     function _claimReward(
         uint256 round
-    ) internal virtual returns (uint256 reward) {
+    ) internal virtual returns (uint256 amount) {
         // Calculate reward for the user
         bool isMinted;
-        (reward, isMinted) = rewardByAccount(round, msg.sender);
+        (amount, isMinted) = rewardByAccount(round, msg.sender);
         // Check if already minted
         if (isMinted) {
             revert AlreadyClaimed();
         }
         // Update claimed reward
-        _claimedReward[round][msg.sender] = reward;
+        _claimedReward[round][msg.sender] = amount;
 
         // Transfer reward to user
-        if (reward > 0) {
+        if (amount > 0) {
             ILOVE20Token token = ILOVE20Token(tokenAddress);
-            token.transfer(msg.sender, reward);
+            token.transfer(msg.sender, amount);
         }
 
-        emit ClaimReward(tokenAddress, msg.sender, actionId, round, reward);
+        emit ClaimReward(tokenAddress, msg.sender, actionId, round, amount);
     }
 }
