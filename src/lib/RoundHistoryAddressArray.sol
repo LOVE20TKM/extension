@@ -17,7 +17,7 @@ library RoundHistoryAddressArray {
     function record(
         History storage self,
         uint256 round,
-        address[] memory newValue
+        address[] memory newValues
     ) internal {
         if (
             self.changeRounds.length == 0 ||
@@ -26,13 +26,13 @@ library RoundHistoryAddressArray {
             self.changeRounds.push(round);
         }
         delete self.valueByRound[round];
-        for (uint256 i = 0; i < newValue.length; i++) {
-            self.valueByRound[round].push(newValue[i]);
+        for (uint256 i = 0; i < newValues.length; i++) {
+            self.valueByRound[round].push(newValues[i]);
         }
     }
 
     /// @notice Get address array at a specific round using binary search
-    function value(
+    function values(
         History storage self,
         uint256 round
     ) internal view returns (address[] memory) {
@@ -43,7 +43,7 @@ library RoundHistoryAddressArray {
     }
 
     /// @notice Get the latest recorded address array
-    function latestValue(
+    function latestValues(
         History storage self
     ) internal view returns (address[] memory) {
         if (self.changeRounds.length == 0) {
