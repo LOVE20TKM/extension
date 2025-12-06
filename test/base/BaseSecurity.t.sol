@@ -6,7 +6,7 @@ import {
     LOVE20ExtensionBaseTokenJoin
 } from "../../src/LOVE20ExtensionBaseTokenJoin.sol";
 import {ITokenJoin} from "../../src/interface/base/ITokenJoin.sol";
-import {IExtensionExit} from "../../src/interface/base/IExtensionExit.sol";
+import {IExit} from "../../src/interface/base/IExit.sol";
 import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
 import {IExtensionCore} from "../../src/interface/base/IExtensionCore.sol";
 import {ExtensionReward} from "../../src/base/ExtensionReward.sol";

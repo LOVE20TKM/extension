@@ -12,7 +12,7 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ITokenJoin} from "./interface/base/ITokenJoin.sol";
-import {IExtensionExit} from "./interface/base/IExtensionExit.sol";
+import {IExit} from "./interface/base/IExit.sol";
 
 /// @title LOVE20ExtensionBaseTokenJoinAuto
 /// @notice Abstract base contract for auto score-based token join LOVE20 extensions
@@ -99,8 +99,8 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         super.join(amount, verificationInfos);
     }
 
-    /// @inheritdoc IExtensionExit
-    function exit() public virtual override(IExtensionExit, TokenJoin) {
+    /// @inheritdoc IExit
+    function exit() public virtual override(IExit, TokenJoin) {
         _prepareVerifyResultIfNeeded();
         super.exit();
     }

@@ -5,7 +5,7 @@ import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {IJoin} from "../interface/base/IJoin.sol";
-import {IExtensionExit} from "../interface/base/IExtensionExit.sol";
+import {IExit} from "../interface/base/IExit.sol";
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 
 /// @title Join
@@ -45,7 +45,7 @@ abstract contract Join is
         emit Join(tokenAddress, _join.currentRound(), actionId, msg.sender);
     }
 
-    /// @inheritdoc IExtensionExit
+    /// @inheritdoc IExit
     function exit() public virtual {
         // Check if joined via center
         if (!_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtensionExit} from "./IExtensionExit.sol";
+import {IExit} from "./IExit.sol";
 
 /// @title ITokenJoin
 /// @notice Interface for token-based join functionality
 /// @dev Defines join/withdraw operations with ERC20 token-based participation and block-delayed withdrawal
-interface ITokenJoin is IExtensionExit {
+interface ITokenJoin is IExit {
     // ============================================
     // ERRORS
     // ============================================

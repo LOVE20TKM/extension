@@ -5,7 +5,7 @@ import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
-import {IExtensionExit} from "../interface/base/IExtensionExit.sol";
+import {IExit} from "../interface/base/IExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     ReentrancyGuard
@@ -105,7 +105,7 @@ abstract contract TokenJoin is
         );
     }
 
-    /// @inheritdoc IExtensionExit
+    /// @inheritdoc IExit
     function exit() public virtual nonReentrant {
         JoinInfo storage info = _joinInfo[msg.sender];
         if (info.joinedBlock == 0) {
