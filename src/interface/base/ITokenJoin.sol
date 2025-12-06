@@ -29,27 +29,31 @@ interface ITokenJoin is IExtensionExit {
 
     /// @notice Emitted when an account joins
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that joined
+    /// @param round The current round
     /// @param actionId The action ID this extension is associated with
+    /// @param account The account that joined
     /// @param amount The amount of tokens joined
     /// @param joinedBlock The block number when the join occurred
     event Join(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount,
         uint256 joinedBlock
     );
 
     /// @notice Emitted when an account exits
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that exited
+    /// @param round The current round
     /// @param actionId The action ID this extension is associated with
+    /// @param account The account that exited
     /// @param amount The amount of tokens withdrawn
     event Exit(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount
     );
 

@@ -9,9 +9,9 @@ interface IExtensionReward {
     /// @notice Emitted when a user claims a reward
     event ClaimReward(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
         uint256 round,
+        uint256 indexed actionId,
+        address indexed account,
         uint256 amount
     );
 

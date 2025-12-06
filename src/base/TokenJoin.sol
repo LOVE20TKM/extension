@@ -95,7 +95,14 @@ abstract contract TokenJoin is
         // Update verification info if provided
         updateVerificationInfo(verificationInfos);
 
-        emit Join(tokenAddress, msg.sender, actionId, amount, block.number);
+        emit Join(
+            tokenAddress,
+            _join.currentRound(),
+            actionId,
+            msg.sender,
+            amount,
+            block.number
+        );
     }
 
     /// @inheritdoc IExtensionExit
@@ -121,7 +128,13 @@ abstract contract TokenJoin is
         // Transfer tokens back to user
         _joinToken.transfer(msg.sender, amount);
 
-        emit Exit(tokenAddress, msg.sender, actionId, amount);
+        emit Exit(
+            tokenAddress,
+            _join.currentRound(),
+            actionId,
+            msg.sender,
+            amount
+        );
     }
 
     /// @inheritdoc ITokenJoin

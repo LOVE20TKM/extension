@@ -130,6 +130,6 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
             token.transfer(msg.sender, amount);
         }
 
-        emit ClaimReward(tokenAddress, msg.sender, actionId, round, amount);
+        emit ClaimReward(tokenAddress, round, actionId, msg.sender, amount);
     }
 }

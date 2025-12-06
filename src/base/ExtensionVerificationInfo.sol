@@ -113,10 +113,10 @@ abstract contract ExtensionVerificationInfo is
 
         emit UpdateVerificationInfo({
             tokenAddress: tokenAddress,
-            account: msg.sender,
-            actionId: actionId,
-            verificationKey: verificationKey,
             round: currentRound,
+            actionId: actionId,
+            account: msg.sender,
+            verificationKey: verificationKey,
             verificationInfo: aVerificationInfo
         });
     }

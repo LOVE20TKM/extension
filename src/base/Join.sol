@@ -37,7 +37,7 @@ abstract contract Join is
         // Update verification info if provided
         updateVerificationInfo(verificationInfos);
 
-        emit Join(tokenAddress, msg.sender, actionId);
+        emit Join(tokenAddress, _join.currentRound(), actionId, msg.sender);
     }
 
     /// @inheritdoc IExtensionExit
@@ -50,6 +50,6 @@ abstract contract Join is
         // Remove from accounts list
         _removeAccount(msg.sender);
 
-        emit Exit(tokenAddress, msg.sender, actionId);
+        emit Exit(tokenAddress, _join.currentRound(), actionId, msg.sender);
     }
 }

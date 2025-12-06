@@ -23,22 +23,26 @@ interface IJoin is IExtensionExit {
 
     /// @notice Emitted when an account joins
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that joined
+    /// @param round The current round
     /// @param actionId The action ID this extension is associated with
+    /// @param account The account that joined
     event Join(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account
     );
 
     /// @notice Emitted when an account exits
     /// @param tokenAddress The token address this extension is associated with
-    /// @param account The account that exited
+    /// @param round The current round
     /// @param actionId The action ID this extension is associated with
+    /// @param account The account that exited
     event Exit(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account
     );
 
     // ============================================

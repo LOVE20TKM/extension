@@ -9,10 +9,10 @@ interface IExtensionVerificationInfo {
     /// @notice Emitted when verification info is updated
     event UpdateVerificationInfo(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        string verificationKey,
         uint256 round,
+        uint256 indexed actionId,
+        address indexed account,
+        string verificationKey,
         string verificationInfo
     );
 
@@ -72,4 +72,3 @@ interface IExtensionVerificationInfo {
         uint256 index
     ) external view returns (uint256);
 }
-
