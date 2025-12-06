@@ -93,10 +93,10 @@ contract ExtensionRewardTest is BaseExtensionTest {
 
     event ClaimReward(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
         uint256 round,
-        uint256 reward
+        uint256 indexed actionId,
+        address indexed account,
+        uint256 amount
     );
 
     function setUp() public {
@@ -157,7 +157,7 @@ contract ExtensionRewardTest is BaseExtensionTest {
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimReward(address(token), user1, ACTION_ID, targetRound, 100e18);
+        emit ClaimReward(address(token), targetRound, ACTION_ID, user1, 100e18);
 
         vm.prank(user1);
         extension.claimReward(targetRound);

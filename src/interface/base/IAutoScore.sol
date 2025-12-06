@@ -13,6 +13,20 @@ interface IAutoScore {
     error NoSnapshotForFutureRound();
 
     // ============================================
+    // EVENTS
+    // ============================================
+
+    /// @notice Emitted when a snapshot is created for score calculation
+    /// @param tokenAddress The token address this extension is associated with
+    /// @param round The round number for the snapshot
+    /// @param actionId The action ID this extension is associated with
+    event SnapshotCreate(
+        address indexed tokenAddress,
+        uint256 round,
+        uint256 indexed actionId
+    );
+
+    // ============================================
     // SCORE CALCULATION
     // ============================================
 

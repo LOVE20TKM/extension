@@ -166,7 +166,7 @@ contract ExtensionAccountsTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
     }
 
     function test_AccountAtIndex_MultipleAccounts() public {
@@ -177,9 +177,9 @@ contract ExtensionAccountsTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(new string[](0));
 
-        assertEq(extension.accountAtIndex(0), user1);
-        assertEq(extension.accountAtIndex(1), user2);
-        assertEq(extension.accountAtIndex(2), user3);
+        assertEq(extension.accountsAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(1), user2);
+        assertEq(extension.accountsAtIndex(2), user3);
     }
 
     function test_AccountAtIndex_RevertsOutOfBounds() public {
@@ -187,7 +187,7 @@ contract ExtensionAccountsTest is BaseExtensionTest {
         extension.join(new string[](0));
 
         vm.expectRevert();
-        extension.accountAtIndex(1);
+        extension.accountsAtIndex(1);
     }
 
     // ============================================
@@ -338,7 +338,7 @@ contract ExtensionAccountsTest is BaseExtensionTest {
 
         // Verify all can be accessed
         for (uint256 i = 0; i < numAccounts; i++) {
-            address acc = extension.accountAtIndex(i);
+            address acc = extension.accountsAtIndex(i);
             assertEq(acc, addrs[i]);
         }
     }
@@ -359,7 +359,7 @@ contract ExtensionAccountsTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
         assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
     }
 
     function test_AllAccountsExit() public {

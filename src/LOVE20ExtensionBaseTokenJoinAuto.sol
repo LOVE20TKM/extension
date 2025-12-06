@@ -191,6 +191,8 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
                 currentAccounts[i]
             ] = scoresCalculated[i];
         }
+
+        emit SnapshotCreate(tokenAddress, currentRound, actionId);
     }
 
     // ============================================

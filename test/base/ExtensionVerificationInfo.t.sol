@@ -70,10 +70,10 @@ contract ExtensionVerificationInfoTest is BaseExtensionTest {
 
     event UpdateVerificationInfo(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId,
-        string verificationKey,
         uint256 round,
+        uint256 indexed actionId,
+        address indexed account,
+        string verificationKey,
         string verificationInfo
     );
 
@@ -146,10 +146,10 @@ contract ExtensionVerificationInfoTest is BaseExtensionTest {
         vm.expectEmit(true, true, true, true);
         emit UpdateVerificationInfo(
             address(token),
-            user1,
-            ACTION_ID,
-            "email",
             1, // current round
+            ACTION_ID,
+            user1,
+            "email",
             "test@example.com"
         );
 

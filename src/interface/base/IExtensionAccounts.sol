@@ -24,5 +24,5 @@ interface IExtensionAccounts {
     /// @notice Get account at a specific index
     /// @param index The index in the accounts array
     /// @return The account address
-    function accountAtIndex(uint256 index) external view returns (address);
+    function accountsAtIndex(uint256 index) external view returns (address);
 }

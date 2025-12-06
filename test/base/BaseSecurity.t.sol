@@ -211,7 +211,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         extension.join(100e18, new string[](0));
 
         assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
 
         // Add user2
         vm.prank(user2);
@@ -226,7 +226,7 @@ contract BaseSecurityTest is BaseExtensionTest {
 
         assertEq(extension.accountsCount(), 1);
         // After removal, remaining account should still be accessible
-        address remaining = extension.accountAtIndex(0);
+        address remaining = extension.accountsAtIndex(0);
         assertTrue(remaining == user2, "user2 should remain");
     }
 
@@ -283,7 +283,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         extension.join(100e18, new string[](0));
 
         assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
     }
 
     function test_AccountManagement_LargeNumberOfAccounts() public {

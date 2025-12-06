@@ -46,6 +46,15 @@ interface IJoin is IExtensionExit {
     );
 
     // ============================================
+    // VIEW FUNCTIONS
+    // ============================================
+
+    /// @notice Check if an account has joined
+    /// @param account The account address to check
+    /// @return True if the account has joined
+    function isJoined(address account) external view returns (bool);
+
+    // ============================================
     // STATE-CHANGING FUNCTIONS
     // ============================================
 

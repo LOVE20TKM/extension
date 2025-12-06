@@ -22,6 +22,11 @@ abstract contract Join is
     // ============================================
 
     /// @inheritdoc IJoin
+    function isJoined(address account) public view virtual returns (bool) {
+        return _center.isAccountJoined(tokenAddress, actionId, account);
+    }
+
+    /// @inheritdoc IJoin
     function join(string[] memory verificationInfos) public virtual {
         // Auto-initialize if not initialized
         _autoInitialize();

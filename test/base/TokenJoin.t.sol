@@ -75,15 +75,17 @@ contract TokenJoinTest is BaseExtensionTest {
 
     event Join(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount,
         uint256 joinedBlock
     );
     event Exit(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount
     );
 
@@ -164,7 +166,7 @@ contract TokenJoinTest is BaseExtensionTest {
         uint256 amount = 100e18;
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), user1, ACTION_ID, amount, block.number);
+        emit Join(address(token), join.currentRound(), ACTION_ID, user1, amount, block.number);
 
         vm.prank(user1);
         extension.join(amount, new string[](0));
@@ -280,7 +282,7 @@ contract TokenJoinTest is BaseExtensionTest {
         advanceBlocks(10);
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), user1, ACTION_ID, 50e18, block.number);
+        emit Join(address(token), join.currentRound(), ACTION_ID, user1, 50e18, block.number);
 
         vm.prank(user1);
         extension.join(50e18, new string[](0));
@@ -342,7 +344,7 @@ contract TokenJoinTest is BaseExtensionTest {
         advanceBlocks(WAITING_BLOCKS);
 
         vm.expectEmit(true, true, true, true);
-        emit Exit(address(token), user1, ACTION_ID, amount);
+        emit Exit(address(token), join.currentRound(), ACTION_ID, user1, amount);
 
         vm.prank(user1);
         extension.exit();

@@ -36,7 +36,7 @@ abstract contract ExtensionAccounts is ExtensionCore, IExtensionAccounts {
     }
 
     /// @inheritdoc IExtensionAccounts
-    function accountAtIndex(
+    function accountsAtIndex(
         uint256 index
     ) external view virtual returns (address) {
         return _accounts.at(index);

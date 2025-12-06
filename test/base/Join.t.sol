@@ -68,13 +68,15 @@ contract JoinTest is BaseExtensionTest {
 
     event Join(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account
     );
     event Exit(
         address indexed tokenAddress,
-        address indexed account,
-        uint256 indexed actionId
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account
     );
 
     function setUp() public {
@@ -104,13 +106,13 @@ contract JoinTest is BaseExtensionTest {
         extension.join(new string[](0));
 
         assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
         assertTrue(center.isAccountJoined(address(token), ACTION_ID, user1));
     }
 
     function test_Join_EmitEvent() public {
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), user1, ACTION_ID);
+        emit Join(address(token), join.currentRound(), ACTION_ID, user1);
 
         vm.prank(user1);
         extension.join(new string[](0));
@@ -190,7 +192,7 @@ contract JoinTest is BaseExtensionTest {
         extension.join(new string[](0));
 
         vm.expectEmit(true, true, true, true);
-        emit Exit(address(token), user1, ACTION_ID);
+        emit Exit(address(token), join.currentRound(), ACTION_ID, user1);
 
         vm.prank(user1);
         extension.exit();
@@ -313,7 +315,7 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
         assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountAtIndex(0), user1);
+        assertEq(extension.accountsAtIndex(0), user1);
     }
 
     function test_Scenario_MultipleUsersJoinExit() public {

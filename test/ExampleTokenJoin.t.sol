@@ -54,21 +54,25 @@ contract ExampleTokenJoinTest is Test {
 
     event Join(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount,
         uint256 joinedBlock
     );
     event Exit(
         address indexed tokenAddress,
-        address indexed account,
+        uint256 round,
         uint256 indexed actionId,
+        address indexed account,
         uint256 amount
     );
     event ClaimReward(
+        address indexed tokenAddress,
+        uint256 round,
+        uint256 indexed actionId,
         address indexed account,
-        uint256 indexed round,
-        uint256 reward
+        uint256 amount
     );
 
     function setUp() public {
@@ -191,7 +195,7 @@ contract ExampleTokenJoinTest is Test {
         uint256 amount = 100e18;
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), user1, ACTION_ID, amount, block.number);
+        emit Join(address(token), join.currentRound(), ACTION_ID, user1, amount, block.number);
 
         vm.prank(user1);
         extension.join(amount, new string[](0));
@@ -281,7 +285,7 @@ contract ExampleTokenJoinTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.expectEmit(true, true, true, true);
-        emit Exit(address(token), user1, ACTION_ID, amount);
+        emit Exit(address(token), join.currentRound(), ACTION_ID, user1, amount);
 
         vm.prank(user1);
         extension.exit();
