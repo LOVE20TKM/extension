@@ -3,9 +3,7 @@ pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
 import {LOVE20ExtensionBaseJoin} from "../../src/LOVE20ExtensionBaseJoin.sol";
-import {
-    IExtensionVerificationInfo
-} from "../../src/interface/base/IExtensionVerificationInfo.sol";
+import {IVerificationInfo} from "../../src/interface/base/IVerificationInfo.sol";
 import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
 import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
 import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
@@ -14,10 +12,10 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
- * @title MockExtensionForVerificationInfo
- * @notice Mock extension for testing ExtensionVerificationInfo
+ * @title MockVerificationInfo
+ * @notice Mock extension for testing VerificationInfo
  */
-contract MockExtensionForVerificationInfo is LOVE20ExtensionBaseJoin {
+contract MockVerificationInfo is LOVE20ExtensionBaseJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
@@ -60,13 +58,13 @@ contract MockExtensionForVerificationInfo is LOVE20ExtensionBaseJoin {
 }
 
 /**
- * @title ExtensionVerificationInfoTest
- * @notice Test suite for ExtensionVerificationInfo
+ * @title VerificationInfoTest
+ * @notice Test suite for VerificationInfo
  * @dev Tests verification info update, retrieval, and round-based queries
  */
-contract ExtensionVerificationInfoTest is BaseExtensionTest {
+contract VerificationInfoTest is BaseExtensionTest {
     MockExtensionFactory public mockFactory;
-    MockExtensionForVerificationInfo public extension;
+    MockVerificationInfo public extension;
 
     event UpdateVerificationInfo(
         address indexed tokenAddress,
@@ -81,7 +79,7 @@ contract ExtensionVerificationInfoTest is BaseExtensionTest {
         setUpBase();
 
         mockFactory = new MockExtensionFactory(address(center));
-        extension = new MockExtensionForVerificationInfo(
+        extension = new MockVerificationInfo(
             address(mockFactory),
             address(token)
         );
@@ -182,7 +180,7 @@ contract ExtensionVerificationInfoTest is BaseExtensionTest {
 
         vm.prank(user1);
         vm.expectRevert(
-            IExtensionVerificationInfo.VerificationInfoLengthMismatch.selector
+            IVerificationInfo.VerificationInfoLengthMismatch.selector
         );
         extension.updateVerificationInfo(infos);
     }
@@ -691,3 +689,4 @@ contract ExtensionVerificationInfoTest is BaseExtensionTest {
         assertEq(extension.verificationInfo(user1, "email"), expected);
     }
 }
+

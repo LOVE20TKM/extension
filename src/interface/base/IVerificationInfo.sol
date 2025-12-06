@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-interface IExtensionVerificationInfo {
+interface IVerificationInfo {
     // ============================================
     // EVENTS
     // ============================================
@@ -72,3 +72,4 @@ interface IExtensionVerificationInfo {
         uint256 index
     ) external view returns (uint256);
 }
+

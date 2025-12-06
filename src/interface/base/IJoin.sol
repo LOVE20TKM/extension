@@ -2,11 +2,12 @@
 pragma solidity =0.8.17;
 
 import {IExit} from "./IExit.sol";
+import {IVerificationInfo} from "./IVerificationInfo.sol";
 
 /// @title IJoin
 /// @notice Interface for token-free join functionality
 /// @dev Defines join/withdraw operations without token requirements and block-delayed withdrawal
-interface IJoin is IExit {
+interface IJoin is IExit, IVerificationInfo {
     // ============================================
     // ERRORS
     // ============================================

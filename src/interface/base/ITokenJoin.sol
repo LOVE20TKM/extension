@@ -2,11 +2,12 @@
 pragma solidity =0.8.17;
 
 import {IExit} from "./IExit.sol";
+import {IVerificationInfo} from "./IVerificationInfo.sol";
 
 /// @title ITokenJoin
 /// @notice Interface for token-based join functionality
 /// @dev Defines join/withdraw operations with ERC20 token-based participation and block-delayed withdrawal
-interface ITokenJoin is IExit {
+interface ITokenJoin is IExit, IVerificationInfo {
     // ============================================
     // ERRORS
     // ============================================

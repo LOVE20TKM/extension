@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
-import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
+import {VerificationInfo} from "./VerificationInfo.sol";
 import {IJoin} from "../interface/base/IJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
 import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
@@ -14,7 +14,7 @@ import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 abstract contract Join is
     ExtensionCore,
     ExtensionAccounts,
-    ExtensionVerificationInfo,
+    VerificationInfo,
     IJoin
 {
     // ============================================

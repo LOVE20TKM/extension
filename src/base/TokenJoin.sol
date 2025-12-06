@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {ExtensionAccounts} from "./ExtensionAccounts.sol";
-import {ExtensionVerificationInfo} from "./ExtensionVerificationInfo.sol";
+import {VerificationInfo} from "./VerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -17,7 +17,7 @@ import {
 abstract contract TokenJoin is
     ExtensionCore,
     ExtensionAccounts,
-    ExtensionVerificationInfo,
+    VerificationInfo,
     ReentrancyGuard,
     ITokenJoin
 {

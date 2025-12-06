@@ -2,20 +2,15 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
-import {
-    IExtensionVerificationInfo
-} from "../interface/base/IExtensionVerificationInfo.sol";
+import {IVerificationInfo} from "../interface/base/IVerificationInfo.sol";
 import {ILOVE20Submit} from "@core/interfaces/ILOVE20Submit.sol";
 import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {RoundHistoryString} from "../lib/RoundHistoryString.sol";
 
-/// @title ExtensionVerificationInfo
+/// @title VerificationInfo
 /// @notice Base contract providing verification information functionality
-/// @dev Implements IExtensionVerificationInfo interface with verification info storage
-abstract contract ExtensionVerificationInfo is
-    ExtensionCore,
-    IExtensionVerificationInfo
-{
+/// @dev Implements IVerificationInfo interface with verification info storage
+abstract contract VerificationInfo is ExtensionCore, IVerificationInfo {
     using RoundHistoryString for RoundHistoryString.History;
 
     // ============================================
@@ -27,10 +22,10 @@ abstract contract ExtensionVerificationInfo is
         internal _verificationInfoHistory;
 
     // ============================================
-    // IEXTENSIONVERIFICATION INTERFACE
+    // IVERIFICATIONINFO INTERFACE
     // ============================================
 
-    /// @inheritdoc IExtensionVerificationInfo
+    /// @inheritdoc IVerificationInfo
     function updateVerificationInfo(
         string[] memory verificationInfos
     ) public virtual {
@@ -56,7 +51,7 @@ abstract contract ExtensionVerificationInfo is
         }
     }
 
-    /// @inheritdoc IExtensionVerificationInfo
+    /// @inheritdoc IVerificationInfo
     function verificationInfo(
         address account,
         string calldata verificationKey
@@ -64,7 +59,7 @@ abstract contract ExtensionVerificationInfo is
         return _verificationInfoHistory[account][verificationKey].latestValue();
     }
 
-    /// @inheritdoc IExtensionVerificationInfo
+    /// @inheritdoc IVerificationInfo
     function verificationInfoByRound(
         address account,
         string calldata verificationKey,
@@ -73,7 +68,7 @@ abstract contract ExtensionVerificationInfo is
         return _verificationInfoHistory[account][verificationKey].value(round);
     }
 
-    /// @inheritdoc IExtensionVerificationInfo
+    /// @inheritdoc IVerificationInfo
     function verificationInfoUpdateRoundsCount(
         address account,
         string calldata verificationKey
@@ -83,7 +78,7 @@ abstract contract ExtensionVerificationInfo is
                 .changeRoundsCount();
     }
 
-    /// @inheritdoc IExtensionVerificationInfo
+    /// @inheritdoc IVerificationInfo
     function verificationInfoUpdateRoundsAtIndex(
         address account,
         string calldata verificationKey,
@@ -121,3 +116,4 @@ abstract contract ExtensionVerificationInfo is
         });
     }
 }
+
