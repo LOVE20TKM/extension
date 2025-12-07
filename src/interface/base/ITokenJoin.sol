@@ -63,9 +63,11 @@ interface ITokenJoin is IExit, IVerificationInfo {
     // ============================================
 
     /// @notice Information about an account's join
+    /// @param joinedRound The round when the join occurred
     /// @param amount The amount of tokens joined
     /// @param joinedBlock The block number when the join occurred
     struct JoinInfo {
+        uint256 joinedRound;
         uint256 amount;
         uint256 joinedBlock;
     }
@@ -88,6 +90,7 @@ interface ITokenJoin is IExit, IVerificationInfo {
 
     /// @notice Get join information for a specific account
     /// @param account The account address to query
+    /// @return joinedRound The round when the join occurred
     /// @return amount The amount of tokens joined
     /// @return joinedBlock The block number when the join occurred
     /// @return exitableBlock The block number when exit becomes available
@@ -96,7 +99,12 @@ interface ITokenJoin is IExit, IVerificationInfo {
     )
         external
         view
-        returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock);
+        returns (
+            uint256 joinedRound,
+            uint256 amount,
+            uint256 joinedBlock,
+            uint256 exitableBlock
+        );
 
     // ============================================
     // STATE-CHANGING FUNCTIONS

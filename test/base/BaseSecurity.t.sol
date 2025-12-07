@@ -49,7 +49,7 @@ contract MockExtensionForSecurity is LOVE20ExtensionBaseTokenJoin {
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        (uint256 amount, , ) = this.joinInfo(account);
+        (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
 
@@ -160,7 +160,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 200e18);
         assertEq(extension.totalJoinedAmount(), 200e18);
         assertEq(extension.accountsCount(), 1);

@@ -175,6 +175,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(amount, new string[](0));
 
         (
+            ,
             uint256 joinedAmount,
             uint256 joinedBlock,
             uint256 exitableBlock
@@ -190,7 +191,14 @@ contract ExampleTokenJoinAutoTest is Test {
         uint256 amount = 100e18;
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), join.currentRound(), ACTION_ID, user1, amount, block.number);
+        emit Join(
+            address(token),
+            join.currentRound(),
+            ACTION_ID,
+            user1,
+            amount,
+            block.number
+        );
 
         vm.prank(user1);
         extension.join(amount, new string[](0));
@@ -222,7 +230,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(50e18, new string[](0));
         vm.stopPrank();
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
         assertEq(extension.totalJoinedAmount(), 150e18);
         assertEq(extension.accountsCount(), 1);
@@ -251,6 +259,7 @@ contract ExampleTokenJoinAutoTest is Test {
         assertEq(extension.accountsCount(), 0);
 
         (
+            ,
             uint256 joinedAmount,
             uint256 joinedBlock,
             uint256 exitableBlock
@@ -269,7 +278,13 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.roll(block.number + WAITING_BLOCKS);
 
         vm.expectEmit(true, true, true, true);
-        emit Exit(address(token), join.currentRound(), ACTION_ID, user1, amount);
+        emit Exit(
+            address(token),
+            join.currentRound(),
+            ACTION_ID,
+            user1,
+            amount
+        );
 
         vm.prank(user1);
         extension.exit();
@@ -303,7 +318,7 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 0);
     }
 
@@ -312,7 +327,7 @@ contract ExampleTokenJoinAutoTest is Test {
     // ============================================
 
     function test_ExitableBlock_Zero_NotJoined() public view {
-        (, , uint256 exitableBlock) = extension.joinInfo(user1);
+        (, , , uint256 exitableBlock) = extension.joinInfo(user1);
         assertEq(exitableBlock, 0);
     }
 
@@ -322,7 +337,7 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        (, , uint256 exitableBlock) = extension.joinInfo(user1);
+        (, , , uint256 exitableBlock) = extension.joinInfo(user1);
         assertEq(exitableBlock, joinBlock + WAITING_BLOCKS);
     }
 
@@ -521,7 +536,7 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        (uint256 joinedAmount, , ) = extension.joinInfo(user1);
+        (, uint256 joinedAmount, , ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
         assertEq(extension.totalJoinedAmount(), amount);
     }

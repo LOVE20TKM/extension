@@ -50,10 +50,12 @@ interface IJoin is IExit, IVerificationInfo {
     // VIEW FUNCTIONS
     // ============================================
 
-    /// @notice Check if an account has joined
-    /// @param account The account address to check
-    /// @return True if the account has joined
-    function isJoined(address account) external view returns (bool);
+    /// @notice Get join information for a specific account
+    /// @param account The account address to query
+    /// @return joinedRound The round when the account joined, 0 if not joined
+    function joinInfo(
+        address account
+    ) external view returns (uint256 joinedRound);
 
     // ============================================
     // STATE-CHANGING FUNCTIONS

@@ -40,7 +40,7 @@ contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        (uint256 amount, , ) = this.joinInfo(account);
+        (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
 
@@ -151,6 +151,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(amount, new string[](0));
 
         (
+            ,
             uint256 joinedAmount,
             uint256 joinedBlock,
             uint256 exitableBlock
@@ -166,7 +167,14 @@ contract TokenJoinTest is BaseExtensionTest {
         uint256 amount = 100e18;
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), join.currentRound(), ACTION_ID, user1, amount, block.number);
+        emit Join(
+            address(token),
+            join.currentRound(),
+            ACTION_ID,
+            user1,
+            amount,
+            block.number
+        );
 
         vm.prank(user1);
         extension.join(amount, new string[](0));
@@ -215,7 +223,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(50e18, new string[](0));
         vm.stopPrank();
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
         assertEq(extension.totalJoinedAmount(), 150e18);
         assertEq(extension.accountsCount(), 1);
@@ -231,7 +239,7 @@ contract TokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(50e18, new string[](0));
 
-        (, uint256 joinedBlock, uint256 exitableBlock) = extension.joinInfo(
+        (, , uint256 joinedBlock, uint256 exitableBlock) = extension.joinInfo(
             user1
         );
         assertEq(joinedBlock, firstJoinBlock + 50);
@@ -244,7 +252,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
         // Advance to almost exitable
         advanceBlocks(WAITING_BLOCKS - 1);
-        (, , uint256 exitableBlock1) = extension.joinInfo(user1);
+        (, , , uint256 exitableBlock1) = extension.joinInfo(user1);
         assertTrue(block.number < exitableBlock1);
 
         // Add more resets waiting period
@@ -252,12 +260,12 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(50e18, new string[](0));
 
         // Cannot exit immediately after adding more
-        (, , uint256 exitableBlock2) = extension.joinInfo(user1);
+        (, , , uint256 exitableBlock2) = extension.joinInfo(user1);
         assertTrue(block.number < exitableBlock2);
 
         // Need to wait full waiting period again
         advanceBlocks(WAITING_BLOCKS);
-        (, , uint256 exitableBlock3) = extension.joinInfo(user1);
+        (, , , uint256 exitableBlock3) = extension.joinInfo(user1);
         assertTrue(block.number >= exitableBlock3);
     }
 
@@ -269,7 +277,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(25e18, new string[](0));
         vm.stopPrank();
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 200e18);
         assertEq(extension.totalJoinedAmount(), 200e18);
         assertEq(extension.accountsCount(), 1);
@@ -282,7 +290,14 @@ contract TokenJoinTest is BaseExtensionTest {
         advanceBlocks(10);
 
         vm.expectEmit(true, true, true, true);
-        emit Join(address(token), join.currentRound(), ACTION_ID, user1, 50e18, block.number);
+        emit Join(
+            address(token),
+            join.currentRound(),
+            ACTION_ID,
+            user1,
+            50e18,
+            block.number
+        );
 
         vm.prank(user1);
         extension.join(50e18, new string[](0));
@@ -326,6 +341,7 @@ contract TokenJoinTest is BaseExtensionTest {
         assertEq(extension.accountsCount(), 0);
 
         (
+            ,
             uint256 joinedAmount,
             uint256 joinedBlock,
             uint256 exitableBlock
@@ -344,7 +360,13 @@ contract TokenJoinTest is BaseExtensionTest {
         advanceBlocks(WAITING_BLOCKS);
 
         vm.expectEmit(true, true, true, true);
-        emit Exit(address(token), join.currentRound(), ACTION_ID, user1, amount);
+        emit Exit(
+            address(token),
+            join.currentRound(),
+            ACTION_ID,
+            user1,
+            amount
+        );
 
         vm.prank(user1);
         extension.exit();
@@ -376,7 +398,7 @@ contract TokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        (uint256 amount, , ) = extension.joinInfo(user1);
+        (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 0);
     }
 
@@ -418,8 +440,12 @@ contract TokenJoinTest is BaseExtensionTest {
     // ============================================
 
     function test_JoinInfo_NotJoined() public view {
-        (uint256 amount, uint256 joinedBlock, uint256 exitableBlock) = extension
-            .joinInfo(user1);
+        (
+            ,
+            uint256 amount,
+            uint256 joinedBlock,
+            uint256 exitableBlock
+        ) = extension.joinInfo(user1);
         assertEq(amount, 0);
         assertEq(joinedBlock, 0);
         assertEq(exitableBlock, 0);
@@ -432,8 +458,12 @@ contract TokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(joinAmount, new string[](0));
 
-        (uint256 amount, uint256 joinedBlock, uint256 exitableBlock) = extension
-            .joinInfo(user1);
+        (
+            ,
+            uint256 amount,
+            uint256 joinedBlock,
+            uint256 exitableBlock
+        ) = extension.joinInfo(user1);
         assertEq(amount, joinAmount);
         assertEq(joinedBlock, joinBlock);
         assertEq(exitableBlock, joinBlock + WAITING_BLOCKS);
@@ -648,7 +678,7 @@ contract TokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        (uint256 joinedAmount, , ) = extension.joinInfo(user1);
+        (, uint256 joinedAmount, , ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
         assertEq(extension.totalJoinedAmount(), amount);
     }

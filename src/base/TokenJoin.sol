@@ -80,6 +80,9 @@ abstract contract TokenJoin is
         bool isFirstJoin = info.joinedBlock == 0;
 
         // Update state
+        if (isFirstJoin) {
+            info.joinedRound = _join.currentRound();
+        }
         info.amount += amount;
         info.joinedBlock = block.number;
         totalJoinedAmount += amount;
@@ -118,6 +121,7 @@ abstract contract TokenJoin is
         uint256 amount = info.amount;
 
         // Clear join info
+        info.joinedRound = 0;
         info.amount = 0;
         info.joinedBlock = 0;
         totalJoinedAmount -= amount;
@@ -144,10 +148,16 @@ abstract contract TokenJoin is
         external
         view
         virtual
-        returns (uint256 amount, uint256 joinedBlock, uint256 exitableBlock)
+        returns (
+            uint256 joinedRound,
+            uint256 amount,
+            uint256 joinedBlock,
+            uint256 exitableBlock
+        )
     {
         JoinInfo storage info = _joinInfo[account];
         return (
+            info.joinedRound,
             info.amount,
             info.joinedBlock,
             info.joinedBlock == 0 ? 0 : info.joinedBlock + waitingBlocks

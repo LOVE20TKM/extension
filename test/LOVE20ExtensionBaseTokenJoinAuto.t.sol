@@ -47,7 +47,7 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        (uint256 amount, , ) = this.joinInfo(account);
+        (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
 
@@ -63,7 +63,7 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
         total = 0;
 
         for (uint256 i = 0; i < accountsLength; i++) {
-            (uint256 amount, , ) = this.joinInfo(_accounts.at(i));
+            (, uint256 amount, , ) = this.joinInfo(_accounts.at(i));
             scores[i] = amount;
             total += amount;
         }
@@ -73,7 +73,7 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
         address account
     ) public view override returns (uint256 total, uint256 score) {
         (total, ) = calculateScores();
-        (uint256 amount, , ) = this.joinInfo(account);
+        (, uint256 amount, , ) = this.joinInfo(account);
         score = amount;
     }
 }

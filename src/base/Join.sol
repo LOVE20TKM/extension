@@ -18,12 +18,21 @@ abstract contract Join is
     IJoin
 {
     // ============================================
+    // STATE VARIABLES
+    // ============================================
+
+    /// @dev Mapping from account to the round when they joined
+    mapping(address => uint256) internal _joinedRound;
+
+    // ============================================
     // IJOIN INTERFACE
     // ============================================
 
     /// @inheritdoc IJoin
-    function isJoined(address account) public view virtual returns (bool) {
-        return _center.isAccountJoined(tokenAddress, actionId, account);
+    function joinInfo(
+        address account
+    ) public view virtual returns (uint256 joinedRound) {
+        return _joinedRound[account];
     }
 
     /// @inheritdoc IJoin
@@ -31,10 +40,13 @@ abstract contract Join is
         // Auto-initialize if not initialized
         _autoInitialize();
 
-        // Check if already joined via center
-        if (_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {
+        // Check if already joined
+        if (_joinedRound[msg.sender] != 0) {
             revert AlreadyJoined();
         }
+
+        // Record joined round
+        _joinedRound[msg.sender] = _join.currentRound();
 
         // Add to accounts list
         _addAccount(msg.sender);
@@ -47,10 +59,13 @@ abstract contract Join is
 
     /// @inheritdoc IExit
     function exit() public virtual {
-        // Check if joined via center
-        if (!_center.isAccountJoined(tokenAddress, actionId, msg.sender)) {
+        // Check if joined
+        if (_joinedRound[msg.sender] == 0) {
             revert NotJoined();
         }
+
+        // Clear joined round
+        _joinedRound[msg.sender] = 0;
 
         // Remove from accounts list
         _removeAccount(msg.sender);
