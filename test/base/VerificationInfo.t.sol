@@ -30,13 +30,13 @@ contract MockVerificationInfo is LOVE20ExtensionBaseJoin {
     }
 
     function joinedValue() external view override returns (uint256) {
-        return _accounts.length();
+        return _center.accountsCount(tokenAddress, actionId);
     }
 
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        return _accounts.contains(account) ? 1 : 0;
+        return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
     }
 
     function rewardByAccount(

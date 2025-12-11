@@ -28,13 +28,13 @@ contract MockExtensionForJoin is LOVE20ExtensionBaseJoin {
     }
 
     function joinedValue() external view override returns (uint256) {
-        return _accounts.length();
+        return _center.accountsCount(tokenAddress, actionId);
     }
 
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        return _accounts.contains(account) ? 1 : 0;
+        return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
     }
 
     function rewardByAccount(
@@ -104,8 +104,8 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountsAtIndex(0), user1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
         assertTrue(center.isAccountJoined(address(token), ACTION_ID, user1));
     }
 
@@ -127,9 +127,9 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
-        address[] memory accounts = extension.accounts();
+        address[] memory accounts = center.accounts(address(token), ACTION_ID);
         assertEq(accounts[0], user1);
         assertEq(accounts[1], user2);
         assertEq(accounts[2], user3);
@@ -157,7 +157,7 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(verificationInfos);
 
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
         assertEq(extension.verificationInfo(user1, "key1"), "info1");
         assertEq(extension.verificationInfo(user1, "key2"), "info2");
     }
@@ -166,7 +166,7 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     // ============================================
@@ -177,12 +177,12 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
         assertFalse(center.isAccountJoined(address(token), ACTION_ID, user1));
     }
 
@@ -211,14 +211,14 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
-        address[] memory accounts = extension.accounts();
+        address[] memory accounts = center.accounts(address(token), ACTION_ID);
         assertTrue(accounts[0] == user1 || accounts[0] == user3);
         assertTrue(accounts[1] == user1 || accounts[1] == user3);
         assertTrue(accounts[0] != accounts[1]);
@@ -305,16 +305,16 @@ contract JoinTest is BaseExtensionTest {
     function test_Scenario_JoinExitRejoin() public {
         vm.prank(user1);
         extension.join(new string[](0));
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         vm.prank(user1);
         extension.exit();
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         vm.prank(user1);
         extension.join(new string[](0));
-        assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountsAtIndex(0), user1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
     }
 
     function test_Scenario_MultipleUsersJoinExit() public {
@@ -325,22 +325,22 @@ contract JoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(new string[](0));
 
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         vm.prank(user2);
         extension.exit();
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         vm.prank(user1);
         extension.exit();
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
-        address[] memory accounts = extension.accounts();
+        address[] memory accounts = center.accounts(address(token), ACTION_ID);
         assertEq(accounts[0], user3);
 
         vm.prank(user2);
         extension.join(new string[](0));
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
     }
 
     // ============================================
@@ -356,7 +356,7 @@ contract JoinTest is BaseExtensionTest {
             extension.join(new string[](0));
         }
 
-        assertEq(extension.accountsCount(), numUsers);
+        assertEq(center.accountsCount(address(token), ACTION_ID), numUsers);
         assertEq(extension.joinedValue(), numUsers);
     }
 }

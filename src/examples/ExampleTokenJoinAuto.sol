@@ -53,10 +53,15 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
         override
         returns (uint256 total, uint256[] memory scores)
     {
-        uint256 accountsCount = _accounts.length();
-        scores = new uint256[](accountsCount);
-        for (uint256 i = 0; i < accountsCount; i++) {
-            uint256 score = _joinInfo[_accounts.at(i)].amount;
+        uint256 count = _center.accountsCount(tokenAddress, actionId);
+        scores = new uint256[](count);
+        for (uint256 i = 0; i < count; i++) {
+            address account = _center.accountsAtIndex(
+                tokenAddress,
+                actionId,
+                i
+            );
+            uint256 score = _joinInfo[account].amount;
             scores[i] = score;
             total += score;
         }

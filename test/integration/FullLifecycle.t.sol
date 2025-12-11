@@ -213,8 +213,8 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         vm.prank(user1);
         extensionTokenJoin.join(100e18, new string[](0));
 
-        assertEq(extensionTokenJoin.accountsCount(), 1);
-        assertEq(extensionTokenJoinAuto.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID_1), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 0);
 
         // User1 退出 extensionTokenJoin
         advanceBlocks(WAITING_BLOCKS);
@@ -222,13 +222,13 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         vm.prank(user1);
         extensionTokenJoin.exit();
 
-        assertEq(extensionTokenJoin.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID_1), 0);
 
         // User1 加入 extensionTokenJoinAuto
         vm.prank(user1);
         extensionTokenJoinAuto.join(150e18, new string[](0));
 
-        assertEq(extensionTokenJoinAuto.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 1);
 
         // 验证 center 中的记录更新
         assertFalse(center.isAccountJoined(address(token), ACTION_ID_1, user1));
@@ -262,8 +262,8 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         assertEq(extensionTokenJoin.totalJoinedAmount(), 600e18);
         assertEq(extensionTokenJoinAuto.totalJoinedAmount(), 600e18);
 
-        assertEq(extensionTokenJoin.accountsCount(), 3);
-        assertEq(extensionTokenJoinAuto.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID_1), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 3);
 
         // 进入下一轮（触发快照）
         verify.setCurrentRound(round0 + 1);
@@ -385,14 +385,14 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         vm.prank(user1);
         extensionTokenJoinAuto.join(100e18, new string[](0));
 
-        assertEq(extensionTokenJoinAuto.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 1);
         assertTrue(center.isAccountJoined(address(token), ACTION_ID_2, user1));
 
         // 阶段 2: 更多用户加入
         vm.prank(user2);
         extensionTokenJoinAuto.join(200e18, new string[](0));
 
-        assertEq(extensionTokenJoinAuto.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 2);
 
         // 阶段 3: 进入下一轮（触发快照）
         verify.setCurrentRound(round0 + 1);
@@ -423,14 +423,14 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         extensionTokenJoinAuto.exit();
 
         assertEq(joinToken.balanceOf(user1), joinTokenBefore + 100e18);
-        assertEq(extensionTokenJoinAuto.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 2);
         assertFalse(center.isAccountJoined(address(token), ACTION_ID_2, user1));
 
         // 阶段 8: 用户重新加入
         vm.prank(user1);
         extensionTokenJoinAuto.join(150e18, new string[](0));
 
-        assertEq(extensionTokenJoinAuto.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID_2), 3);
         assertTrue(center.isAccountJoined(address(token), ACTION_ID_2, user1));
     }
 }

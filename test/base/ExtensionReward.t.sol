@@ -32,13 +32,13 @@ contract MockExtensionForReward is LOVE20ExtensionBaseJoin {
     }
 
     function joinedValue() external view override returns (uint256) {
-        return _accounts.length();
+        return _center.accountsCount(tokenAddress, actionId);
     }
 
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        return _accounts.contains(account) ? 1 : 0;
+        return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
     }
 
     // Configure reward calculation
@@ -63,7 +63,10 @@ contract MockExtensionForReward is LOVE20ExtensionBaseJoin {
             return customRewardByAccount[account];
         }
         // Default: equal distribution if account has joined
-        if (_accounts.contains(account) && _accounts.length() > 0) {
+        if (
+            _center.isAccountJoined(tokenAddress, actionId, account) &&
+            _center.accountsCount(tokenAddress, actionId) > 0
+        ) {
             return rewardPerAccount;
         }
         return 0;

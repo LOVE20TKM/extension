@@ -79,4 +79,21 @@ interface ILOVE20ExtensionCenter {
         address account,
         uint256 index
     ) external view returns (uint256);
+
+    // ------ the accounts that joined the actions by extension (action dimension)
+    function accounts(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address[] memory);
+
+    function accountsCount(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (uint256);
+
+    function accountsAtIndex(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 index
+    ) external view returns (address);
 }

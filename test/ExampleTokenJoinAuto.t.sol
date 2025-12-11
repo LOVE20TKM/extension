@@ -180,7 +180,7 @@ contract ExampleTokenJoinAutoTest is Test {
         assertEq(joinedBlock, blockBefore);
         assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
         assertEq(extension.totalJoinedAmount(), amount);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_Join_EmitEvent() public {
@@ -211,7 +211,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(300e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 600e18);
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
     }
 
     function test_Join_RevertIfAmountZero() public {
@@ -229,7 +229,7 @@ contract ExampleTokenJoinAutoTest is Test {
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
         assertEq(extension.totalJoinedAmount(), 150e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     // ============================================
@@ -252,7 +252,7 @@ contract ExampleTokenJoinAutoTest is Test {
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         (
             ,
@@ -407,22 +407,22 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        address[] memory accounts = extension.accounts();
+        address[] memory accounts = center.accounts(address(token), ACTION_ID);
         assertEq(accounts.length, 2);
         assertEq(accounts[0], user1);
         assertEq(accounts[1], user2);
     }
 
     function test_AccountsCount() public {
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         vm.prank(user1);
         extension.join(100e18, new string[](0));
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         vm.prank(user2);
         extension.join(200e18, new string[](0));
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
     }
 
     function test_AccountAtIndex() public {
@@ -432,8 +432,8 @@ contract ExampleTokenJoinAutoTest is Test {
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        assertEq(extension.accountsAtIndex(0), user1);
-        assertEq(extension.accountsAtIndex(1), user2);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 1), user2);
     }
 
     // ============================================
@@ -461,7 +461,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(100e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 100e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         // Exit
         vm.roll(block.number + WAITING_BLOCKS);
@@ -469,14 +469,14 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         // Join again
         vm.prank(user1);
         extension.join(200e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 200e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_MultipleUsersComplexScenario() public {
@@ -489,7 +489,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.join(200e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 300e18);
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         // Fast forward
         vm.roll(block.number + WAITING_BLOCKS);
@@ -499,14 +499,14 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 200e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         // User3 joins
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 500e18);
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         // Fast forward again
         vm.roll(block.number + WAITING_BLOCKS);
@@ -519,7 +519,7 @@ contract ExampleTokenJoinAutoTest is Test {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
     // ============================================

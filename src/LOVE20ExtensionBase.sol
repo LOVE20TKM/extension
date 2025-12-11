@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionAccounts} from "./base/ExtensionAccounts.sol";
 import {ExtensionReward} from "./base/ExtensionReward.sol";
 import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
 
 /// @title LOVE20ExtensionBase
 /// @notice Abstract base contract for LOVE20 extensions
 /// @dev Provides common storage and implementation for all extensions
-abstract contract LOVE20ExtensionBase is
-    ExtensionAccounts,
-    ExtensionReward,
-    ILOVE20Extension
-{
+abstract contract LOVE20ExtensionBase is ExtensionReward, ILOVE20Extension {
     // ============================================
     // CONSTRUCTOR
     // ============================================

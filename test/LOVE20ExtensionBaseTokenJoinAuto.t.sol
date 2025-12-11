@@ -58,12 +58,17 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
         override
         returns (uint256 total, uint256[] memory scores)
     {
-        uint256 accountsLength = _accounts.length();
-        scores = new uint256[](accountsLength);
+        uint256 count = _center.accountsCount(tokenAddress, actionId);
+        scores = new uint256[](count);
         total = 0;
 
-        for (uint256 i = 0; i < accountsLength; i++) {
-            (, uint256 amount, , ) = this.joinInfo(_accounts.at(i));
+        for (uint256 i = 0; i < count; i++) {
+            address account = _center.accountsAtIndex(
+                tokenAddress,
+                actionId,
+                i
+            );
+            (, uint256 amount, , ) = this.joinInfo(account);
             scores[i] = amount;
             total += amount;
         }

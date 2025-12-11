@@ -2,21 +2,14 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
-import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {VerificationInfo} from "./VerificationInfo.sol";
 import {IJoin} from "../interface/base/IJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
-import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
 
 /// @title Join
 /// @notice Base contract providing token-free join/exit functionality
 /// @dev Implements IJoin interface with block-based waiting period
-abstract contract Join is
-    ExtensionCore,
-    ExtensionAccounts,
-    VerificationInfo,
-    IJoin
-{
+abstract contract Join is ExtensionCore, VerificationInfo, IJoin {
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -48,8 +41,8 @@ abstract contract Join is
         // Record joined round
         _joinedRound[msg.sender] = _join.currentRound();
 
-        // Add to accounts list
-        _addAccount(msg.sender);
+        // Add to center accounts
+        _center.addAccount(tokenAddress, actionId, msg.sender);
 
         // Update verification info if provided
         updateVerificationInfo(verificationInfos);
@@ -67,8 +60,8 @@ abstract contract Join is
         // Clear joined round
         _joinedRound[msg.sender] = 0;
 
-        // Remove from accounts list
-        _removeAccount(msg.sender);
+        // Remove from center accounts
+        _center.removeAccount(tokenAddress, actionId, msg.sender);
 
         emit Exit(tokenAddress, _join.currentRound(), actionId, msg.sender);
     }

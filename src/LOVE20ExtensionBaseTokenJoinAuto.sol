@@ -182,7 +182,10 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
         _scores[currentRound] = scoresCalculated;
 
         // Save accounts snapshot for current round
-        address[] memory currentAccounts = _accounts.values();
+        address[] memory currentAccounts = _center.accounts(
+            tokenAddress,
+            actionId
+        );
         _accountsByRound[currentRound] = currentAccounts;
 
         // Build score lookup mapping for current round
@@ -210,7 +213,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
             return _accountsByRound[round];
         }
         if (round == _verify.currentRound()) {
-            return _accounts.values();
+            return _center.accounts(tokenAddress, actionId);
         }
         return new address[](0);
     }
@@ -222,7 +225,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
             return _accountsByRound[round].length;
         }
         if (round == _verify.currentRound()) {
-            return _accounts.length();
+            return _center.accountsCount(tokenAddress, actionId);
         }
         return 0;
     }
@@ -235,7 +238,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
             return _accountsByRound[round][index];
         }
         if (round == _verify.currentRound()) {
-            return _accounts.at(index);
+            return _center.accountsAtIndex(tokenAddress, actionId, index);
         }
         revert NoSnapshotForFutureRound();
     }
@@ -260,7 +263,7 @@ abstract contract LOVE20ExtensionBaseTokenJoinAuto is
             return _scores[round].length;
         }
         if (round == _verify.currentRound()) {
-            return _accounts.length();
+            return _center.accountsCount(tokenAddress, actionId);
         }
         return 0;
     }

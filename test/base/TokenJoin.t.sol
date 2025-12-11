@@ -125,7 +125,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
     function test_Constructor_InitialState() public view {
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
     function test_Constructor_RevertsOnZeroJoinTokenAddress() public {
@@ -159,7 +159,7 @@ contract TokenJoinTest is BaseExtensionTest {
         assertEq(joinedBlock, blockBefore);
         assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
         assertEq(extension.totalJoinedAmount(), amount);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_Join_EmitEvent() public {
@@ -207,7 +207,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(300e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 600e18);
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
     }
 
     function test_Join_RevertIfAmountZero() public {
@@ -225,7 +225,7 @@ contract TokenJoinTest is BaseExtensionTest {
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
         assertEq(extension.totalJoinedAmount(), 150e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_Join_AddMore_UpdatesJoinedBlock() public {
@@ -279,7 +279,7 @@ contract TokenJoinTest is BaseExtensionTest {
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 200e18);
         assertEq(extension.totalJoinedAmount(), 200e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_Join_AddMore_EmitEvent() public {
@@ -337,7 +337,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         (
             ,
@@ -417,7 +417,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 200e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         // User2 cannot exit yet
         vm.prank(user2);
@@ -431,7 +431,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
     // ============================================
@@ -640,7 +640,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.join(300e18, new string[](0));
 
         assertEq(extension.totalJoinedAmount(), 600e18);
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         advanceBlocks(70);
 
@@ -648,7 +648,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 500e18);
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         advanceBlocks(20);
 
@@ -656,7 +656,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 300e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         advanceBlocks(10);
 
@@ -664,7 +664,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(extension.totalJoinedAmount(), 0);
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
     // ============================================

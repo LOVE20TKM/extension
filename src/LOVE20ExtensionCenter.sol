@@ -4,8 +4,13 @@ pragma solidity =0.8.17;
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     // ------ state variables ------
     address public immutable uniswapV2FactoryAddress;
     address public immutable launchAddress;
@@ -24,6 +29,10 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // tokenAddress => account => actionIds array
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
+
+    // tokenAddress => actionId => accounts set
+    mapping(address => mapping(uint256 => EnumerableSet.AddressSet))
+        internal _accounts;
 
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
@@ -99,6 +108,9 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         // add actionId to account's list
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
+        // add account to action's list
+        _accounts[tokenAddress][actionId].add(account);
+
         emit AccountAdded(tokenAddress, actionId, account);
     }
 
@@ -116,6 +128,9 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
 
         // remove actionId from account's list
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
+
+        // remove account from action's list
+        _accounts[tokenAddress][actionId].remove(account);
 
         emit AccountRemoved(tokenAddress, actionId, account);
     }
@@ -149,5 +164,28 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         uint256 index
     ) external view returns (uint256) {
         return _actionIdsByAccount[tokenAddress][account][index];
+    }
+
+    // ------ accounts by action queries ------
+    function accounts(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address[] memory) {
+        return _accounts[tokenAddress][actionId].values();
+    }
+
+    function accountsCount(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (uint256) {
+        return _accounts[tokenAddress][actionId].length();
+    }
+
+    function accountsAtIndex(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 index
+    ) external view returns (address) {
+        return _accounts[tokenAddress][actionId].at(index);
     }
 }

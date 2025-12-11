@@ -2,7 +2,6 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
-import {ExtensionAccounts} from "./ExtensionAccounts.sol";
 import {VerificationInfo} from "./VerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
@@ -16,7 +15,6 @@ import {
 /// @dev Implements ITokenJoin interface with ERC20 token participation and block-based waiting period
 abstract contract TokenJoin is
     ExtensionCore,
-    ExtensionAccounts,
     VerificationInfo,
     ReentrancyGuard,
     ITokenJoin
@@ -87,9 +85,9 @@ abstract contract TokenJoin is
         info.joinedBlock = block.number;
         totalJoinedAmount += amount;
 
-        // Add to accounts list only on first join
+        // Add to center accounts only on first join
         if (isFirstJoin) {
-            _addAccount(msg.sender);
+            _center.addAccount(tokenAddress, actionId, msg.sender);
         }
 
         // Transfer tokens from user
@@ -126,8 +124,8 @@ abstract contract TokenJoin is
         info.joinedBlock = 0;
         totalJoinedAmount -= amount;
 
-        // Remove from accounts list
-        _removeAccount(msg.sender);
+        // Remove from center accounts
+        _center.removeAccount(tokenAddress, actionId, msg.sender);
 
         // Transfer tokens back to user
         _joinToken.transfer(msg.sender, amount);

@@ -10,7 +10,6 @@ import {IExit} from "../../src/interface/base/IExit.sol";
 import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
 import {IExtensionCore} from "../../src/interface/base/IExtensionCore.sol";
 import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
-import {ExtensionAccounts} from "../../src/base/ExtensionAccounts.sol";
 import {TokenJoin} from "../../src/base/TokenJoin.sol";
 import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
@@ -162,7 +161,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 200e18);
         assertEq(extension.totalJoinedAmount(), 200e18);
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
     function test_ReentrancyProtection_ExitCannotReenter() public {
@@ -209,23 +208,27 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountsAtIndex(0), user1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
 
         // Add user2
         vm.prank(user2);
         extension.join(200e18, new string[](0));
 
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         // Fast forward and remove user1
         vm.roll(block.number + WAITING_BLOCKS + 1);
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
         // After removal, remaining account should still be accessible
-        address remaining = extension.accountsAtIndex(0);
+        address remaining = center.accountsAtIndex(
+            address(token),
+            ACTION_ID,
+            0
+        );
         assertTrue(remaining == user2, "user2 should remain");
     }
 
@@ -238,16 +241,16 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.accountsCount(), 3);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         // Fast forward and remove user2 (middle account)
         vm.roll(block.number + WAITING_BLOCKS + 1);
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 2);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
         // Verify user2 is removed and other two remain
-        address[] memory accs = extension.accounts();
+        address[] memory accs = center.accounts(address(token), ACTION_ID);
         assertTrue(accs.length == 2, "Should have 2 accounts");
         assertTrue(
             (accs[0] == user1 || accs[0] == user3) &&
@@ -273,7 +276,7 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.accountsCount(), 0);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         // Add user1 again
         joinToken.mint(user1, 100e18);
@@ -281,8 +284,8 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.accountsCount(), 1);
-        assertEq(extension.accountsAtIndex(0), user1);
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
     }
 
     function test_AccountManagement_LargeNumberOfAccounts() public {
@@ -299,7 +302,7 @@ contract BaseSecurityTest is BaseExtensionTest {
             extension.join(100e18, new string[](0));
         }
 
-        assertEq(extension.accountsCount(), numAccounts);
+        assertEq(center.accountsCount(address(token), ACTION_ID), numAccounts);
 
         // Remove accounts from middle (test O(1) performance)
         vm.roll(block.number + WAITING_BLOCKS + 1);
@@ -308,7 +311,10 @@ contract BaseSecurityTest is BaseExtensionTest {
         vm.prank(accounts[25]);
         extension.exit();
 
-        assertEq(extension.accountsCount(), numAccounts - 1);
+        assertEq(
+            center.accountsCount(address(token), ACTION_ID),
+            numAccounts - 1
+        );
     }
 
     // ============================================
