@@ -88,7 +88,6 @@ contract JoinTest is BaseExtensionTest {
             address(token)
         );
 
-        registerFactory(address(token), address(mockFactory));
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(extension), address(token));
 

@@ -149,21 +149,6 @@ abstract contract BaseExtensionTest is Test {
     }
 
     /**
-     * @notice 注册 factory 到 center
-     * @param tokenAddr 代币地址
-     * @param factory factory 地址
-     */
-    function registerFactory(
-        address tokenAddr,
-        address factory
-    ) internal virtual {
-        // 授予权限
-        submit.setCanSubmit(tokenAddr, address(this), true);
-        // 注册 factory
-        center.addFactory(tokenAddr, factory);
-    }
-
-    /**
      * @notice 准备 factory 注册 extension 所需的代币
      * @param factory factory 地址
      * @param tokenAddr 代币地址

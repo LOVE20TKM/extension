@@ -1,22 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 interface ILOVE20ExtensionCenter {
-    // ------ structs ------
-    struct ExtensionInfo {
-        address tokenAddress;
-        uint256 actionId;
-    }
-
     // ------ events ------
-    event ExtensionFactoryAdded(
-        address indexed tokenAddress,
-        address indexed factory
-    );
-    event ExtensionInitialized(
-        address indexed tokenAddress,
-        uint256 indexed actionId,
-        address indexed extension
-    );
     event AccountAdded(
         address indexed tokenAddress,
         uint256 indexed actionId,
@@ -38,17 +23,9 @@ interface ILOVE20ExtensionCenter {
     error InvalidVerifyAddress();
     error InvalidMintAddress();
     error InvalidRandomAddress();
-    error NotEnoughGovVotes();
-    error InvalidExtensionFactory();
-    error ExtensionNotFoundInFactory();
-    error InvalidWhiteListAddress();
-    error ExtensionNotJoinedAction();
-    error ExtensionFactoryAlreadyExists();
-    error ExtensionAlreadyExists();
     error OnlyExtensionCanCall();
     error AccountAlreadyJoined();
     error AccountNotJoined();
-    error ExtensionNotInitialized();
 
     // ------ core system addresses ------
     function uniswapV2FactoryAddress() external view returns (address);
@@ -61,41 +38,11 @@ interface ILOVE20ExtensionCenter {
     function mintAddress() external view returns (address);
     function randomAddress() external view returns (address);
 
-    // ------ register extension factory ------
-
-    // only 0.3% gov votes holder can call once per round
-    function addFactory(address tokenAddress, address factory) external;
-
-    function existsFactory(
-        address tokenAddress,
-        address factory
-    ) external view returns (bool);
-
-    function factories(
-        address tokenAddress
-    ) external view returns (address[] memory);
-
-    function factoriesCount(
-        address tokenAddress
-    ) external view returns (uint256);
-
-    function factoriesAtIndex(
-        address tokenAddress,
-        uint256 index
-    ) external view returns (address);
-    // ------ all the extensions that successfully joined actions ------
-
-    // register extension to Center (called by extension itself after auto-initialization)
-    function registerExtension() external;
-
+    // ------ extension query ------
     function extension(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address);
-
-    function extensionInfo(
-        address extension
-    ) external view returns (address tokenAddress, uint256 actionId);
 
     // ------ only the corresponding action extension can call ------
     function addAccount(

@@ -115,9 +115,6 @@ abstract contract ExtensionCore is IExtensionCore {
             DEFAULT_JOIN_AMOUNT,
             new string[](0)
         );
-
-        // Register to center
-        _center.registerExtension();
     }
 
     /// @dev Auto-initialize by scanning voted actions to find matching actionId

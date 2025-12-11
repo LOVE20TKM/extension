@@ -38,15 +38,6 @@ contract LOVE20ExtensionCenterTest is Test {
     uint256 public actionId1 = 1;
     uint256 public actionId2 = 2;
 
-    event ExtensionFactoryAdded(
-        address indexed tokenAddress,
-        address indexed factory
-    );
-    event ExtensionInitialized(
-        address indexed tokenAddress,
-        uint256 indexed actionId,
-        address indexed extension
-    );
     event AccountAdded(
         address indexed tokenAddress,
         uint256 indexed actionId,
@@ -241,366 +232,28 @@ contract LOVE20ExtensionCenterTest is Test {
         );
     }
 
-    // ------ Extension Factory tests ------
-    function testAddFactory() public {
-        // Setup: give govHolder permission to submit
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-
-        assertEq(
-            extensionCenter.existsFactory(tokenAddress, address(mockFactory)),
-            false
-        );
-
-        // Execute
-        vm.prank(govHolder);
-        vm.expectEmit(true, true, false, false);
-        emit ExtensionFactoryAdded(tokenAddress, address(mockFactory));
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        assertEq(
-            extensionCenter.existsFactory(tokenAddress, address(mockFactory)),
-            true
-        );
-    }
-
-    function testAddFactoryRevertsInvalidExtensionFactory() public {
-        mockFactory = new MockExtensionFactory(address(0x111));
-
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.InvalidExtensionFactory.selector
-        );
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-    }
-
-    function testAddFactoryRevertsIfNotEnoughGovVotes() public {
-        // Don't give govHolder permission
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, false);
-
-        vm.prank(govHolder);
-        vm.expectRevert(ILOVE20ExtensionCenter.NotEnoughGovVotes.selector);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-    }
-
-    function testAddFactoryRevertsIfAlreadyExists() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-
-        vm.startPrank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.ExtensionFactoryAlreadyExists.selector
-        );
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-        vm.stopPrank();
-    }
-
-    // ------ Extension initialization tests ------
-    function testInitializeExtension() public {
-        // Setup
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        // Create mock extension
+    // ------ Extension query tests ------
+    function testExtensionQuery() public {
+        // Setup extension as whitelist
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
-
-        // Setup action info with extension as whitelist
         mockSubmit.setActionInfo(
             tokenAddress,
             actionId1,
             address(mockExtension)
         );
 
-        // Setup join amount (extension has joined the action)
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-
-        // Mock initialize the extension
-        mockExtension.mockInitialize(actionId1);
-
-        // Execute - extension calls registerExtension itself
-        vm.expectEmit(true, true, true, false);
-        emit ExtensionInitialized(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-
-        // Verify
+        // Verify extension() returns whiteListAddress from submit
         assertEq(
             extensionCenter.extension(tokenAddress, actionId1),
             address(mockExtension)
-        );
-        assertTrue(mockExtension.initialized());
-        assertEq(extensionCenter.extensionsCount(tokenAddress), 1);
-        assertEq(
-            extensionCenter.extensionsAtIndex(tokenAddress, 0),
-            address(mockExtension)
-        );
-    }
-
-    function testRegisterExtensionRevertsIfAlreadyExists() public {
-        // Setup first extension
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        MockExtension mockExtension1 = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension1)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension1),
-            1000
-        );
-        mockExtension1.mockInitialize(actionId1);
-        vm.prank(address(mockExtension1));
-        extensionCenter.registerExtension();
-
-        // Try to add another extension with same tokenAddress and actionId
-        MockExtension mockExtension2 = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension2)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension2),
-            1000
-        );
-        mockExtension2.mockInitialize(actionId1);
-
-        vm.expectRevert(ILOVE20ExtensionCenter.ExtensionAlreadyExists.selector);
-        vm.prank(address(mockExtension2));
-        extensionCenter.registerExtension();
-    }
-
-    function testRegisterExtensionRevertsIfInvalidFactory() public {
-        // Don't add factory to extension center
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockExtension.mockInitialize(actionId1);
-
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.InvalidExtensionFactory.selector
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-    }
-
-    function testRegisterExtensionRevertsIfNotFoundInFactory() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        // Don't create extension in factory
-        MockExtension mockExtension = new MockExtension(
-            address(mockFactory),
-            tokenAddress
-        );
-        mockExtension.mockInitialize(actionId1);
-
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.ExtensionNotFoundInFactory.selector
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-    }
-
-    function testRegisterExtensionRevertsIfInvalidWhiteListAddress() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-
-        // Set wrong whitelist address
-        mockSubmit.setActionInfo(tokenAddress, actionId1, address(0x9999));
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.InvalidWhiteListAddress.selector
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-    }
-
-    function testRegisterExtensionRevertsIfNotJoinedAction() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-
-        // Don't set join amount (extension hasn't joined)
-        mockJoin.setJoinWillFail(true);
-        mockExtension.mockInitialize(actionId1);
-
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.ExtensionNotJoinedAction.selector
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-    }
-
-    function testRegisterExtensionRevertsIfNotInitialized() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-
-        // Don't call mockInitialize - extension is not initialized
-        vm.expectRevert(
-            ILOVE20ExtensionCenter.ExtensionNotInitialized.selector
-        );
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-    }
-
-    // ------ Extension info queries ------
-    function testExtensionInfo() public {
-        // Setup and initialize extension
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
-
-        // Test extensionInfo
-        (address returnedToken, uint256 returnedActionId) = extensionCenter
-            .extensionInfo(address(mockExtension));
-        assertEq(returnedToken, tokenAddress);
-        assertEq(returnedActionId, actionId1);
-    }
-
-    function testMultipleExtensions() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        // Create and initialize first extension
-        MockExtension mockExtension1 = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension1)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension1),
-            1000
-        );
-        mockExtension1.mockInitialize(actionId1);
-        vm.prank(address(mockExtension1));
-        extensionCenter.registerExtension();
-
-        // Create and initialize second extension
-        MockExtension mockExtension2 = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId2,
-            address(mockExtension2)
-        );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId2,
-            address(mockExtension2),
-            2000
-        );
-        mockExtension2.mockInitialize(actionId2);
-        vm.prank(address(mockExtension2));
-        extensionCenter.registerExtension();
-
-        // Verify
-        assertEq(extensionCenter.extensionsCount(tokenAddress), 2);
-        assertEq(
-            extensionCenter.extensionsAtIndex(tokenAddress, 0),
-            address(mockExtension1)
-        );
-        assertEq(
-            extensionCenter.extensionsAtIndex(tokenAddress, 1),
-            address(mockExtension2)
         );
     }
 
     // ------ Account management tests ------
     function testAddAccount() public {
-        // Setup extension
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
+        // Setup extension as whitelist
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -609,15 +262,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         // Add account from extension
         vm.prank(address(mockExtension));
@@ -646,10 +290,6 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testAddAccountRevertsIfNotExtension() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -658,15 +298,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         // Try to add account from non-extension address
         vm.prank(user1);
@@ -675,10 +306,6 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testAddAccountRevertsIfAlreadyJoined() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -687,15 +314,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         // Add account first time
         vm.startPrank(address(mockExtension));
@@ -708,11 +326,7 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testRemoveAccount() public {
-        // Setup and add account first
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
+        // Setup extension as whitelist
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -721,15 +335,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         vm.startPrank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1);
@@ -751,10 +356,6 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testRemoveAccountRevertsIfNotExtension() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -763,15 +364,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1);
@@ -783,10 +375,6 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testRemoveAccountRevertsIfNotJoined() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -795,15 +383,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension),
-            1000
-        );
-        mockExtension.mockInitialize(actionId1);
-        vm.prank(address(mockExtension));
-        extensionCenter.registerExtension();
 
         // Try to remove account that was never added
         vm.prank(address(mockExtension));
@@ -812,11 +391,7 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testMultipleAccountsAndActions() public {
-        mockSubmit.setCanSubmit(tokenAddress, govHolder, true);
-        vm.prank(govHolder);
-        extensionCenter.addFactory(tokenAddress, address(mockFactory));
-
-        // Create two extensions
+        // Create two extensions for different actions
         MockExtension mockExtension1 = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -825,15 +400,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension1)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId1,
-            address(mockExtension1),
-            1000
-        );
-        mockExtension1.mockInitialize(actionId1);
-        vm.prank(address(mockExtension1));
-        extensionCenter.registerExtension();
 
         MockExtension mockExtension2 = MockExtension(
             mockFactory.createExtension(tokenAddress)
@@ -843,15 +409,6 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId2,
             address(mockExtension2)
         );
-        mockJoin.setAmount(
-            tokenAddress,
-            actionId2,
-            address(mockExtension2),
-            2000
-        );
-        mockExtension2.mockInitialize(actionId2);
-        vm.prank(address(mockExtension2));
-        extensionCenter.registerExtension();
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
@@ -888,21 +445,11 @@ contract LOVE20ExtensionCenterTest is Test {
 
     // ------ Edge cases ------
     function testExtensionQueriesForNonExistentData() public view {
-        // Query non-existent extension
+        // Query non-existent extension (returns address(0) from submit)
         assertEq(
             extensionCenter.extension(tokenAddress, actionId1),
             address(0)
         );
-
-        // Query non-existent extension info
-        (address token, uint256 action) = extensionCenter.extensionInfo(
-            address(0x9999)
-        );
-        assertEq(token, address(0));
-        assertEq(action, 0);
-
-        // Query extensions count for non-existent token
-        assertEq(extensionCenter.extensionsCount(address(0x9999)), 0);
     }
 
     function testAccountQueriesForNonExistentData() public view {

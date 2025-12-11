@@ -118,10 +118,6 @@ contract ExampleTokenJoinAutoTest is Test {
             )
         );
 
-        // Register factory to center (needs canSubmit permission)
-        submit.setCanSubmit(address(token), address(this), true);
-        center.addFactory(address(token), address(factory));
-
         // Set action info whiteListAddress to extension address
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
 

@@ -101,9 +101,6 @@ contract LOVE20ExtensionBaseTokenJoinAutoTest is BaseExtensionTest {
             WAITING_BLOCKS
         );
 
-        // 注册 factory
-        registerFactory(address(token), address(mockFactory));
-
         // 将扩展注册到 factory
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(extension), address(token));

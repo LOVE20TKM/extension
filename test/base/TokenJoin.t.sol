@@ -100,7 +100,6 @@ contract TokenJoinTest is BaseExtensionTest {
             WAITING_BLOCKS
         );
 
-        registerFactory(address(token), address(mockFactory));
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(extension), address(token));
 

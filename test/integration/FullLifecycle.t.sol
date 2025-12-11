@@ -38,10 +38,6 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
         factoryTokenJoin = new ExampleFactoryTokenJoin(address(center));
         factoryTokenJoinAuto = new ExampleFactoryTokenJoinAuto(address(center));
 
-        // 注册 factories
-        registerFactory(address(token), address(factoryTokenJoin));
-        registerFactory(address(token), address(factoryTokenJoinAuto));
-
         // 准备代币用于 factory 注册
         prepareFactoryRegistration(address(factoryTokenJoin), address(token));
         prepareFactoryRegistration(
@@ -121,14 +117,6 @@ contract FullLifecycleIntegrationTest is BaseExtensionTest {
     // ============================================
 
     function test_FullLifecycle_FactoryToExtension() public view {
-        // 验证 factory 注册
-        assertTrue(
-            center.existsFactory(address(token), address(factoryTokenJoin))
-        );
-        assertTrue(
-            center.existsFactory(address(token), address(factoryTokenJoinAuto))
-        );
-
         // 验证扩展创建
         assertTrue(factoryTokenJoin.exists(address(extensionTokenJoin)));
         assertTrue(

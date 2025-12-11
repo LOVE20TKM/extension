@@ -126,7 +126,6 @@ contract BaseSecurityTest is BaseExtensionTest {
             WAITING_BLOCKS
         );
 
-        registerFactory(address(token), address(mockFactory));
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(extension), address(token));
 
@@ -335,41 +334,6 @@ contract BaseSecurityTest is BaseExtensionTest {
     // ============================================
     // Edge Cases and Boundary Tests
     // ============================================
-
-    function test_EdgeCase_MultipleRegistrationAttempts() public {
-        MockExtensionForSecurity newExtension = new MockExtensionForSecurity(
-            address(mockFactory),
-            address(token),
-            address(joinToken),
-            WAITING_BLOCKS
-        );
-
-        prepareFactoryRegistration(address(mockFactory), address(token));
-        mockFactory.registerExtension(address(newExtension), address(token));
-        submit.setActionInfo(
-            address(token),
-            ACTION_ID + 2,
-            address(newExtension)
-        );
-        vote.setVotedActionIds(
-            address(token),
-            join.currentRound(),
-            ACTION_ID + 2
-        );
-        token.mint(address(newExtension), 1e18);
-
-        // First user join triggers auto-initialization and registration
-        joinToken.mint(user1, 100e18);
-        vm.prank(user1);
-        joinToken.approve(address(newExtension), type(uint256).max);
-        vm.prank(user1);
-        newExtension.join(100e18, new string[](0));
-
-        // Extension is now registered, trying to register again should fail
-        vm.expectRevert(ILOVE20ExtensionCenter.ExtensionAlreadyExists.selector);
-        vm.prank(address(newExtension));
-        center.registerExtension();
-    }
 
     function test_EdgeCase_JoinWithZeroAmount() public {
         vm.prank(user1);

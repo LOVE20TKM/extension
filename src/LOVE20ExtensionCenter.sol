@@ -2,10 +2,7 @@
 pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
-import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
-import {ILOVE20Extension} from "./interface/ILOVE20Extension.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
-import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
@@ -20,17 +17,6 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     address public immutable mintAddress;
     address public immutable randomAddress;
 
-    // tokenAddress => factory[]
-    mapping(address => address[]) internal _factories;
-    // tokenAddress => factory => bool
-    mapping(address => mapping(address => bool)) internal _existsFactory;
-
-    // tokenAddress => actionId => extension
-    mapping(address => mapping(uint256 => address)) internal _extension;
-
-    // extension => (tokenAddress, actionId)
-    mapping(address => ExtensionInfo) internal _extensionInfos;
-
     // tokenAddress => actionId => account => bool
     mapping(address => mapping(uint256 => mapping(address => bool)))
         internal _isAccountJoined;
@@ -41,7 +27,11 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
 
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
-        if (_extension[tokenAddress][actionId] != msg.sender) {
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        if (actionInfo.body.whiteListAddress != msg.sender) {
             revert OnlyExtensionCanCall();
         }
         _;
@@ -81,120 +71,16 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         randomAddress = randomAddress_;
     }
 
-    // ------ register extension factory ------
-    function addFactory(address tokenAddress, address factory) external {
-        if (ILOVE20ExtensionFactory(factory).center() != address(this)) {
-            revert InvalidExtensionFactory();
-        }
-        if (_existsFactory[tokenAddress][factory])
-            revert ExtensionFactoryAlreadyExists();
-
-        if (!ILOVE20Submit(submitAddress).canSubmit(tokenAddress, msg.sender))
-            revert NotEnoughGovVotes();
-        emit ExtensionFactoryAdded(tokenAddress, factory);
-        _existsFactory[tokenAddress][factory] = true;
-        _factories[tokenAddress].push(factory);
-    }
-
-    function existsFactory(
-        address tokenAddress,
-        address factory
-    ) external view returns (bool) {
-        return _existsFactory[tokenAddress][factory];
-    }
-
-    function factories(
-        address tokenAddress
-    ) external view returns (address[] memory) {
-        return _factories[tokenAddress];
-    }
-
-    function factoriesCount(
-        address tokenAddress
-    ) external view returns (uint256) {
-        return _factories[tokenAddress].length;
-    }
-
-    function factoriesAtIndex(
-        address tokenAddress,
-        uint256 index
-    ) external view returns (address) {
-        return _factories[tokenAddress][index];
-    }
-
-    // ------ extensions management ------
-
-    /// @notice Register extension to Center (called by extension itself after auto-initialization)
-    function registerExtension() external {
-        address extensionAddress = msg.sender;
-        ILOVE20Extension ext = ILOVE20Extension(extensionAddress);
-
-        // check if extension is initialized
-        if (!ext.initialized()) {
-            revert ExtensionNotInitialized();
-        }
-
-        // get tokenAddress and actionId from extension
-        address tokenAddress = ext.tokenAddress();
-        uint256 actionId = ext.actionId();
-
-        // check if extension already exists for this tokenAddress and actionId
-        if (_extension[tokenAddress][actionId] != address(0)) {
-            revert ExtensionAlreadyExists();
-        }
-
-        if (!_existsFactory[tokenAddress][ext.factory()])
-            revert InvalidExtensionFactory();
-
-        ILOVE20ExtensionFactory extFactory = ILOVE20ExtensionFactory(
-            ext.factory()
-        );
-        if (!extFactory.exists(extensionAddress))
-            revert ExtensionNotFoundInFactory();
-
-        // check if extension is in white list
-        ILOVE20Submit submit = ILOVE20Submit(submitAddress);
-        ActionInfo memory actionInfo = submit.actionInfo(
-            tokenAddress,
-            actionId
-        );
-        if (actionInfo.body.whiteListAddress != extensionAddress)
-            revert InvalidWhiteListAddress();
-
-        // check if already successfully joined through joinAddress
-        ILOVE20Join join = ILOVE20Join(joinAddress);
-        if (
-            join.amountByActionIdByAccount(
-                tokenAddress,
-                actionId,
-                extensionAddress
-            ) == 0
-        ) {
-            revert ExtensionNotJoinedAction();
-        }
-
-        // register extension
-        _extension[tokenAddress][actionId] = extensionAddress;
-        _extensionInfos[extensionAddress] = ExtensionInfo({
-            tokenAddress: tokenAddress,
-            actionId: actionId
-        });
-
-        emit ExtensionInitialized(tokenAddress, actionId, extensionAddress);
-    }
-
+    // ------ extension query ------
     function extension(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
-        return _extension[tokenAddress][actionId];
-    }
-
-    function extensionInfo(
-        address extensionAddress
-    ) external view returns (address tokenAddress, uint256 actionId) {
-        ExtensionInfo memory info = _extensionInfos[extensionAddress];
-        return (info.tokenAddress, info.actionId);
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        return actionInfo.body.whiteListAddress;
     }
 
     // ------ account management (only extension can call) ------

@@ -3,7 +3,9 @@ pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
 import {LOVE20ExtensionBaseJoin} from "../../src/LOVE20ExtensionBaseJoin.sol";
-import {IVerificationInfo} from "../../src/interface/base/IVerificationInfo.sol";
+import {
+    IVerificationInfo
+} from "../../src/interface/base/IVerificationInfo.sol";
 import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
 import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
 import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
@@ -84,7 +86,6 @@ contract VerificationInfoTest is BaseExtensionTest {
             address(token)
         );
 
-        registerFactory(address(token), address(mockFactory));
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(extension), address(token));
 
@@ -689,4 +690,3 @@ contract VerificationInfoTest is BaseExtensionTest {
         assertEq(extension.verificationInfo(user1, "email"), expected);
     }
 }
-
