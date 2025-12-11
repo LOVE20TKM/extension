@@ -31,9 +31,6 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // extension => (tokenAddress, actionId)
     mapping(address => ExtensionInfo) internal _extensionInfos;
 
-    // tokenAddress => extensions array
-    mapping(address => address[]) internal _extensions;
-
     // tokenAddress => actionId => account => bool
     mapping(address => mapping(uint256 => mapping(address => bool)))
         internal _isAccountJoined;
@@ -182,7 +179,6 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             tokenAddress: tokenAddress,
             actionId: actionId
         });
-        _extensions[tokenAddress].push(extensionAddress);
 
         emit ExtensionInitialized(tokenAddress, actionId, extensionAddress);
     }
@@ -199,25 +195,6 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     ) external view returns (address tokenAddress, uint256 actionId) {
         ExtensionInfo memory info = _extensionInfos[extensionAddress];
         return (info.tokenAddress, info.actionId);
-    }
-
-    function extensions(
-        address tokenAddress
-    ) external view returns (address[] memory) {
-        return _extensions[tokenAddress];
-    }
-
-    function extensionsCount(
-        address tokenAddress
-    ) external view returns (uint256) {
-        return _extensions[tokenAddress].length;
-    }
-
-    function extensionsAtIndex(
-        address tokenAddress,
-        uint256 index
-    ) external view returns (address) {
-        return _extensions[tokenAddress][index];
     }
 
     // ------ account management (only extension can call) ------
