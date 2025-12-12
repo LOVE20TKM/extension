@@ -4,11 +4,16 @@ pragma solidity =0.8.17;
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {IExtensionReward} from "../interface/base/IExtensionReward.sol";
 import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title ExtensionReward
 /// @notice Base contract providing reward claiming functionality
 /// @dev Implements IExtensionReward interface with reward storage and claiming logic
 abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
+    using SafeERC20 for IERC20;
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -126,8 +131,7 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
 
         // Transfer reward to user
         if (amount > 0) {
-            ILOVE20Token token = ILOVE20Token(tokenAddress);
-            token.transfer(msg.sender, amount);
+            IERC20(tokenAddress).safeTransfer(msg.sender, amount);
         }
 
         emit ClaimReward(tokenAddress, round, actionId, msg.sender, amount);

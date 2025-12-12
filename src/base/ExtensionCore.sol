@@ -7,7 +7,10 @@ import {
     ILOVE20ExtensionFactory,
     DEFAULT_JOIN_AMOUNT
 } from "../interface/ILOVE20ExtensionFactory.sol";
-import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
@@ -21,6 +24,7 @@ import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
 /// @notice Core base contract providing fundamental extension functionality
 /// @dev Implements IExtensionCore interface with factory/center references and initialization
 abstract contract ExtensionCore is IExtensionCore {
+    using SafeERC20 for IERC20;
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -105,8 +109,10 @@ abstract contract ExtensionCore is IExtensionCore {
         actionId = actionId_;
 
         // Approve token to joinAddress before joining
-        ILOVE20Token token = ILOVE20Token(tokenAddress);
-        token.approve(address(_join), DEFAULT_JOIN_AMOUNT);
+        IERC20(tokenAddress).safeIncreaseAllowance(
+            address(_join),
+            DEFAULT_JOIN_AMOUNT
+        );
 
         // Join the action
         _join.join(

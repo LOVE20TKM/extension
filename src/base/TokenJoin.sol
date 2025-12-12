@@ -7,8 +7,13 @@ import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+using SafeERC20 for IERC20;
 
 /// @title TokenJoin
 /// @notice Base contract providing token-based join/exit functionality
@@ -91,7 +96,7 @@ abstract contract TokenJoin is
         }
 
         // Transfer tokens from user
-        _joinToken.transferFrom(msg.sender, address(this), amount);
+        _joinToken.safeTransferFrom(msg.sender, address(this), amount);
 
         // Update verification info if provided
         updateVerificationInfo(verificationInfos);
@@ -128,7 +133,7 @@ abstract contract TokenJoin is
         _center.removeAccount(tokenAddress, actionId, msg.sender);
 
         // Transfer tokens back to user
-        _joinToken.transfer(msg.sender, amount);
+        _joinToken.safeTransfer(msg.sender, amount);
 
         emit Exit(
             tokenAddress,

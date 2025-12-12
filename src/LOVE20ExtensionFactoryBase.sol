@@ -5,14 +5,16 @@ import {
     ILOVE20ExtensionFactory,
     DEFAULT_JOIN_AMOUNT
 } from "./interface/ILOVE20ExtensionFactory.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
-    IERC20
-} from "lib/core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title LOVE20ExtensionFactoryBase
 /// @notice Abstract base contract for LOVE20 extension factories
 /// @dev Provides common storage and implementation for all extension factories
 abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
+    using SafeERC20 for IERC20;
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -74,7 +76,7 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     ) internal {
         _extensions.push(extension);
         _isExtension[extension] = true;
-        IERC20(tokenAddress).transferFrom(
+        IERC20(tokenAddress).safeTransferFrom(
             msg.sender,
             extension,
             DEFAULT_JOIN_AMOUNT
