@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionBase} from "../../src/LOVE20ExtensionBase.sol";
 import {IExtensionCore} from "../../src/interface/base/IExtensionCore.sol";
 import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
 import {ExtensionCore} from "../../src/base/ExtensionCore.sol";
@@ -11,11 +10,11 @@ import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
  * @title MockExtension
  * @dev Mock Extension contract for unit testing
  */
-contract MockExtension is LOVE20ExtensionBase {
+contract MockExtension is ExtensionReward {
     constructor(
         address factory_,
         address tokenAddress_
-    ) LOVE20ExtensionBase(factory_, tokenAddress_) {}
+    ) ExtensionReward(factory_, tokenAddress_) {}
 
     /// @dev Test helper to simulate initialization without going through _doInitialize
     function mockInitialize(uint256 actionId_) external {
@@ -43,7 +42,7 @@ contract MockExtension is LOVE20ExtensionBase {
     )
         public
         pure
-        override(IExtensionReward, ExtensionReward)
+        override(ExtensionReward)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);

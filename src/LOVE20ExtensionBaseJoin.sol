@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {LOVE20ExtensionBase} from "./LOVE20ExtensionBase.sol";
+import {ExtensionReward} from "./base/ExtensionReward.sol";
 import {Join} from "./base/Join.sol";
 import {ILOVE20ExtensionJoin} from "./interface/ILOVE20ExtensionJoin.sol";
 
@@ -23,7 +23,7 @@ import {ILOVE20ExtensionJoin} from "./interface/ILOVE20ExtensionJoin.sol";
 ///    - joinedValueByAccount() - get joined value for specific account
 ///
 abstract contract LOVE20ExtensionBaseJoin is
-    LOVE20ExtensionBase,
+    ExtensionReward,
     Join,
     ILOVE20ExtensionJoin
 {
@@ -37,5 +37,5 @@ abstract contract LOVE20ExtensionBaseJoin is
     constructor(
         address factory_,
         address tokenAddress_
-    ) LOVE20ExtensionBase(factory_, tokenAddress_) {}
+    ) ExtensionReward(factory_, tokenAddress_) {}
 }
