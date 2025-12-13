@@ -90,9 +90,9 @@
 
 参与者集合来自 ExtensionCenter：`center.accounts(tokenAddress, actionId)`。
 
-### 4.4 未来轮次访问限制
+### 4.4 未生成快照轮次访问限制
 
-对未来轮次访问快照索引函数会 revert：`NoSnapshotForFutureRound()`。
+对未生成快照的非当前轮次访问索引函数（如 `accountsByRoundAtIndex`、`scoresAtIndex`）会 revert：`NoSnapshotForFutureRound()`。其他查询函数对未生成快照的轮次返回空数组或 0。
 
 ## 5. 奖励分配规则
 
@@ -106,7 +106,7 @@ reward(account, round) = totalActionReward(round) \times \frac{score(account, ro
 
 ### 5.2 未生成快照不分配
 
-若某轮次未生成分数快照（`totalScore(round) == 0`），则该轮次个人奖励为 0。
+若某轮次 `totalScore(round) == 0`（包括未生成快照或所有参与者分数为 0），则该轮次个人奖励为 0。
 
 ## 6. 继承者实现指南
 
@@ -119,5 +119,3 @@ reward(account, round) = totalActionReward(round) \times \frac{score(account, ro
 
 - 分数数组长度与当前参与者集合长度一致
 - 分数数组索引与 `center.accounts(tokenAddress, actionId)` 的顺序一致
-
-
