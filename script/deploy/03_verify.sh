@@ -11,7 +11,7 @@ if [ -z "$RPC_URL" ]; then
 fi
 
 # Ensure extension center address is loaded
-if [ -z "$extensionCenterAddress" ]; then
+if [ -z "$centerAddress" ]; then
     source $network_dir/address.extension.center.params
 fi
 
@@ -40,4 +40,4 @@ verify_contract(){
 echo "verify_contract() loaded"
 
 # Verify LOVE20ExtensionCenter
-verify_contract $extensionCenterAddress "LOVE20ExtensionCenter" "src/LOVE20ExtensionCenter.sol"
+verify_contract $centerAddress "LOVE20ExtensionCenter" "src/LOVE20ExtensionCenter.sol"

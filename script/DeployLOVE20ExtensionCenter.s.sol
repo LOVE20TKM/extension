@@ -10,7 +10,7 @@ import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
  * @dev Reads deployment parameters from address.params and writes deployed address to address.extension.center.params
  */
 contract DeployLOVE20ExtensionCenter is BaseScript {
-    address public extensionCenterAddress;
+    address public centerAddress;
 
     /**
      * @notice Deploy LOVE20ExtensionCenter with parameters from address.params
@@ -71,7 +71,7 @@ contract DeployLOVE20ExtensionCenter is BaseScript {
 
         // Deploy LOVE20ExtensionCenter
         vm.startBroadcast();
-        extensionCenterAddress = address(
+        centerAddress = address(
             new LOVE20ExtensionCenter(
                 uniswapV2FactoryAddress,
                 launchAddress,
@@ -88,10 +88,7 @@ contract DeployLOVE20ExtensionCenter is BaseScript {
 
         // Log deployment info if enabled
         if (!hideLogs) {
-            console.log(
-                "LOVE20ExtensionCenter deployed at:",
-                extensionCenterAddress
-            );
+            console.log("LOVE20ExtensionCenter deployed at:", centerAddress);
             console.log("Constructor parameters:");
             console.log("  uniswapV2FactoryAddress:", uniswapV2FactoryAddress);
             console.log("  launchAddress:", launchAddress);
@@ -107,8 +104,8 @@ contract DeployLOVE20ExtensionCenter is BaseScript {
         // Update address file
         updateParamsFile(
             "address.extension.center.params",
-            "extensionCenterAddress",
-            vm.toString(extensionCenterAddress)
+            "centerAddress",
+            vm.toString(centerAddress)
         );
     }
 }

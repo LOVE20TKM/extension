@@ -34,11 +34,11 @@ fi
 
 # Load deployed address
 source $network_dir/address.extension.center.params
-if [ -z "$extensionCenterAddress" ]; then
+if [ -z "$centerAddress" ]; then
     echo -e "\033[31mError:\033[0m Extension center address not found"
     return 1
 fi
-echo -e "\033[32m✓\033[0m Extension Center deployed at: $extensionCenterAddress"
+echo -e "\033[32m✓\033[0m Extension Center deployed at: $centerAddress"
 
 # ------ Step 3: Verify contract (for thinkium70001 networks) ------
 if [[ "$network" == thinkium70001* ]]; then
@@ -64,6 +64,6 @@ fi
 echo -e "\n========================================="
 echo -e "\033[32m✓ Deployment completed successfully!\033[0m"
 echo -e "========================================="
-echo -e "Extension Center Address: $extensionCenterAddress"
+echo -e "Extension Center Address: $centerAddress"
 echo -e "Network: $network"
 echo -e "=========================================\n"
