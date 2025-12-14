@@ -3,13 +3,14 @@ pragma solidity =0.8.17;
 
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
+import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
+import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
-    using EnumerableSet for EnumerableSet.AddressSet;
+    using RoundHistoryUint256 for RoundHistoryUint256.History;
+    using RoundHistoryAddress for RoundHistoryAddress.History;
 
     // ------ state variables ------
     address public immutable uniswapV2FactoryAddress;
@@ -30,9 +31,17 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
 
-    // tokenAddress => actionId => accounts set
-    mapping(address => mapping(uint256 => EnumerableSet.AddressSet))
-        internal _accounts;
+    // tokenAddress => actionId => accountsCount history
+    mapping(address => mapping(uint256 => RoundHistoryUint256.History))
+        internal _accountsCountHistory;
+
+    // tokenAddress => actionId => index => account history
+    mapping(address => mapping(uint256 => mapping(uint256 => RoundHistoryAddress.History)))
+        internal _accountsAtIndexHistory;
+
+    // tokenAddress => actionId => account => index history
+    mapping(address => mapping(uint256 => mapping(address => RoundHistoryUint256.History)))
+        internal _accountsIndexHistory;
 
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
@@ -102,14 +111,29 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             revert AccountAlreadyJoined();
         }
 
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+
         // set account joined
         _isAccountJoined[tokenAddress][actionId][account] = true;
 
         // add actionId to account's list
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
-        // add account to action's list
-        _accounts[tokenAddress][actionId].add(account);
+        // add account to action's list using RoundHistory
+        uint256 accountCount = _accountsCountHistory[tokenAddress][actionId]
+            .latestValue();
+        _accountsAtIndexHistory[tokenAddress][actionId][accountCount].record(
+            currentRound,
+            account
+        );
+        _accountsIndexHistory[tokenAddress][actionId][account].record(
+            currentRound,
+            accountCount
+        );
+        _accountsCountHistory[tokenAddress][actionId].record(
+            currentRound,
+            accountCount + 1
+        );
 
         emit AccountAdded(tokenAddress, actionId, account);
     }
@@ -123,14 +147,37 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             revert AccountNotJoined();
         }
 
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+
         // set account joined to false
         _isAccountJoined[tokenAddress][actionId][account] = false;
 
         // remove actionId from account's list
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 
-        // remove account from action's list
-        _accounts[tokenAddress][actionId].remove(account);
+        // remove account from action's list using swap-and-pop
+        uint256 index = _accountsIndexHistory[tokenAddress][actionId][account]
+            .latestValue();
+        uint256 lastIndex = _accountsCountHistory[tokenAddress][actionId]
+            .latestValue() - 1;
+
+        if (index != lastIndex) {
+            address lastAccount = _accountsAtIndexHistory[tokenAddress][
+                actionId
+            ][lastIndex].latestValue();
+            _accountsAtIndexHistory[tokenAddress][actionId][index].record(
+                currentRound,
+                lastAccount
+            );
+            _accountsIndexHistory[tokenAddress][actionId][lastAccount].record(
+                currentRound,
+                index
+            );
+        }
+        _accountsCountHistory[tokenAddress][actionId].record(
+            currentRound,
+            lastIndex
+        );
 
         emit AccountRemoved(tokenAddress, actionId, account);
     }
@@ -166,19 +213,26 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         return _actionIdsByAccount[tokenAddress][account][index];
     }
 
-    // ------ accounts by action queries ------
+    // ------ accounts by action queries (current) ------
     function accounts(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address[] memory) {
-        return _accounts[tokenAddress][actionId].values();
+        uint256 count = _accountsCountHistory[tokenAddress][actionId]
+            .latestValue();
+        address[] memory result = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
+                .latestValue();
+        }
+        return result;
     }
 
     function accountsCount(
         address tokenAddress,
         uint256 actionId
     ) external view returns (uint256) {
-        return _accounts[tokenAddress][actionId].length();
+        return _accountsCountHistory[tokenAddress][actionId].latestValue();
     }
 
     function accountsAtIndex(
@@ -186,6 +240,27 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         uint256 actionId,
         uint256 index
     ) external view returns (address) {
-        return _accounts[tokenAddress][actionId].at(index);
+        return
+            _accountsAtIndexHistory[tokenAddress][actionId][index]
+                .latestValue();
+    }
+
+    // ------ accounts by action queries (by round) ------
+    function accountsCountByRound(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 round
+    ) external view returns (uint256) {
+        return _accountsCountHistory[tokenAddress][actionId].value(round);
+    }
+
+    function accountsAtIndexByRound(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 index,
+        uint256 round
+    ) external view returns (address) {
+        return
+            _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
     }
 }

@@ -12,8 +12,10 @@ import {
 import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
 
 using SafeERC20 for IERC20;
+using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /// @title TokenJoin
 /// @notice Base contract providing token-based join/exit functionality
@@ -38,11 +40,18 @@ abstract contract TokenJoin is
     // STATE VARIABLES - JOIN STATE
     // ============================================
 
-    /// @notice Total amount currently joined
-    uint256 public totalJoinedAmount;
+    /// @dev Round when account first joined
+    mapping(address => uint256) internal _joinedRoundByAccount;
 
-    /// @dev Mapping from account to their join information
-    mapping(address => JoinInfo) internal _joinInfo;
+    /// @dev Block when account last joined (for waiting period)
+    mapping(address => uint256) internal _joinedBlockByAccount;
+
+    /// @dev Amount history by account
+    mapping(address => RoundHistoryUint256.History)
+        internal _amountHistoryByAccount;
+
+    /// @dev Total joined amount history
+    RoundHistoryUint256.History internal _totalJoinedAmountHistory;
 
     /// @dev ERC20 interface for the join token
     IERC20 internal _joinToken;
@@ -79,19 +88,24 @@ abstract contract TokenJoin is
             revert JoinAmountZero();
         }
 
-        JoinInfo storage info = _joinInfo[msg.sender];
-        bool isFirstJoin = info.joinedBlock == 0;
+        uint256 currentRound = _join.currentRound();
+        bool isFirstJoin = _joinedBlockByAccount[msg.sender] == 0;
 
-        // Update state
-        if (isFirstJoin) {
-            info.joinedRound = _join.currentRound();
-        }
-        info.amount += amount;
-        info.joinedBlock = block.number;
-        totalJoinedAmount += amount;
+        // Update amount history
+        uint256 prevAmount = _amountHistoryByAccount[msg.sender].latestValue();
+        uint256 newAmount = prevAmount + amount;
+        _amountHistoryByAccount[msg.sender].record(currentRound, newAmount);
+
+        // Update total joined amount history
+        uint256 prevTotal = _totalJoinedAmountHistory.latestValue();
+        _totalJoinedAmountHistory.record(currentRound, prevTotal + amount);
+
+        // Update join block
+        _joinedBlockByAccount[msg.sender] = block.number;
 
         // Add to center accounts only on first join
         if (isFirstJoin) {
+            _joinedRoundByAccount[msg.sender] = currentRound;
             _center.addAccount(tokenAddress, actionId, msg.sender);
         }
 
@@ -103,7 +117,7 @@ abstract contract TokenJoin is
 
         emit Join(
             tokenAddress,
-            _join.currentRound(),
+            currentRound,
             actionId,
             msg.sender,
             amount,
@@ -113,21 +127,25 @@ abstract contract TokenJoin is
 
     /// @inheritdoc IExit
     function exit() public virtual nonReentrant {
-        JoinInfo storage info = _joinInfo[msg.sender];
-        if (info.joinedBlock == 0) {
+        uint256 joinedBlock = _joinedBlockByAccount[msg.sender];
+        if (joinedBlock == 0) {
             revert NoJoinedAmount();
         }
-        if (block.number < info.joinedBlock + waitingBlocks) {
+        if (block.number < joinedBlock + waitingBlocks) {
             revert NotEnoughWaitingBlocks();
         }
 
-        uint256 amount = info.amount;
+        uint256 amount = _amountHistoryByAccount[msg.sender].latestValue();
+        uint256 currentRound = _join.currentRound();
 
-        // Clear join info
-        info.joinedRound = 0;
-        info.amount = 0;
-        info.joinedBlock = 0;
-        totalJoinedAmount -= amount;
+        // Clear join state
+        _amountHistoryByAccount[msg.sender].record(currentRound, 0);
+        _totalJoinedAmountHistory.record(
+            currentRound,
+            _totalJoinedAmountHistory.latestValue() - amount
+        );
+        delete _joinedRoundByAccount[msg.sender];
+        delete _joinedBlockByAccount[msg.sender];
 
         // Remove from center accounts
         _center.removeAccount(tokenAddress, actionId, msg.sender);
@@ -135,14 +153,12 @@ abstract contract TokenJoin is
         // Transfer tokens back to user
         _joinToken.safeTransfer(msg.sender, amount);
 
-        emit Exit(
-            tokenAddress,
-            _join.currentRound(),
-            actionId,
-            msg.sender,
-            amount
-        );
+        emit Exit(tokenAddress, currentRound, actionId, msg.sender, amount);
     }
+
+    // ============================================
+    // VIEW FUNCTIONS
+    // ============================================
 
     /// @inheritdoc ITokenJoin
     function joinInfo(
@@ -158,12 +174,32 @@ abstract contract TokenJoin is
             uint256 exitableBlock
         )
     {
-        JoinInfo storage info = _joinInfo[account];
+        joinedBlock = _joinedBlockByAccount[account];
         return (
-            info.joinedRound,
-            info.amount,
-            info.joinedBlock,
-            info.joinedBlock == 0 ? 0 : info.joinedBlock + waitingBlocks
+            _joinedRoundByAccount[account],
+            _amountHistoryByAccount[account].latestValue(),
+            joinedBlock,
+            joinedBlock == 0 ? 0 : joinedBlock + waitingBlocks
         );
+    }
+
+    /// @inheritdoc ITokenJoin
+    function totalJoinedAmount() public view returns (uint256) {
+        return _totalJoinedAmountHistory.latestValue();
+    }
+
+    /// @inheritdoc ITokenJoin
+    function totalJoinedAmountByRound(
+        uint256 round
+    ) public view returns (uint256) {
+        return _totalJoinedAmountHistory.value(round);
+    }
+
+    /// @inheritdoc ITokenJoin
+    function amountByAccountByRound(
+        address account,
+        uint256 round
+    ) public view returns (uint256) {
+        return _amountHistoryByAccount[account].value(round);
     }
 }

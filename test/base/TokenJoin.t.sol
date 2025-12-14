@@ -34,7 +34,7 @@ contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
     }
 
     function joinedValue() external view override returns (uint256) {
-        return totalJoinedAmount;
+        return totalJoinedAmount();
     }
 
     function joinedValueByAccount(

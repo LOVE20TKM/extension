@@ -41,7 +41,7 @@ contract MockLOVE20ExtensionBaseTokenJoinAuto is
     }
 
     function joinedValue() external view override returns (uint256) {
-        return totalJoinedAmount;
+        return totalJoinedAmount();
     }
 
     function joinedValueByAccount(

@@ -10,6 +10,9 @@ import {
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
+
+using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /// @title ExampleTokenJoinAuto
 /// @notice Example implementation of LOVE20ExtensionBaseTokenJoinAuto
@@ -61,7 +64,7 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
                 actionId,
                 i
             );
-            uint256 score = _joinInfo[account].amount;
+            uint256 score = _amountHistoryByAccount[account].latestValue();
             scores[i] = score;
             total += score;
         }
@@ -77,7 +80,7 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
         address account
     ) public view override returns (uint256 total, uint256 score) {
         (total, ) = calculateScores();
-        score = _joinInfo[account].amount;
+        score = _amountHistoryByAccount[account].latestValue();
         return (total, score);
     }
 
@@ -95,7 +98,7 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
     /// @dev Returns the total amount of tokens joined by all accounts
     /// @return The total joined value
     function joinedValue() external view override returns (uint256) {
-        return totalJoinedAmount;
+        return totalJoinedAmount();
     }
 
     /// @notice Get the joined value for a specific account
@@ -104,6 +107,6 @@ contract ExampleTokenJoinAuto is LOVE20ExtensionBaseTokenJoinAuto {
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        return _joinInfo[account].amount;
+        return _amountHistoryByAccount[account].latestValue();
     }
 }

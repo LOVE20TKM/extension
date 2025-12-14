@@ -59,20 +59,6 @@ interface ITokenJoin is IExit, IVerificationInfo {
     );
 
     // ============================================
-    // STRUCTS
-    // ============================================
-
-    /// @notice Information about an account's join
-    /// @param joinedRound The round when the join occurred
-    /// @param amount The amount of tokens joined
-    /// @param joinedBlock The block number when the join occurred
-    struct JoinInfo {
-        uint256 joinedRound;
-        uint256 amount;
-        uint256 joinedBlock;
-    }
-
-    // ============================================
     // VIEW FUNCTIONS
     // ============================================
 
@@ -87,6 +73,22 @@ interface ITokenJoin is IExit, IVerificationInfo {
     /// @notice Get the total amount of tokens joined by all accounts
     /// @return The total joined amount
     function totalJoinedAmount() external view returns (uint256);
+
+    /// @notice Get the total joined amount at a specific round
+    /// @param round The round to query
+    /// @return The total joined amount at the round
+    function totalJoinedAmountByRound(
+        uint256 round
+    ) external view returns (uint256);
+
+    /// @notice Get the joined amount for an account at a specific round
+    /// @param account The account address to query
+    /// @param round The round to query
+    /// @return The joined amount at the round
+    function amountByAccountByRound(
+        address account,
+        uint256 round
+    ) external view returns (uint256);
 
     /// @notice Get join information for a specific account
     /// @param account The account address to query

@@ -6,6 +6,9 @@ import {
 } from "../LOVE20ExtensionBaseTokenJoin.sol";
 import {ExtensionReward} from "../base/ExtensionReward.sol";
 import {IExtensionReward} from "../interface/base/IExtensionReward.sol";
+import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
+
+using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /// @title ExampleTokenJoin
 /// @notice Example implementation of LOVE20ExtensionBaseTokenJoin
@@ -48,7 +51,7 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
     /// @dev Returns the total amount of tokens joined by all accounts
     /// @return The total joined value
     function joinedValue() external view override returns (uint256) {
-        return totalJoinedAmount;
+        return totalJoinedAmount();
     }
 
     /// @notice Get the joined value for a specific account
@@ -57,7 +60,7 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
     function joinedValueByAccount(
         address account
     ) external view override returns (uint256) {
-        return _joinInfo[account].amount;
+        return _amountHistoryByAccount[account].latestValue();
     }
 
     // ============================================
@@ -77,8 +80,9 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
         );
 
         reward =
-            (totalActionReward * _joinInfo[account].amount) /
-            totalJoinedAmount;
+            (totalActionReward *
+                _amountHistoryByAccount[account].latestValue()) /
+            totalJoinedAmount();
         return reward;
     }
 }
