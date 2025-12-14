@@ -522,23 +522,6 @@ contract ExampleTokenJoinTest is Test {
     }
 
     // ============================================
-    // VERIFICATION INFO TESTS
-    // ============================================
-    // Note: Comprehensive verification info tests would require action setup
-    // with verification keys configured in the action. These tests focus on
-    // the basic join functionality accepting verification infos.
-
-    function test_UpdateVerificationInfo_Empty() public {
-        string[] memory verificationInfos = new string[](0);
-
-        vm.prank(user1);
-        extension.updateVerificationInfo(verificationInfos);
-
-        // Empty verification info should succeed without error
-        assertTrue(true);
-    }
-
-    // ============================================
     // TOKEN TRANSFER TESTS
     // ============================================
 

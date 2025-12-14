@@ -2,7 +2,6 @@
 pragma solidity =0.8.17;
 
 import {ExtensionCore} from "./ExtensionCore.sol";
-import {VerificationInfo} from "./VerificationInfo.sol";
 import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
 import {IExit} from "../interface/base/IExit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,12 +19,7 @@ using RoundHistoryUint256 for RoundHistoryUint256.History;
 /// @title TokenJoin
 /// @notice Base contract providing token-based join/exit functionality
 /// @dev Implements ITokenJoin interface with ERC20 token participation and block-based waiting period
-abstract contract TokenJoin is
-    ExtensionCore,
-    VerificationInfo,
-    ReentrancyGuard,
-    ITokenJoin
-{
+abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
     // ============================================
     // STATE VARIABLES - IMMUTABLE CONFIG
     // ============================================
@@ -106,14 +100,23 @@ abstract contract TokenJoin is
         // Add to center accounts only on first join
         if (isFirstJoin) {
             _joinedRoundByAccount[msg.sender] = currentRound;
-            _center.addAccount(tokenAddress, actionId, msg.sender);
+            _center.addAccount(
+                tokenAddress,
+                actionId,
+                msg.sender,
+                verificationInfos
+            );
+        } else if (verificationInfos.length > 0) {
+            _center.updateVerificationInfo(
+                tokenAddress,
+                actionId,
+                msg.sender,
+                verificationInfos
+            );
         }
 
         // Transfer tokens from user
         _joinToken.safeTransferFrom(msg.sender, address(this), amount);
-
-        // Update verification info if provided
-        updateVerificationInfo(verificationInfos);
 
         emit Join(
             tokenAddress,

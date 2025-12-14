@@ -7,10 +7,12 @@ import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
+import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     using RoundHistoryUint256 for RoundHistoryUint256.History;
     using RoundHistoryAddress for RoundHistoryAddress.History;
+    using RoundHistoryString for RoundHistoryString.History;
 
     // ------ state variables ------
     address public immutable uniswapV2FactoryAddress;
@@ -42,6 +44,10 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     // tokenAddress => actionId => account => index history
     mapping(address => mapping(uint256 => mapping(address => RoundHistoryUint256.History)))
         internal _accountsIndexHistory;
+
+    // tokenAddress => actionId => account => verificationKey => History
+    mapping(address => mapping(uint256 => mapping(address => mapping(string => RoundHistoryString.History))))
+        internal _verificationInfoHistory;
 
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
@@ -105,7 +111,8 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     function addAccount(
         address tokenAddress,
         uint256 actionId,
-        address account
+        address account,
+        string[] calldata verificationInfos
     ) external onlyExtension(tokenAddress, actionId) {
         if (_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountAlreadyJoined();
@@ -133,6 +140,15 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         _accountsCountHistory[tokenAddress][actionId].record(
             currentRound,
             accountCount + 1
+        );
+
+        // store verification info
+        _storeVerificationInfo(
+            tokenAddress,
+            actionId,
+            account,
+            verificationInfos,
+            currentRound
         );
 
         emit AccountAdded(tokenAddress, actionId, account);
@@ -262,5 +278,86 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     ) external view returns (address) {
         return
             _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
+    }
+
+    // ------ verification info (only extension can call) ------
+    function updateVerificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string[] calldata verificationInfos
+    ) external onlyExtension(tokenAddress, actionId) {
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+        _storeVerificationInfo(
+            tokenAddress,
+            actionId,
+            account,
+            verificationInfos,
+            currentRound
+        );
+    }
+
+    // ------ verification info queries ------
+    function verificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey
+    ) external view returns (string memory) {
+        return
+            _verificationInfoHistory[tokenAddress][actionId][account][
+                verificationKey
+            ].latestValue();
+    }
+
+    function verificationInfoByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey,
+        uint256 round
+    ) external view returns (string memory) {
+        return
+            _verificationInfoHistory[tokenAddress][actionId][account][
+                verificationKey
+            ].value(round);
+    }
+
+    // ------ internal functions ------
+    function _storeVerificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string[] calldata verificationInfos,
+        uint256 currentRound
+    ) internal {
+        if (verificationInfos.length == 0) {
+            return;
+        }
+
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        string[] memory verificationKeys = actionInfo.body.verificationKeys;
+
+        if (verificationKeys.length != verificationInfos.length) {
+            revert VerificationInfoLengthMismatch();
+        }
+
+        for (uint256 i = 0; i < verificationKeys.length; i++) {
+            _verificationInfoHistory[tokenAddress][actionId][account][
+                verificationKeys[i]
+            ].record(currentRound, verificationInfos[i]);
+
+            emit UpdateVerificationInfo(
+                tokenAddress,
+                currentRound,
+                actionId,
+                account,
+                verificationKeys[i],
+                verificationInfos[i]
+            );
+        }
     }
 }

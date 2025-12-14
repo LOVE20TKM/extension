@@ -12,6 +12,14 @@ interface ILOVE20ExtensionCenter {
         uint256 indexed actionId,
         address indexed account
     );
+    event UpdateVerificationInfo(
+        address indexed tokenAddress,
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account,
+        string verificationKey,
+        string verificationInfo
+    );
 
     // ------ errors ------
     error InvalidUniswapV2FactoryAddress();
@@ -26,6 +34,7 @@ interface ILOVE20ExtensionCenter {
     error OnlyExtensionCanCall();
     error AccountAlreadyJoined();
     error AccountNotJoined();
+    error VerificationInfoLengthMismatch();
 
     // ------ core system addresses ------
     function uniswapV2FactoryAddress() external view returns (address);
@@ -48,7 +57,8 @@ interface ILOVE20ExtensionCenter {
     function addAccount(
         address tokenAddress,
         uint256 actionId,
-        address account
+        address account,
+        string[] calldata verificationInfos
     ) external;
 
     function removeAccount(
@@ -110,4 +120,27 @@ interface ILOVE20ExtensionCenter {
         uint256 index,
         uint256 round
     ) external view returns (address);
+
+    // ------ verification info ------
+    function updateVerificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string[] calldata verificationInfos
+    ) external;
+
+    function verificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey
+    ) external view returns (string memory);
+
+    function verificationInfoByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey,
+        uint256 round
+    ) external view returns (string memory);
 }

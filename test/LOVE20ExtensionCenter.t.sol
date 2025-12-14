@@ -48,6 +48,14 @@ contract LOVE20ExtensionCenterTest is Test {
         uint256 indexed actionId,
         address indexed account
     );
+    event UpdateVerificationInfo(
+        address indexed tokenAddress,
+        uint256 round,
+        uint256 indexed actionId,
+        address indexed account,
+        string verificationKey,
+        string verificationInfo
+    );
 
     function setUp() public {
         // Deploy mock contracts
@@ -267,7 +275,7 @@ contract LOVE20ExtensionCenterTest is Test {
         vm.prank(address(mockExtension));
         vm.expectEmit(true, true, true, false);
         emit AccountAdded(tokenAddress, actionId1, user1);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
 
         // Verify
         assertTrue(
@@ -302,7 +310,7 @@ contract LOVE20ExtensionCenterTest is Test {
         // Try to add account from non-extension address
         vm.prank(user1);
         vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
     }
 
     function testAddAccountRevertsIfAlreadyJoined() public {
@@ -317,11 +325,11 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Add account first time
         vm.startPrank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
 
         // Try to add again
         vm.expectRevert(ILOVE20ExtensionCenter.AccountAlreadyJoined.selector);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
         vm.stopPrank();
     }
 
@@ -337,7 +345,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         vm.startPrank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
 
         // Remove account
         vm.expectEmit(true, true, true, false);
@@ -366,7 +374,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         vm.prank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
 
         // Try to remove from non-extension address
         vm.prank(user1);
@@ -412,14 +420,14 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1);
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
 
         vm.prank(address(mockExtension2));
-        extensionCenter.addAccount(tokenAddress, actionId2, user1);
+        extensionCenter.addAccount(tokenAddress, actionId2, user1, new string[](0));
 
         // Add user2 to action1 only
         vm.prank(address(mockExtension1));
-        extensionCenter.addAccount(tokenAddress, actionId1, user2);
+        extensionCenter.addAccount(tokenAddress, actionId1, user2, new string[](0));
 
         // Verify user1 is in both actions
         assertEq(
@@ -467,5 +475,283 @@ contract LOVE20ExtensionCenterTest is Test {
             user1
         );
         assertEq(actionIds.length, 0);
+    }
+
+    // ------ Verification info tests ------
+    function testAddAccountWithVerificationInfo() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        // Set verification keys
+        string[] memory keys = new string[](2);
+        keys[0] = "email";
+        keys[1] = "twitter";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Add account with verification info
+        string[] memory infos = new string[](2);
+        infos[0] = "user1@example.com";
+        infos[1] = "@user1";
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
+
+        // Verify
+        assertEq(
+            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            "user1@example.com"
+        );
+        assertEq(
+            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "twitter"),
+            "@user1"
+        );
+    }
+
+    function testUpdateVerificationInfo() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        // Set verification keys
+        string[] memory keys = new string[](1);
+        keys[0] = "email";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Add account first
+        string[] memory infos = new string[](1);
+        infos[0] = "old@example.com";
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
+
+        // Update verification info
+        string[] memory newInfos = new string[](1);
+        newInfos[0] = "new@example.com";
+
+        vm.prank(address(mockExtension));
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            newInfos
+        );
+
+        // Verify updated
+        assertEq(
+            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            "new@example.com"
+        );
+    }
+
+    function testUpdateVerificationInfoEmitsEvent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        string[] memory keys = new string[](1);
+        keys[0] = "email";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+
+        string[] memory newInfos = new string[](1);
+        newInfos[0] = "test@example.com";
+
+        uint256 currentRound = mockJoin.currentRound();
+
+        vm.prank(address(mockExtension));
+        vm.expectEmit(true, true, true, true);
+        emit UpdateVerificationInfo(
+            tokenAddress,
+            currentRound,
+            actionId1,
+            user1,
+            "email",
+            "test@example.com"
+        );
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            newInfos
+        );
+    }
+
+    function testUpdateVerificationInfoRevertsIfNotExtension() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        string[] memory infos = new string[](0);
+
+        vm.prank(user1);
+        vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            infos
+        );
+    }
+
+    function testVerificationInfoByRound() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        string[] memory keys = new string[](1);
+        keys[0] = "email";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Add account at round 1
+        string[] memory infos1 = new string[](1);
+        infos1[0] = "round1@example.com";
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, infos1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+
+        // Update at round 2
+        string[] memory infos2 = new string[](1);
+        infos2[0] = "round2@example.com";
+        vm.prank(address(mockExtension));
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            infos2
+        );
+
+        // Query by round
+        assertEq(
+            extensionCenter.verificationInfoByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email",
+                round1
+            ),
+            "round1@example.com"
+        );
+        assertEq(
+            extensionCenter.verificationInfoByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email",
+                round1 + 1
+            ),
+            "round2@example.com"
+        );
+        // Latest should be round2
+        assertEq(
+            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            "round2@example.com"
+        );
+    }
+
+    function testAddAccountRevertsOnVerificationInfoLengthMismatch() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        // Set 2 verification keys
+        string[] memory keys = new string[](2);
+        keys[0] = "email";
+        keys[1] = "twitter";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Try to add with only 1 info (mismatch)
+        string[] memory infos = new string[](1);
+        infos[0] = "user1@example.com";
+
+        vm.prank(address(mockExtension));
+        vm.expectRevert(
+            ILOVE20ExtensionCenter.VerificationInfoLengthMismatch.selector
+        );
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
+    }
+
+    function testUpdateVerificationInfoRevertsOnLengthMismatch() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        // Set 2 verification keys
+        string[] memory keys = new string[](2);
+        keys[0] = "email";
+        keys[1] = "twitter";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Add account without verification info (empty array skips check)
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+
+        // Try to update with mismatched length
+        string[] memory infos = new string[](1);
+        infos[0] = "user1@example.com";
+
+        vm.prank(address(mockExtension));
+        vm.expectRevert(
+            ILOVE20ExtensionCenter.VerificationInfoLengthMismatch.selector
+        );
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            infos
+        );
+    }
+
+    function testVerificationInfoEmptyForNonExistentKey() public view {
+        // Query non-existent verification info
+        assertEq(
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "nonexistent"
+            ),
+            ""
+        );
     }
 }

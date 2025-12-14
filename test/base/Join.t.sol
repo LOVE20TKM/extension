@@ -158,8 +158,8 @@ contract JoinTest is BaseExtensionTest {
         extension.join(verificationInfos);
 
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
-        assertEq(extension.verificationInfo(user1, "key1"), "info1");
-        assertEq(extension.verificationInfo(user1, "key2"), "info2");
+        assertEq(center.verificationInfo(address(token), ACTION_ID, user1, "key1"), "info1");
+        assertEq(center.verificationInfo(address(token), ACTION_ID, user1, "key2"), "info2");
     }
 
     function test_Join_EmptyVerificationInfo() public {
