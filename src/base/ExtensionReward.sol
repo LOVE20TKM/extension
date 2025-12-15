@@ -72,7 +72,7 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     }
 
     /// @inheritdoc IExtensionReward
-    function reward(uint256 round) external view virtual returns (uint256) {
+    function reward(uint256 round) public view virtual returns (uint256) {
         if (_reward[round] > 0) {
             return _reward[round];
         }
