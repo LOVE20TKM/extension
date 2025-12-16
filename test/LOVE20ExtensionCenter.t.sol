@@ -272,13 +272,22 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Add account from extension
         vm.prank(address(mockExtension));
         vm.expectEmit(true, true, true, false);
         emit AccountAdded(tokenAddress, actionId1, user1);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         // Verify
         assertTrue(
@@ -313,7 +322,12 @@ contract LOVE20ExtensionCenterTest is Test {
         // Try to add account from non-extension address
         vm.prank(user1);
         vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
     }
 
     function testAddAccountRevertsIfAlreadyJoined() public {
@@ -325,15 +339,29 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Add account first time
         vm.startPrank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         // Try to add again
         vm.expectRevert(ILOVE20ExtensionCenter.AccountAlreadyJoined.selector);
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
         vm.stopPrank();
     }
 
@@ -347,10 +375,19 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         vm.startPrank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         // Remove account
         vm.expectEmit(true, true, true, false);
@@ -377,10 +414,19 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         vm.prank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         // Try to remove from non-extension address
         vm.prank(user1);
@@ -414,7 +460,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension1)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         MockExtension mockExtension2 = MockExtension(
             mockFactory.createExtension(tokenAddress)
@@ -424,18 +474,37 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId2,
             address(mockExtension2)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId2);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId2
+        );
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         vm.prank(address(mockExtension2));
-        extensionCenter.addAccount(tokenAddress, actionId2, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId2,
+            user1,
+            new string[](0)
+        );
 
         // Add user2 to action1 only
         vm.prank(address(mockExtension1));
-        extensionCenter.addAccount(tokenAddress, actionId1, user2, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
 
         // Verify user1 is in both actions
         assertEq(
@@ -495,7 +564,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Set verification keys
         string[] memory keys = new string[](2);
@@ -513,11 +586,21 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Verify
         assertEq(
-            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email"
+            ),
             "user1@example.com"
         );
         assertEq(
-            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "twitter"),
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "twitter"
+            ),
             "@user1"
         );
     }
@@ -531,7 +614,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Set verification keys
         string[] memory keys = new string[](1);
@@ -558,7 +645,12 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Verify updated
         assertEq(
-            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email"
+            ),
             "new@example.com"
         );
     }
@@ -572,14 +664,23 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         string[] memory keys = new string[](1);
         keys[0] = "email";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
 
         vm.prank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         string[] memory newInfos = new string[](1);
         newInfos[0] = "test@example.com";
@@ -635,7 +736,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         string[] memory keys = new string[](1);
         keys[0] = "email";
@@ -686,7 +791,12 @@ contract LOVE20ExtensionCenterTest is Test {
         );
         // Latest should be round2
         assertEq(
-            extensionCenter.verificationInfo(tokenAddress, actionId1, user1, "email"),
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email"
+            ),
             "round2@example.com"
         );
     }
@@ -700,7 +810,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Set 2 verification keys
         string[] memory keys = new string[](2);
@@ -728,7 +842,11 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
-        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
 
         // Set 2 verification keys
         string[] memory keys = new string[](2);
@@ -738,7 +856,12 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Add account without verification info (empty array skips check)
         vm.prank(address(mockExtension));
-        extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
 
         // Try to update with mismatched length
         string[] memory infos = new string[](1);
