@@ -4,6 +4,7 @@ pragma solidity =0.8.17;
 import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
+import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
@@ -114,11 +115,21 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address account,
         string[] calldata verificationInfos
     ) external onlyExtension(tokenAddress, actionId) {
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+
+        if (
+            !ILOVE20Vote(voteAddress).isActionIdVoted(
+                tokenAddress,
+                currentRound,
+                actionId
+            )
+        ) {
+            revert ActionNotVotedInCurrentRound();
+        }
+
         if (_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountAlreadyJoined();
         }
-
-        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
         // set account joined
         _isAccountJoined[tokenAddress][actionId][account] = true;

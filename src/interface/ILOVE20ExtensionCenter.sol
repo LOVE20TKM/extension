@@ -35,6 +35,7 @@ interface ILOVE20ExtensionCenter {
     error AccountAlreadyJoined();
     error AccountNotJoined();
     error VerificationInfoLengthMismatch();
+    error ActionNotVotedInCurrentRound();
 
     // ------ core system addresses ------
     function uniswapV2FactoryAddress() external view returns (address);
