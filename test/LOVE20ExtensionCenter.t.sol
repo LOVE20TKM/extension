@@ -8,6 +8,7 @@ import {
 } from "../src/interface/ILOVE20ExtensionCenter.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
+import {MockVote} from "./mocks/MockVote.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {MockExtension} from "./mocks/MockExtension.sol";
 import {MockToken} from "./mocks/MockToken.sol";
@@ -20,12 +21,12 @@ contract LOVE20ExtensionCenterTest is Test {
     LOVE20ExtensionCenter public extensionCenter;
     MockSubmit public mockSubmit;
     MockJoin public mockJoin;
+    MockVote public mockVote;
     MockExtensionFactory public mockFactory;
 
     address public mockUniswapV2Factory = address(0x2000);
     address public mockLaunch = address(0x2001);
     address public mockStake = address(0x2002);
-    address public mockVote = address(0x2003);
     address public mockVerify = address(0x2004);
     address public mockMint = address(0x2005);
     address public mockRandom = address(0x2006);
@@ -61,6 +62,7 @@ contract LOVE20ExtensionCenterTest is Test {
         // Deploy mock contracts
         mockSubmit = new MockSubmit();
         mockJoin = new MockJoin();
+        mockVote = new MockVote();
 
         // Deploy extension center with all required addresses
         extensionCenter = new LOVE20ExtensionCenter(
@@ -68,7 +70,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -96,7 +98,7 @@ contract LOVE20ExtensionCenterTest is Test {
         assertEq(extensionCenter.launchAddress(), mockLaunch);
         assertEq(extensionCenter.stakeAddress(), mockStake);
         assertEq(extensionCenter.submitAddress(), address(mockSubmit));
-        assertEq(extensionCenter.voteAddress(), mockVote);
+        assertEq(extensionCenter.voteAddress(), address(mockVote));
         assertEq(extensionCenter.joinAddress(), address(mockJoin));
         assertEq(extensionCenter.verifyAddress(), mockVerify);
         assertEq(extensionCenter.mintAddress(), mockMint);
@@ -112,7 +114,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -127,7 +129,7 @@ contract LOVE20ExtensionCenterTest is Test {
             address(0),
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -142,7 +144,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             address(0),
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -157,7 +159,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(0),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -187,7 +189,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(0),
             mockVerify,
             mockMint,
@@ -202,7 +204,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             address(0),
             mockMint,
@@ -217,7 +219,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             address(0),
@@ -232,7 +234,7 @@ contract LOVE20ExtensionCenterTest is Test {
             mockLaunch,
             mockStake,
             address(mockSubmit),
-            mockVote,
+            address(mockVote),
             address(mockJoin),
             mockVerify,
             mockMint,
@@ -270,6 +272,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Add account from extension
         vm.prank(address(mockExtension));
@@ -322,6 +325,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Add account first time
         vm.startPrank(address(mockExtension));
@@ -343,6 +347,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         vm.startPrank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
@@ -372,6 +377,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(tokenAddress, actionId1, user1, new string[](0));
@@ -408,6 +414,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension1)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         MockExtension mockExtension2 = MockExtension(
             mockFactory.createExtension(tokenAddress)
@@ -417,6 +424,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId2,
             address(mockExtension2)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId2);
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
@@ -487,6 +495,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Set verification keys
         string[] memory keys = new string[](2);
@@ -522,6 +531,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Set verification keys
         string[] memory keys = new string[](1);
@@ -562,6 +572,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         string[] memory keys = new string[](1);
         keys[0] = "email";
@@ -624,6 +635,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         string[] memory keys = new string[](1);
         keys[0] = "email";
@@ -688,6 +700,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Set 2 verification keys
         string[] memory keys = new string[](2);
@@ -715,6 +728,7 @@ contract LOVE20ExtensionCenterTest is Test {
             actionId1,
             address(mockExtension)
         );
+        mockVote.setVotedActionIds(tokenAddress, mockJoin.currentRound(), actionId1);
 
         // Set 2 verification keys
         string[] memory keys = new string[](2);
