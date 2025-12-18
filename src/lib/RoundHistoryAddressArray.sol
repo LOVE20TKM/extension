@@ -52,4 +52,56 @@ library RoundHistoryAddressArray {
         uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
         return self.valueByRound[latestRound];
     }
+
+    /// @notice Add address if not exists
+    function add(History storage self, uint256 round, address value) internal {
+        address[] memory arr = values(self, round);
+        for (uint256 i; i < arr.length; ) {
+            if (arr[i] == value) return;
+            unchecked {
+                ++i;
+            }
+        }
+        address[] memory updated = new address[](arr.length + 1);
+        for (uint256 i; i < arr.length; ) {
+            updated[i] = arr[i];
+            unchecked {
+                ++i;
+            }
+        }
+        updated[arr.length] = value;
+        record(self, round, updated);
+    }
+
+    /// @notice Remove address, returns true if removed
+    function remove(
+        History storage self,
+        uint256 round,
+        address value
+    ) internal returns (bool) {
+        address[] memory arr = values(self, round);
+        for (uint256 i; i < arr.length; ) {
+            if (arr[i] == value) {
+                address[] memory updated = new address[](arr.length - 1);
+                for (uint256 j; j < i; ) {
+                    updated[j] = arr[j];
+                    unchecked {
+                        ++j;
+                    }
+                }
+                for (uint256 j = i + 1; j < arr.length; ) {
+                    updated[j - 1] = arr[j];
+                    unchecked {
+                        ++j;
+                    }
+                }
+                record(self, round, updated);
+                return true;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return false;
+    }
 }
