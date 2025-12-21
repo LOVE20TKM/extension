@@ -67,6 +67,8 @@ interface ILOVE20ExtensionCenter {
         address account
     ) external;
 
+    function forceExit(address tokenAddress, uint256 actionId) external;
+
     // ------ the accounts that joined the actions by extension
     function isAccountJoined(
         address tokenAddress,

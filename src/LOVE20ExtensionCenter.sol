@@ -170,6 +170,18 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         uint256 actionId,
         address account
     ) external onlyExtension(tokenAddress, actionId) {
+        _removeAccount(tokenAddress, actionId, account);
+    }
+
+    function forceExit(address tokenAddress, uint256 actionId) external {
+        _removeAccount(tokenAddress, actionId, msg.sender);
+    }
+
+    function _removeAccount(
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) internal {
         if (!_isAccountJoined[tokenAddress][actionId][account]) {
             return;
         }

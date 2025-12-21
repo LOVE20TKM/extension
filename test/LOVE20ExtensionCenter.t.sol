@@ -903,4 +903,359 @@ contract LOVE20ExtensionCenterTest is Test {
             ""
         );
     }
+
+    // ------ forceExit tests ------
+    function testForceExit() public {
+        // Setup extension as whitelist
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add account from extension
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // User exits by themselves
+        vm.prank(user1);
+        vm.expectEmit(true, true, true, false);
+        emit AccountRemoved(tokenAddress, actionId1, user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertEq(
+            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
+            0
+        );
+        assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 0);
+    }
+
+    function testForceExitIdempotent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        // Try to exit account that was never added (should succeed silently)
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify state unchanged
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertEq(
+            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
+            0
+        );
+
+        // Try to exit again (should still succeed silently)
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+    }
+
+    function testForceExitAfterRemove() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add account
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Extension removes account
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // User tries to force exit (should succeed silently)
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify state unchanged
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testForceExitMultipleAccounts() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add multiple accounts
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify both are added
+        assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 2);
+
+        // User1 exits
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify user1 is removed, user2 remains
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
+        );
+        assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 1);
+        assertEq(
+            extensionCenter.accountsAtIndex(tokenAddress, actionId1, 0),
+            user2
+        );
+    }
+
+    function testForceExitMiddleAccount() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        address user3 = address(0x1004);
+
+        // Add three accounts
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user3,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify all are added
+        assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 3);
+
+        // User2 (middle account) exits
+        vm.prank(user2);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify user2 is removed, user1 and user3 remain
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user3)
+        );
+        assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 2);
+
+        // Verify accounts list contains user1 and user3
+        address[] memory accounts = extensionCenter.accounts(
+            tokenAddress,
+            actionId1
+        );
+        assertEq(accounts.length, 2);
+        assertTrue(
+            (accounts[0] == user1 || accounts[0] == user3) &&
+                (accounts[1] == user1 || accounts[1] == user3)
+        );
+    }
+
+    function testForceExitMultipleActions() public {
+        // Create two extensions for different actions
+        MockExtension mockExtension1 = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension1)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        MockExtension mockExtension2 = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId2,
+            address(mockExtension2)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId2
+        );
+
+        // Add user1 to both actions
+        vm.prank(address(mockExtension1));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        vm.prank(address(mockExtension2));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId2,
+            user1,
+            new string[](0)
+        );
+
+        // Verify user1 is in both actions
+        assertEq(
+            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
+            2
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId2, user1)
+        );
+
+        // User1 exits from action1 only
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify user1 is removed from action1 but still in action2
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId2, user1)
+        );
+        assertEq(
+            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
+            1
+        );
+        assertEq(
+            extensionCenter.actionIdsByAccountAtIndex(tokenAddress, user1, 0),
+            actionId2
+        );
+    }
+
+    function testForceExitOnlySelf() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add both users
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // User1 tries to exit user2 (should only exit themselves)
+        vm.prank(user1);
+        extensionCenter.forceExit(tokenAddress, actionId1);
+
+        // Verify user1 is removed, user2 remains
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
+        );
+    }
 }
