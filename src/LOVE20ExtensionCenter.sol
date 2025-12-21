@@ -285,7 +285,23 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ accounts by action queries (by round) ------
-    function accountsCountByRound(
+    function accountsByRound(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 round
+    ) external view returns (address[] memory) {
+        uint256 count = _accountsCountHistory[tokenAddress][actionId].value(
+            round
+        );
+        address[] memory result = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
+                .value(round);
+        }
+        return result;
+    }
+
+    function accountsByRoundCount(
         address tokenAddress,
         uint256 actionId,
         uint256 round
@@ -293,7 +309,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         return _accountsCountHistory[tokenAddress][actionId].value(round);
     }
 
-    function accountsAtIndexByRound(
+    function accountsByRoundAtIndex(
         address tokenAddress,
         uint256 actionId,
         uint256 index,

@@ -1258,4 +1258,457 @@ contract LOVE20ExtensionCenterTest is Test {
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
         );
     }
+
+    // ------ accounts by round tests ------
+    function testAccountsByRound() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add accounts at round 1
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify accountsByRound at round 1
+        address[] memory accountsRound1 = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+        assertEq(accountsRound1.length, 2);
+        assertTrue(
+            (accountsRound1[0] == user1 || accountsRound1[0] == user2) &&
+                (accountsRound1[1] == user1 || accountsRound1[1] == user2)
+        );
+        assertTrue(accountsRound1[0] != accountsRound1[1]);
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Remove user1 first (since user1 already joined in round 1, must remove before adding in round 2)
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Verify accountsByRound at round 2
+        // Note: After removing user1, user2 moves to index 0 (swap-and-pop), then user1 is added at index 1
+        address[] memory accountsRound2 = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round2
+        );
+        assertEq(accountsRound2.length, 2);
+        assertEq(accountsRound2[0], user2); // user2 moved to index 0 after user1 removal
+        assertEq(accountsRound2[1], user1); // user1 added at index 1
+
+        // Verify round 1 data is still accessible
+        address[] memory accountsRound1Again = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+        assertEq(accountsRound1Again.length, 2);
+    }
+
+    function testAccountsByRoundCount() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add accounts at round 1
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify accountsByRoundCount at round 1
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round1
+            ),
+            2
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Verify that round 2 initially has the same count as round 1 (before any changes in round 2)
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round1 + 1
+            ),
+            2
+        );
+
+        // Remove user1 first (since user1 already joined in round 1, must remove before adding in round 2)
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Verify accountsByRoundCount at round 2
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round2
+            ),
+            2
+        );
+
+        // Verify round 1 count is still 2
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round1
+            ),
+            2
+        );
+    }
+
+    function testAccountsByRoundAtIndex() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add accounts at round 1
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify accountsByRoundAtIndex at round 1
+        address account0 = extensionCenter.accountsByRoundAtIndex(
+            tokenAddress,
+            actionId1,
+            0,
+            round1
+        );
+        address account1 = extensionCenter.accountsByRoundAtIndex(
+            tokenAddress,
+            actionId1,
+            1,
+            round1
+        );
+        // Verify order: user1 added first (index 0), user2 added second (index 1)
+        assertEq(account0, user1);
+        assertEq(account1, user2);
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Remove user1 first (since user1 already joined in round 1, must remove before adding in round 2)
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Verify accountsByRoundAtIndex at round 2
+        // Note: After removing user1, user2 moves to index 0 (swap-and-pop), then user1 is added at index 1
+        address account0Round2 = extensionCenter.accountsByRoundAtIndex(
+            tokenAddress,
+            actionId1,
+            0,
+            round2
+        );
+        address account1Round2 = extensionCenter.accountsByRoundAtIndex(
+            tokenAddress,
+            actionId1,
+            1,
+            round2
+        );
+        assertEq(account0Round2, user2); // user2 moved to index 0 after user1 removal
+        assertEq(account1Round2, user1); // user1 added at index 1
+
+        // Verify round 1 data is still accessible
+        address account0Round1Again = extensionCenter.accountsByRoundAtIndex(
+            tokenAddress,
+            actionId1,
+            0,
+            round1
+        );
+        assertEq(account0Round1Again, user1); // user1 was at index 0 in round 1
+    }
+
+    function testAccountsByRoundMultipleRounds() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add user1 at round 1
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add user2 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Verify round 1 has only user1
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round1
+            ),
+            1
+        );
+        address[] memory accountsRound1 = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+        assertEq(accountsRound1.length, 1);
+        assertEq(accountsRound1[0], user1);
+
+        // Verify round 2 has both users
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round2
+            ),
+            2
+        );
+        address[] memory accountsRound2 = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round2
+        );
+        assertEq(accountsRound2.length, 2);
+        assertEq(accountsRound2[0], user1); // user1 from round 1
+        assertEq(accountsRound2[1], user2); // user2 added in round 2
+    }
+
+    function testAccountsByRoundEmpty() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Query empty accounts by round
+        assertEq(
+            extensionCenter.accountsByRoundCount(
+                tokenAddress,
+                actionId1,
+                round1
+            ),
+            0
+        );
+        address[] memory accounts = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+        assertEq(accounts.length, 0);
+    }
+
+    function testAccountsByRoundConsistency() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add multiple accounts
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        // Verify consistency between accountsByRound, accountsByRoundCount, and accountsByRoundAtIndex
+        uint256 count = extensionCenter.accountsByRoundCount(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+        address[] memory accounts = extensionCenter.accountsByRound(
+            tokenAddress,
+            actionId1,
+            round1
+        );
+
+        assertEq(count, accounts.length);
+        assertEq(count, 2);
+
+        for (uint256 i = 0; i < count; i++) {
+            address accountAtIndex = extensionCenter.accountsByRoundAtIndex(
+                tokenAddress,
+                actionId1,
+                i,
+                round1
+            );
+            assertEq(accountAtIndex, accounts[i]);
+        }
+    }
 }

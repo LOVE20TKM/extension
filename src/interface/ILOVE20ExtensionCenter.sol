@@ -110,13 +110,19 @@ interface ILOVE20ExtensionCenter {
     ) external view returns (address);
 
     // ------ the accounts that joined the actions by extension (by round)
-    function accountsCountByRound(
+    function accountsByRound(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 round
+    ) external view returns (address[] memory);
+
+    function accountsByRoundCount(
         address tokenAddress,
         uint256 actionId,
         uint256 round
     ) external view returns (uint256);
 
-    function accountsAtIndexByRound(
+    function accountsByRoundAtIndex(
         address tokenAddress,
         uint256 actionId,
         uint256 index,
