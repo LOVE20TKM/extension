@@ -212,10 +212,18 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
                 currentRound,
                 index
             );
+            _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
+                currentRound,
+                address(0)
+            );
         }
         _accountsCountHistory[tokenAddress][actionId].record(
             currentRound,
             lastIndex
+        );
+        _accountsIndexHistory[tokenAddress][actionId][account].record(
+            currentRound,
+            type(uint256).max
         );
 
         emit AccountRemoved(tokenAddress, actionId, account);
