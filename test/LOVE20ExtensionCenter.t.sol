@@ -434,7 +434,7 @@ contract LOVE20ExtensionCenterTest is Test {
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
-    function testRemoveAccountRevertsIfNotJoined() public {
+    function testRemoveAccountIdempotent() public {
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -444,9 +444,21 @@ contract LOVE20ExtensionCenterTest is Test {
             address(mockExtension)
         );
 
-        // Try to remove account that was never added
+        // Try to remove account that was never added (should succeed silently)
         vm.prank(address(mockExtension));
-        vm.expectRevert(ILOVE20ExtensionCenter.AccountNotJoined.selector);
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // Verify state unchanged
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertEq(
+            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
+            0
+        );
+
+        // Try to remove again (should still succeed silently)
+        vm.prank(address(mockExtension));
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 

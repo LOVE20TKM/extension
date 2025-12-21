@@ -33,7 +33,6 @@ interface ILOVE20ExtensionCenter {
     error InvalidRandomAddress();
     error OnlyExtensionCanCall();
     error AccountAlreadyJoined();
-    error AccountNotJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
 

@@ -171,7 +171,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address account
     ) external onlyExtension(tokenAddress, actionId) {
         if (!_isAccountJoined[tokenAddress][actionId][account]) {
-            revert AccountNotJoined();
+            return;
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
