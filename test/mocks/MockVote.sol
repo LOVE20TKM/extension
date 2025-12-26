@@ -9,6 +9,13 @@ contract MockVote {
     // tokenAddress => round => actionIds
     mapping(address => mapping(uint256 => uint256[])) private _votedActionIds;
 
+    // tokenAddress => round => votesNum
+    mapping(address => mapping(uint256 => uint256)) public votesNum;
+
+    // tokenAddress => round => actionId => votesNum
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256)))
+        public votesNumByActionId;
+
     function setVotedActionIds(
         address tokenAddress,
         uint256 round,
@@ -44,5 +51,24 @@ contract MockVote {
             }
         }
         return false;
+    }
+
+    /// @notice Set total votes for a round (for testing)
+    function setVotesNum(
+        address tokenAddress,
+        uint256 round,
+        uint256 votes
+    ) external {
+        votesNum[tokenAddress][round] = votes;
+    }
+
+    /// @notice Set votes for a specific action in a round (for testing)
+    function setVotesNumByActionId(
+        address tokenAddress,
+        uint256 round,
+        uint256 actionId,
+        uint256 votes
+    ) external {
+        votesNumByActionId[tokenAddress][round][actionId] = votes;
     }
 }
