@@ -8,11 +8,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ReentrancyGuard
+} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @title ExtensionReward
 /// @notice Base contract providing reward claiming functionality
 /// @dev Implements IExtensionReward interface with reward storage and claiming logic
-abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
+abstract contract ExtensionReward is ExtensionCore, ReentrancyGuard, IExtensionReward {
     using SafeERC20 for IERC20;
     // ============================================
     // CONSTRUCTOR
@@ -40,7 +43,7 @@ abstract contract ExtensionReward is ExtensionCore, IExtensionReward {
     /// @inheritdoc IExtensionReward
     function claimReward(
         uint256 round
-    ) public virtual returns (uint256 amount) {
+    ) public virtual nonReentrant returns (uint256 amount) {
         // Verify phase must be finished for this round
         if (round >= _verify.currentRound()) {
             revert RoundNotFinished();
