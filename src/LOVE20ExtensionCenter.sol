@@ -216,6 +216,12 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
                 currentRound,
                 address(0)
             );
+        } else {
+            // Clear the last index when removing the last element
+            _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
+                currentRound,
+                address(0)
+            );
         }
         _accountsCountHistory[tokenAddress][actionId].record(
             currentRound,
