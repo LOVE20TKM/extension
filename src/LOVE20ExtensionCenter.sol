@@ -9,6 +9,8 @@ import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
+import {IExtensionCore} from "./interface/base/IExtensionCore.sol";
+import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
 
 contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     using RoundHistoryUint256 for RoundHistoryUint256.History;
@@ -50,16 +52,57 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     mapping(address => mapping(uint256 => mapping(address => mapping(string => RoundHistoryString.History))))
         internal _verificationInfoHistory;
 
+    // extension => delegate address
+    mapping(address => address) internal _extensionDelegate;
+
+    // tokenAddress => actionId => extension address
+    mapping(address => mapping(uint256 => address))
+        internal _extensionByActionId;
+
+    // tokenAddress => actionId => factory address
+    mapping(address => mapping(uint256 => address)) internal _factoryByActionId;
+
     // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
+        if (!_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender)) {
+            revert OnlyExtensionCanCall();
+        }
+        _;
+    }
+
+    // ------ internal helpers ------
+    function _isValidExtensionOrDelegate(
+        address tokenAddress,
+        uint256 actionId,
+        address caller
+    ) internal view returns (bool) {
         ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
             tokenAddress,
             actionId
         );
-        if (actionInfo.body.whiteListAddress != msg.sender) {
-            revert OnlyExtensionCanCall();
-        }
-        _;
+        address extensionAddress = actionInfo.body.whiteListAddress;
+        if (caller == extensionAddress) return true;
+
+        address delegateAddress = _extensionDelegate[extensionAddress];
+        return caller == delegateAddress;
+    }
+
+    function _getExtensionAddress(
+        address tokenAddress,
+        uint256 actionId,
+        address caller
+    ) internal view returns (address) {
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        address extensionAddress = actionInfo.body.whiteListAddress;
+        if (caller == extensionAddress) return extensionAddress;
+
+        address delegateAddress = _extensionDelegate[extensionAddress];
+        if (caller == delegateAddress) return extensionAddress;
+
+        return address(0);
     }
 
     // ------ constructor ------
@@ -108,6 +151,37 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         return actionInfo.body.whiteListAddress;
     }
 
+    function extensionByActionId(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address) {
+        return _extensionByActionId[tokenAddress][actionId];
+    }
+
+    function factoryByActionId(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address) {
+        return _factoryByActionId[tokenAddress][actionId];
+    }
+
+    // ------ extension delegate management ------
+    /// @inheritdoc ILOVE20ExtensionCenter
+    function setExtensionDelegate(address delegate) external {
+        address extensionAddress = msg.sender;
+
+        _extensionDelegate[extensionAddress] = delegate;
+
+        emit ExtensionDelegateSet(extensionAddress, delegate);
+    }
+
+    /// @inheritdoc ILOVE20ExtensionCenter
+    function extensionDelegate(
+        address extensionAddress
+    ) external view returns (address) {
+        return _extensionDelegate[extensionAddress];
+    }
+
     // ------ account management (only extension can call) ------
     function addAccount(
         address tokenAddress,
@@ -129,6 +203,44 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
 
         if (_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountAlreadyJoined();
+        }
+
+        // Get extension address and verify factory
+        address extensionAddress = _getExtensionAddress(
+            tokenAddress,
+            actionId,
+            msg.sender
+        );
+        if (extensionAddress == address(0)) {
+            revert OnlyExtensionCanCall();
+        }
+
+        // If extension and factory are already recorded, skip verification
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress == address(0)) {
+            // Get factory from extension and verify
+            try IExtensionCore(extensionAddress).factory() returns (
+                address factory
+            ) {
+                if (factory == address(0)) {
+                    revert InvalidExtensionFactory();
+                }
+                factoryAddress = factory;
+            } catch {
+                revert InvalidExtensionFactory();
+            }
+            // Verify extension exists in factory
+            if (
+                !ILOVE20ExtensionFactory(factoryAddress).exists(
+                    extensionAddress
+                )
+            ) {
+                revert ExtensionNotFoundInFactory();
+            }
+
+            // Record extension and factory for this actionId
+            _extensionByActionId[tokenAddress][actionId] = extensionAddress;
+            _factoryByActionId[tokenAddress][actionId] = factoryAddress;
         }
 
         // set account joined
@@ -246,24 +358,77 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
 
     function actionIdsByAccount(
         address tokenAddress,
-        address account
-    ) external view returns (uint256[] memory) {
-        return _actionIdsByAccount[tokenAddress][account];
-    }
-
-    function actionIdsByAccountCount(
-        address tokenAddress,
-        address account
-    ) external view returns (uint256) {
-        return _actionIdsByAccount[tokenAddress][account].length;
-    }
-
-    function actionIdsByAccountAtIndex(
-        address tokenAddress,
         address account,
-        uint256 index
-    ) external view returns (uint256) {
-        return _actionIdsByAccount[tokenAddress][account][index];
+        address[] calldata factories
+    )
+        external
+        view
+        returns (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        )
+    {
+        uint256[] memory allActionIds = _actionIdsByAccount[tokenAddress][
+            account
+        ];
+        uint256 length = allActionIds.length;
+
+        // Pre-allocate arrays with max size
+        actionIds = new uint256[](length);
+        extensions = new address[](length);
+        factories_ = new address[](length);
+        uint256 count = 0;
+        bool noFilter = factories.length == 0;
+
+        // Single pass: collect matching actionIds
+        // If factories is empty, all actionIds match; otherwise check if factory is in array
+        for (uint256 i = 0; i < length; ) {
+            uint256 actionId = allActionIds[i];
+            address factory = _factoryByActionId[tokenAddress][actionId];
+
+            // If no filter or factory is in factories array, include it
+            if (noFilter || _isFactoryInArray(factory, factories)) {
+                actionIds[count] = actionId;
+                extensions[count] = _extensionByActionId[tokenAddress][
+                    actionId
+                ];
+                factories_[count] = factory;
+                unchecked {
+                    count++;
+                }
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+
+        // Resize arrays to exact count using mstore
+        // Always resize if count != length to ensure correct array size
+        if (count != length) {
+            assembly {
+                mstore(actionIds, count)
+                mstore(extensions, count)
+                mstore(factories_, count)
+            }
+        }
+    }
+
+    function _isFactoryInArray(
+        address factory,
+        address[] calldata factories
+    ) private pure returns (bool) {
+        uint256 len = factories.length;
+        for (uint256 i = 0; i < len; ) {
+            if (factories[i] == factory) {
+                return true;
+            }
+            unchecked {
+                i++;
+            }
+        }
+        return false;
     }
 
     // ------ accounts by action queries (current) ------

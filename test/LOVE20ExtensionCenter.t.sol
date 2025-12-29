@@ -293,20 +293,43 @@ contract LOVE20ExtensionCenterTest is Test {
         assertTrue(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
+
+        // Verify extension and factory are recorded
         assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            1
+            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            address(mockExtension)
         );
         assertEq(
-            extensionCenter.actionIdsByAccountAtIndex(tokenAddress, user1, 0),
-            actionId1
+            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            address(mockFactory)
         );
-        uint256[] memory actionIds = extensionCenter.actionIdsByAccount(
-            tokenAddress,
-            user1
-        );
+
+        // Verify actionIdsByAccount with empty factories (returns all)
+        (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        ) = extensionCenter.actionIdsByAccount(
+                tokenAddress,
+                user1,
+                new address[](0)
+            );
         assertEq(actionIds.length, 1);
         assertEq(actionIds[0], actionId1);
+        assertEq(extensions.length, 1);
+        assertEq(extensions[0], address(mockExtension));
+        assertEq(factories_.length, 1);
+        assertEq(factories_[0], address(mockFactory));
+
+        // Verify actionIdsByAccount with factory filter
+        address[] memory filterFactories = new address[](1);
+        filterFactories[0] = address(mockFactory);
+        (actionIds, extensions, factories_) = extensionCenter
+            .actionIdsByAccount(tokenAddress, user1, filterFactories);
+        assertEq(actionIds.length, 1);
+        assertEq(actionIds[0], actionId1);
+        assertEq(extensions[0], address(mockExtension));
+        assertEq(factories_[0], address(mockFactory));
     }
 
     function testAddAccountRevertsIfNotExtension() public {
@@ -399,10 +422,12 @@ contract LOVE20ExtensionCenterTest is Test {
         assertFalse(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            0
+        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
+        assertEq(actionIds.length, 0);
     }
 
     function testRemoveAccountRevertsIfNotExtension() public {
@@ -452,10 +477,12 @@ contract LOVE20ExtensionCenterTest is Test {
         assertFalse(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            0
+        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
+        assertEq(actionIds.length, 0);
 
         // Try to remove again (should still succeed silently)
         vm.prank(address(mockExtension));
@@ -519,24 +546,252 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Verify user1 is in both actions
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            2
-        );
-        uint256[] memory user1ActionIds = extensionCenter.actionIdsByAccount(
-            tokenAddress,
-            user1
-        );
+        (
+            uint256[] memory user1ActionIds,
+            address[] memory user1Extensions,
+            address[] memory user1Factories
+        ) = extensionCenter.actionIdsByAccount(
+                tokenAddress,
+                user1,
+                new address[](0)
+            );
         assertEq(user1ActionIds.length, 2);
+        assertEq(user1Extensions.length, 2);
+        assertEq(user1Factories.length, 2);
 
         // Verify user2 is in one action
+        (
+            uint256[] memory user2ActionIds,
+            address[] memory user2Extensions,
+            address[] memory user2Factories
+        ) = extensionCenter.actionIdsByAccount(
+                tokenAddress,
+                user2,
+                new address[](0)
+            );
+        assertEq(user2ActionIds.length, 1);
+        assertEq(user2ActionIds[0], actionId1);
+        assertEq(user2Extensions.length, 1);
+        assertEq(user2Extensions[0], address(mockExtension1));
+        assertEq(user2Factories.length, 1);
+        assertEq(user2Factories[0], address(mockFactory));
+    }
+
+    // ------ Extension and Factory queries tests ------
+    function testExtensionByActionId() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Before addAccount, extensionByActionId should return address(0)
         assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user2),
-            1
+            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            address(0)
         );
         assertEq(
-            extensionCenter.actionIdsByAccountAtIndex(tokenAddress, user2, 0),
+            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            address(0)
+        );
+
+        // Add account to record extension and factory
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // After addAccount, extension and factory should be recorded
+        assertEq(
+            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            address(mockExtension)
+        );
+        assertEq(
+            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            address(mockFactory)
+        );
+    }
+
+    function testActionIdsByAccountWithFactoryFilter() public {
+        // Create two extensions with different factories
+        MockExtensionFactory mockFactory2 = new MockExtensionFactory(
+            address(extensionCenter)
+        );
+        // Approve token for mockFactory2
+        MockToken(tokenAddress).approve(
+            address(mockFactory2),
+            type(uint256).max
+        );
+
+        MockExtension mockExtension1 = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        MockExtension mockExtension2 = MockExtension(
+            mockFactory2.createExtension(tokenAddress)
+        );
+
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension1)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId2,
+            address(mockExtension2)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
             actionId1
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId2
+        );
+
+        // Add user1 to both actions
+        vm.prank(address(mockExtension1));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        vm.prank(address(mockExtension2));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId2,
+            user1,
+            new string[](0)
+        );
+
+        // Test with empty factories array (should return all)
+        (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        ) = extensionCenter.actionIdsByAccount(
+                tokenAddress,
+                user1,
+                new address[](0)
+            );
+        assertEq(actionIds.length, 2);
+        assertEq(extensions.length, 2);
+        assertEq(factories_.length, 2);
+
+        // Verify factories are recorded
+        assertEq(
+            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            address(mockFactory),
+            "Factory should be recorded for actionId1"
+        );
+        assertEq(
+            extensionCenter.factoryByActionId(tokenAddress, actionId2),
+            address(mockFactory2),
+            "Factory should be recorded for actionId2"
+        );
+
+        // Test with factory filter (only mockFactory)
+        address[] memory filterFactories = new address[](1);
+        filterFactories[0] = address(mockFactory);
+        (actionIds, extensions, factories_) = extensionCenter
+            .actionIdsByAccount(tokenAddress, user1, filterFactories);
+        assertEq(actionIds.length, 1, "Should have 1 actionId for mockFactory");
+        assertEq(extensions.length, 1, "Should have 1 extension");
+        assertEq(factories_.length, 1, "Should have 1 factory");
+        assertEq(actionIds[0], actionId1);
+        assertEq(extensions[0], address(mockExtension1));
+        assertEq(factories_[0], address(mockFactory));
+
+        // Test with factory filter (only mockFactory2)
+        filterFactories[0] = address(mockFactory2);
+        (actionIds, extensions, factories_) = extensionCenter
+            .actionIdsByAccount(tokenAddress, user1, filterFactories);
+        assertEq(
+            actionIds.length,
+            1,
+            "Should have 1 actionId for mockFactory2"
+        );
+        assertEq(extensions.length, 1, "Should have 1 extension");
+        assertEq(factories_.length, 1, "Should have 1 factory");
+        assertEq(actionIds[0], actionId2);
+        assertEq(extensions[0], address(mockExtension2));
+        assertEq(factories_[0], address(mockFactory2));
+
+        // Test with both factories in filter
+        filterFactories = new address[](2);
+        filterFactories[0] = address(mockFactory);
+        filterFactories[1] = address(mockFactory2);
+        (actionIds, extensions, factories_) = extensionCenter
+            .actionIdsByAccount(tokenAddress, user1, filterFactories);
+        assertEq(actionIds.length, 2);
+        assertEq(extensions.length, 2);
+        assertEq(factories_.length, 2);
+    }
+
+    function testAddAccountRecordsExtensionAndFactoryOnlyOnce() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // First addAccount should record extension and factory
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        address recordedExtension = extensionCenter.extensionByActionId(
+            tokenAddress,
+            actionId1
+        );
+        address recordedFactory = extensionCenter.factoryByActionId(
+            tokenAddress,
+            actionId1
+        );
+
+        // Second addAccount should not change the recorded extension and factory
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+
+        assertEq(
+            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            recordedExtension
+        );
+        assertEq(
+            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            recordedFactory
         );
     }
 
@@ -554,16 +809,19 @@ contract LOVE20ExtensionCenterTest is Test {
         assertFalse(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            0
-        );
 
-        uint256[] memory actionIds = extensionCenter.actionIdsByAccount(
-            tokenAddress,
-            user1
-        );
+        (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        ) = extensionCenter.actionIdsByAccount(
+                tokenAddress,
+                user1,
+                new address[](0)
+            );
         assertEq(actionIds.length, 0);
+        assertEq(extensions.length, 0);
+        assertEq(factories_.length, 0);
     }
 
     // ------ Verification info tests ------
@@ -940,10 +1198,12 @@ contract LOVE20ExtensionCenterTest is Test {
         assertFalse(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            0
+        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
+        assertEq(actionIds.length, 0);
         assertEq(extensionCenter.accountsCount(tokenAddress, actionId1), 0);
     }
 
@@ -965,10 +1225,12 @@ contract LOVE20ExtensionCenterTest is Test {
         assertFalse(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            0
+        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
+        assertEq(actionIds.length, 0);
 
         // Try to exit again (should still succeed silently)
         vm.prank(user1);
@@ -1183,10 +1445,12 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Verify user1 is in both actions
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            2
+        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
+        assertEq(actionIds.length, 2);
         assertTrue(
             extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
         );
@@ -1205,14 +1469,13 @@ contract LOVE20ExtensionCenterTest is Test {
         assertTrue(
             extensionCenter.isAccountJoined(tokenAddress, actionId2, user1)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountCount(tokenAddress, user1),
-            1
+        (actionIds, , ) = extensionCenter.actionIdsByAccount(
+            tokenAddress,
+            user1,
+            new address[](0)
         );
-        assertEq(
-            extensionCenter.actionIdsByAccountAtIndex(tokenAddress, user1, 0),
-            actionId2
-        );
+        assertEq(actionIds.length, 1);
+        assertEq(actionIds[0], actionId2);
     }
 
     function testForceExitOnlySelf() public {

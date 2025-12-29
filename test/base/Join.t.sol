@@ -158,8 +158,14 @@ contract JoinTest is BaseExtensionTest {
         extension.join(verificationInfos);
 
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
-        assertEq(center.verificationInfo(address(token), ACTION_ID, user1, "key1"), "info1");
-        assertEq(center.verificationInfo(address(token), ACTION_ID, user1, "key2"), "info2");
+        assertEq(
+            center.verificationInfo(address(token), ACTION_ID, user1, "key1"),
+            "info1"
+        );
+        assertEq(
+            center.verificationInfo(address(token), ACTION_ID, user1, "key2"),
+            "info2"
+        );
     }
 
     function test_Join_EmptyVerificationInfo() public {
@@ -278,9 +284,10 @@ contract JoinTest is BaseExtensionTest {
 
         assertTrue(center.isAccountJoined(address(token), ACTION_ID, user1));
 
-        uint256[] memory actionIds = center.actionIdsByAccount(
+        (uint256[] memory actionIds, , ) = center.actionIdsByAccount(
             address(token),
-            user1
+            user1,
+            new address[](0)
         );
         assertEq(actionIds.length, 1);
         assertEq(actionIds[0], ACTION_ID);

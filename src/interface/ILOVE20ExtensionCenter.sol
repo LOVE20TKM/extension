@@ -20,6 +20,10 @@ interface ILOVE20ExtensionCenter {
         string verificationKey,
         string verificationInfo
     );
+    event ExtensionDelegateSet(
+        address indexed extension,
+        address indexed delegate
+    );
 
     // ------ errors ------
     error InvalidUniswapV2FactoryAddress();
@@ -35,6 +39,8 @@ interface ILOVE20ExtensionCenter {
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
+    error InvalidExtensionFactory();
+    error ExtensionNotFoundInFactory();
 
     // ------ core system addresses ------
     function uniswapV2FactoryAddress() external view returns (address);
@@ -51,6 +57,29 @@ interface ILOVE20ExtensionCenter {
     function extension(
         address tokenAddress,
         uint256 actionId
+    ) external view returns (address);
+
+    function extensionByActionId(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address);
+
+    function factoryByActionId(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address);
+
+    // ------ extension delegate management ------
+    /// @notice Set delegate contract for the calling extension
+    /// @dev Only the extension itself can set its delegate
+    /// @param delegate The delegate contract address (address(0) to remove delegate)
+    function setExtensionDelegate(address delegate) external;
+
+    /// @notice Get delegate contract for an extension
+    /// @param extensionAddress The extension address
+    /// @return The delegate contract address (address(0) if not set)
+    function extensionDelegate(
+        address extensionAddress
     ) external view returns (address);
 
     // ------ only the corresponding action extension can call ------
@@ -78,19 +107,16 @@ interface ILOVE20ExtensionCenter {
 
     function actionIdsByAccount(
         address tokenAddress,
-        address account
-    ) external view returns (uint256[] memory);
-
-    function actionIdsByAccountCount(
-        address tokenAddress,
-        address account
-    ) external view returns (uint256);
-
-    function actionIdsByAccountAtIndex(
-        address tokenAddress,
         address account,
-        uint256 index
-    ) external view returns (uint256);
+        address[] calldata factories
+    )
+        external
+        view
+        returns (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        );
 
     // ------ the accounts that joined the actions by extension (action dimension)
     function accounts(

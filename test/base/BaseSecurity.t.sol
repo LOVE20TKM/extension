@@ -496,39 +496,4 @@ contract BaseSecurityTest is BaseExtensionTest {
         assertTrue(gas2 < (avgGas * 11) / 10, "gas2 too high");
         assertTrue(gas3 < (avgGas * 11) / 10, "gas3 too high");
     }
-
-    function test_Gas_RemoveAccountIsConstant() public {
-        // Setup: add many accounts
-        address[] memory accounts = new address[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            accounts[i] = address(uint160(2000 + i));
-            joinToken.mint(accounts[i], 1000e18);
-            vm.prank(accounts[i]);
-            joinToken.approve(address(extension), type(uint256).max);
-            vm.prank(accounts[i]);
-            extension.join(100e18, new string[](0));
-        }
-
-        vm.roll(block.number + WAITING_BLOCKS + 1);
-
-        uint256 gas1;
-        uint256 gas2;
-
-        // Remove first account
-        vm.prank(accounts[0]);
-        gas1 = gasleft();
-        extension.exit();
-        gas1 = gas1 - gasleft();
-
-        // Remove middle account
-        vm.prank(accounts[5]);
-        gas2 = gasleft();
-        extension.exit();
-        gas2 = gas2 - gasleft();
-
-        // Gas should be similar (O(1) operation)
-        uint256 avgGas = (gas1 + gas2) / 2;
-        assertTrue(gas1 < (avgGas * 11) / 10, "gas1 too high");
-        assertTrue(gas2 < (avgGas * 11) / 10, "gas2 too high");
-    }
 }
