@@ -6,6 +6,6 @@ pragma solidity =0.8.17;
  * @dev Mock Random contract for unit testing
  */
 contract MockRandom {
-    // Minimal implementation for LOVE20ExtensionCenter compatibility
+    // Minimal implementation for ExtensionCenter compatibility
     // No specific methods needed for extension testing
 }

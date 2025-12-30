@@ -2,18 +2,18 @@
 pragma solidity =0.8.17;
 
 import {
-    ILOVE20ExtensionFactory,
+    IExtensionFactory,
     DEFAULT_JOIN_AMOUNT
-} from "./interface/ILOVE20ExtensionFactory.sol";
+} from "./interface/IExtensionFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-/// @title LOVE20ExtensionFactoryBase
-/// @notice Abstract base contract for LOVE20 extension factories
+/// @title ExtensionFactoryBase
+/// @notice Abstract base contract for extension factories
 /// @dev Provides common storage and implementation for all extension factories
-abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
+abstract contract ExtensionFactoryBase is IExtensionFactory {
     using SafeERC20 for IERC20;
     // ============================================
     // STATE VARIABLES
@@ -38,27 +38,27 @@ abstract contract LOVE20ExtensionFactoryBase is ILOVE20ExtensionFactory {
     }
 
     // ============================================
-    // ILOVE20ExtensionFactory INTERFACE
+    // IExtensionFactory INTERFACE
     // ============================================
 
-    /// @inheritdoc ILOVE20ExtensionFactory
+    /// @inheritdoc IExtensionFactory
     function extensions() external view override returns (address[] memory) {
         return _extensions;
     }
 
-    /// @inheritdoc ILOVE20ExtensionFactory
+    /// @inheritdoc IExtensionFactory
     function extensionsCount() external view override returns (uint256) {
         return _extensions.length;
     }
 
-    /// @inheritdoc ILOVE20ExtensionFactory
+    /// @inheritdoc IExtensionFactory
     function extensionsAtIndex(
         uint256 index
     ) external view override returns (address) {
         return _extensions[index];
     }
 
-    /// @inheritdoc ILOVE20ExtensionFactory
+    /// @inheritdoc IExtensionFactory
     function exists(address extension) external view override returns (bool) {
         return _isExtension[extension];
     }

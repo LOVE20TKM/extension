@@ -2,26 +2,24 @@
 pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
-import {
-    LOVE20ExtensionBaseTokenJoin
-} from "../../src/LOVE20ExtensionBaseTokenJoin.sol";
-import {ITokenJoin} from "../../src/interface/base/ITokenJoin.sol";
-import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
-import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
+import {ExtensionBaseTokenJoin} from "../../src/ExtensionBaseTokenJoin.sol";
+import {IExtensionTokenJoin} from "../../src/interface/IExtensionTokenJoin.sol";
+import {IExtension} from "../../src/interface/IExtension.sol";
+import {ExtensionBase} from "../../src/ExtensionBase.sol";
 import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
 
 /**
  * @title MockExtensionForTokenJoin
  * @notice Mock extension for testing TokenJoin
  */
-contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
+contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     constructor(
         address factory_,
         address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        LOVE20ExtensionBaseTokenJoin(
+        ExtensionBaseTokenJoin(
             factory_,
             tokenAddress_,
             joinTokenAddress_,
@@ -50,7 +48,7 @@ contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
     )
         public
         pure
-        override(IExtensionReward, ExtensionReward)
+        override(ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -65,11 +63,11 @@ contract MockExtensionForTokenJoin is LOVE20ExtensionBaseTokenJoin {
 }
 
 /**
- * @title TokenJoinTest
- * @notice Test suite for TokenJoin (token-based join/exit)
+ * @title ExtensionBaseTokenJoinTest
+ * @notice Test suite for ExtensionBaseTokenJoin
  * @dev Tests join with tokens, waiting period, exit, and reentrancy
  */
-contract TokenJoinTest is BaseExtensionTest {
+contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     MockExtensionFactory public mockFactory;
     MockExtensionForTokenJoin public extension;
 
@@ -129,7 +127,7 @@ contract TokenJoinTest is BaseExtensionTest {
     }
 
     function test_Constructor_RevertsOnZeroJoinTokenAddress() public {
-        vm.expectRevert(ITokenJoin.InvalidJoinTokenAddress.selector);
+        vm.expectRevert(IExtensionTokenJoin.InvalidJoinTokenAddress.selector);
         new MockExtensionForTokenJoin(
             address(mockFactory),
             address(token),
@@ -212,7 +210,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(IExtensionTokenJoin.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -373,7 +371,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -384,7 +382,7 @@ contract TokenJoinTest is BaseExtensionTest {
         advanceBlocks(WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
     }
 
@@ -421,7 +419,7 @@ contract TokenJoinTest is BaseExtensionTest {
 
         // User2 cannot exit yet
         vm.prank(user2);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         advanceBlocks(50);
@@ -591,7 +589,7 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -697,5 +695,173 @@ contract TokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
+    }
+
+    // ============================================
+    // Account Management Tests
+    // ============================================
+
+    function test_AccountManagement_RemoveMiddleAccount() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+        vm.prank(user3);
+        extension.join(300e18, new string[](0));
+
+        assertEq(center.accountsCount(address(token), ACTION_ID), 3);
+
+        advanceBlocks(WAITING_BLOCKS);
+        vm.prank(user2);
+        extension.exit();
+
+        assertEq(center.accountsCount(address(token), ACTION_ID), 2);
+        address[] memory accs = center.accounts(address(token), ACTION_ID);
+        assertEq(accs.length, 2);
+        assertTrue(
+            (accs[0] == user1 || accs[0] == user3) &&
+                (accs[1] == user1 || accs[1] == user3),
+            "Should contain user1 and user3"
+        );
+    }
+
+    function test_AccountManagement_MultipleAddRemove() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        advanceBlocks(WAITING_BLOCKS);
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(center.accountsCount(address(token), ACTION_ID), 0);
+
+        joinToken.mint(user1, 100e18);
+        advanceBlocks(1);
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        assertEq(center.accountsCount(address(token), ACTION_ID), 1);
+        assertEq(center.accountsAtIndex(address(token), ACTION_ID, 0), user1);
+    }
+
+    function test_AccountManagement_LargeNumberOfAccounts() public {
+        uint256 numAccounts = 50;
+        address[] memory accounts = new address[](numAccounts);
+
+        for (uint256 i = 0; i < numAccounts; i++) {
+            accounts[i] = address(uint160(1000 + i));
+            joinToken.mint(accounts[i], 1000e18);
+            vm.prank(accounts[i]);
+            joinToken.approve(address(extension), type(uint256).max);
+            vm.prank(accounts[i]);
+            extension.join(100e18, new string[](0));
+        }
+
+        assertEq(center.accountsCount(address(token), ACTION_ID), numAccounts);
+
+        advanceBlocks(WAITING_BLOCKS);
+        vm.prank(accounts[25]);
+        extension.exit();
+
+        assertEq(
+            center.accountsCount(address(token), ACTION_ID),
+            numAccounts - 1
+        );
+    }
+
+    // ============================================
+    // Interface Consistency Tests
+    // ============================================
+
+    function test_Interface_TokenAddressIsView() public view {
+        address tokenAddr = extension.tokenAddress();
+        assertEq(tokenAddr, address(token));
+    }
+
+    function test_Interface_ActionIdIsView() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        uint256 actionIdVal = extension.actionId();
+        assertEq(actionIdVal, ACTION_ID);
+    }
+
+    // ============================================
+    // Additional Edge Cases
+    // ============================================
+
+    function test_EdgeCase_ExitBeforeWaitingPeriod() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        vm.prank(user1);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        extension.exit();
+
+        advanceBlocks(WAITING_BLOCKS - 1);
+        vm.prank(user1);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        extension.exit();
+
+        advanceBlocks(1);
+        vm.prank(user1);
+        extension.exit();
+    }
+
+    function test_EdgeCase_StorageLayoutOptimization() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        assertEq(extension.tokenAddress(), address(token));
+        assertTrue(extension.initialized());
+        assertEq(extension.actionId(), ACTION_ID);
+    }
+
+    // ============================================
+    // Gas Optimization Tests
+    // ============================================
+
+    function test_Gas_AddAccountIsConstant() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        address user4 = address(0x4);
+        address user5 = address(0x5);
+        address user6 = address(0x6);
+
+        joinToken.mint(user4, 1000e18);
+        joinToken.mint(user5, 1000e18);
+        joinToken.mint(user6, 1000e18);
+
+        vm.prank(user4);
+        joinToken.approve(address(extension), type(uint256).max);
+        vm.prank(user5);
+        joinToken.approve(address(extension), type(uint256).max);
+        vm.prank(user6);
+        joinToken.approve(address(extension), type(uint256).max);
+
+        uint256 gas1;
+        uint256 gas2;
+        uint256 gas3;
+
+        vm.prank(user4);
+        gas1 = gasleft();
+        extension.join(100e18, new string[](0));
+        gas1 = gas1 - gasleft();
+
+        vm.prank(user5);
+        gas2 = gasleft();
+        extension.join(200e18, new string[](0));
+        gas2 = gas2 - gasleft();
+
+        vm.prank(user6);
+        gas3 = gasleft();
+        extension.join(300e18, new string[](0));
+        gas3 = gas3 - gasleft();
+
+        uint256 avgGas = (gas1 + gas2 + gas3) / 3;
+        assertTrue(gas1 < (avgGas * 11) / 10, "gas1 too high");
+        assertTrue(gas2 < (avgGas * 11) / 10, "gas2 too high");
+        assertTrue(gas3 < (avgGas * 11) / 10, "gas3 too high");
     }
 }

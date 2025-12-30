@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ILOVE20ExtensionCenter} from "../interface/ILOVE20ExtensionCenter.sol";
-import {IExtensionCore} from "../interface/base/IExtensionCore.sol";
+import {IExtensionCenter} from "./interface/IExtensionCenter.sol";
+import {IExtension} from "./interface/IExtension.sol";
 import {
-    ILOVE20ExtensionFactory,
+    IExtensionFactory,
     DEFAULT_JOIN_AMOUNT
-} from "../interface/ILOVE20ExtensionFactory.sol";
+} from "./interface/IExtensionFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ReentrancyGuard
+} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
@@ -20,10 +23,10 @@ import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
 
-/// @title ExtensionCore
+/// @title ExtensionBase
 /// @notice Core base contract providing fundamental extension functionality
-/// @dev Implements IExtensionCore interface with factory/center references and initialization
-abstract contract ExtensionCore is IExtensionCore {
+/// @dev Implements IExtension interface with factory/center references, initialization, and reward claiming
+abstract contract ExtensionBase is IExtension, ReentrancyGuard {
     using SafeERC20 for IERC20;
     // ============================================
     // STATE VARIABLES
@@ -33,7 +36,7 @@ abstract contract ExtensionCore is IExtensionCore {
     address public immutable factory;
 
     /// @notice The center contract address
-    ILOVE20ExtensionCenter internal immutable _center;
+    IExtensionCenter internal immutable _center;
 
     /// @notice The token address this extension is associated with
     address public tokenAddress;
@@ -61,6 +64,12 @@ abstract contract ExtensionCore is IExtensionCore {
     /// @notice The random contract address
     ILOVE20Random internal immutable _random;
 
+    /// @dev round => reward
+    mapping(uint256 => uint256) internal _reward;
+
+    /// @dev round => account => claimedReward
+    mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
+
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -73,9 +82,7 @@ abstract contract ExtensionCore is IExtensionCore {
         }
         factory = factory_;
         tokenAddress = tokenAddress_;
-        _center = ILOVE20ExtensionCenter(
-            ILOVE20ExtensionFactory(factory_).center()
-        );
+        _center = IExtensionCenter(IExtensionFactory(factory_).center());
         _launch = ILOVE20Launch(_center.launchAddress());
         _stake = ILOVE20Stake(_center.stakeAddress());
         _submit = ILOVE20Submit(_center.submitAddress());
@@ -87,12 +94,69 @@ abstract contract ExtensionCore is IExtensionCore {
     }
 
     // ============================================
-    // IEXTENSIONCORE INTERFACE
+    // ILOVE20EXTENSION INTERFACE - Core
     // ============================================
 
-    /// @inheritdoc IExtensionCore
+    /// @inheritdoc IExtension
     function center() public view returns (address) {
         return address(_center);
+    }
+
+    /// @inheritdoc IExtension
+    function initializeAction() external {
+        if (initialized) return;
+
+        // Auto-initialize by scanning voted actions to find matching actionId
+        // This will find the actionId, approve tokens, and join
+        _autoInitialize();
+    }
+
+    // ============================================
+    // ILOVE20EXTENSION INTERFACE - Reward
+    // ============================================
+
+    /// @inheritdoc IExtension
+    function claimReward(
+        uint256 round
+    ) public virtual nonReentrant returns (uint256 amount) {
+        // Verify phase must be finished for this round
+        if (round >= _verify.currentRound()) {
+            revert RoundNotFinished();
+        }
+
+        // Prepare reward
+        _prepareRewardIfNeeded(round);
+
+        return _claimReward(round);
+    }
+
+    /// @inheritdoc IExtension
+    function rewardByAccount(
+        uint256 round,
+        address account
+    ) public view virtual returns (uint256 amount, bool isMinted) {
+        // Check if already claimed
+        uint256 claimedReward = _claimedReward[round][account];
+        if (claimedReward > 0) {
+            return (claimedReward, true);
+        }
+
+        // Calculate reward using child contract implementation
+        return (_calculateReward(round, account), false);
+    }
+
+    /// @inheritdoc IExtension
+    function reward(uint256 round) public view virtual returns (uint256) {
+        if (_reward[round] > 0) {
+            return _reward[round];
+        }
+        (uint256 expectedReward, ) = _mint.actionRewardByActionIdByAccount(
+            tokenAddress,
+            round,
+            actionId,
+            address(this)
+        );
+        return expectedReward;
     }
 
     // ============================================
@@ -123,13 +187,9 @@ abstract contract ExtensionCore is IExtensionCore {
         );
     }
 
-    /// @dev Auto-initialize by scanning voted actions to find matching actionId
-    function _autoInitialize() internal {
-        if (initialized) {
-            return;
-        }
-
-        // Get current round from join phase (action phase)
+    /// @dev Find matching action ID by scanning voted actions
+    /// @return The found action ID
+    function _findMatchingActionId() internal view returns (uint256) {
         uint256 currentRound = _join.currentRound();
         uint256 count = _vote.votedActionIdsCount(tokenAddress, currentRound);
         uint256 foundActionId = 0;
@@ -149,7 +209,64 @@ abstract contract ExtensionCore is IExtensionCore {
             }
         }
         if (!found) revert ActionIdNotFound();
+        return foundActionId;
+    }
 
+    /// @dev Auto-initialize by scanning voted actions to find matching actionId
+    function _autoInitialize() internal {
+        if (initialized) {
+            return;
+        }
+
+        uint256 foundActionId = _findMatchingActionId();
         _doInitialize(foundActionId);
+    }
+
+    /// @dev Calculate reward for an account in a specific round
+    /// @dev Must be implemented by child contracts
+    /// @param round The round number
+    /// @param account The account address
+    /// @return The amount of reward for the account
+    function _calculateReward(
+        uint256 round,
+        address account
+    ) internal view virtual returns (uint256);
+
+    /// @dev Prepare action reward for a specific round if not already prepared
+    /// @param round The round number to prepare reward for
+    function _prepareRewardIfNeeded(uint256 round) internal virtual {
+        if (_reward[round] > 0) {
+            return;
+        }
+        uint256 totalActionReward = _mint.mintActionReward(
+            tokenAddress,
+            round,
+            actionId
+        );
+        _reward[round] = totalActionReward;
+    }
+
+    /// @dev Internal function to claim reward for a specific round
+    /// @param round The round number to claim reward for
+    /// @return amount The amount of reward claimed
+    function _claimReward(
+        uint256 round
+    ) internal virtual returns (uint256 amount) {
+        // Calculate reward for the user
+        bool isMinted;
+        (amount, isMinted) = rewardByAccount(round, msg.sender);
+        // Check if already minted
+        if (isMinted) {
+            revert AlreadyClaimed();
+        }
+        // Update claimed reward
+        _claimedReward[round][msg.sender] = amount;
+
+        // Transfer reward to user
+        if (amount > 0) {
+            IERC20(tokenAddress).safeTransfer(msg.sender, amount);
+        }
+
+        emit ClaimReward(tokenAddress, round, actionId, msg.sender, amount);
     }
 }

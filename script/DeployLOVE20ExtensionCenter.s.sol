@@ -2,18 +2,18 @@
 pragma solidity =0.8.17;
 
 import "../lib/core/script/BaseScript.sol";
-import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
+import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 
 /**
- * @title DeployLOVE20ExtensionCenter
- * @notice Script for deploying LOVE20ExtensionCenter contract
+ * @title DeployExtensionCenter
+ * @notice Script for deploying ExtensionCenter contract
  * @dev Reads deployment parameters from address.params and writes deployed address to address.extension.center.params
  */
-contract DeployLOVE20ExtensionCenter is BaseScript {
+contract DeployExtensionCenter is BaseScript {
     address public centerAddress;
 
     /**
-     * @notice Deploy LOVE20ExtensionCenter with parameters from address.params
+     * @notice Deploy ExtensionCenter with parameters from address.params
      * @dev All required addresses are read from the network's address.params file
      */
     function run() external {
@@ -69,10 +69,10 @@ contract DeployLOVE20ExtensionCenter is BaseScript {
         require(mintAddress != address(0), "mintAddress not found");
         require(randomAddress != address(0), "randomAddress not found");
 
-        // Deploy LOVE20ExtensionCenter
+        // Deploy ExtensionCenter
         vm.startBroadcast();
         centerAddress = address(
-            new LOVE20ExtensionCenter(
+            new ExtensionCenter(
                 uniswapV2FactoryAddress,
                 launchAddress,
                 stakeAddress,
@@ -88,7 +88,7 @@ contract DeployLOVE20ExtensionCenter is BaseScript {
 
         // Log deployment info if enabled
         if (!hideLogs) {
-            console.log("LOVE20ExtensionCenter deployed at:", centerAddress);
+            console.log("ExtensionCenter deployed at:", centerAddress);
             console.log("Constructor parameters:");
             console.log("  uniswapV2FactoryAddress:", uniswapV2FactoryAddress);
             console.log("  launchAddress:", launchAddress);

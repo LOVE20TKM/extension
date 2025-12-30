@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionCore} from "./ExtensionCore.sol";
-import {ITokenJoin} from "../interface/base/ITokenJoin.sol";
-import {IExit} from "../interface/base/IExit.sol";
+import {ExtensionBase} from "./ExtensionBase.sol";
+import {
+    IExtensionTokenJoin
+} from "./interface/IExtensionTokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
@@ -11,15 +12,33 @@ import {
 import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
+import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 
 using SafeERC20 for IERC20;
 using RoundHistoryUint256 for RoundHistoryUint256.History;
 
-/// @title TokenJoin
-/// @notice Base contract providing token-based join/exit functionality
-/// @dev Implements ITokenJoin interface with ERC20 token participation and block-based waiting period
-abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
+/// @title ExtensionBaseTokenJoin
+/// @notice Abstract base contract for token join extensions
+/// @dev Combines TokenJoin with Extension functionality
+///
+/// ==================== IMPLEMENTATION GUIDE ====================
+/// This contract provides a complete join implementation with:
+/// - Join with tokens to participate
+/// - Withdraw after block-based waiting period
+/// - Integration with extension system
+///
+/// To implement this contract, you need to:
+///
+/// Implement joinedValue calculations from ILOVE20Extension
+///    - isJoinedValueCalculated() - whether joined value is calculated
+///    - joinedValue() - get total joined value
+///    - joinedValueByAccount() - get joined value for specific account
+///
+abstract contract ExtensionBaseTokenJoin is
+    ExtensionBase,
+    ReentrancyGuard,
+    IExtensionTokenJoin
+{
     // ============================================
     // STATE VARIABLES - IMMUTABLE CONFIG
     // ============================================
@@ -55,11 +74,18 @@ abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
     // ============================================
 
     /// @notice Initialize the token join extension
+    /// @param factory_ The factory address
+    /// @param tokenAddress_ The token address
     /// @param joinTokenAddress_ The token that can be joined
     /// @param waitingBlocks_ Number of blocks to wait before exit
-    constructor(address joinTokenAddress_, uint256 waitingBlocks_) {
+    constructor(
+        address factory_,
+        address tokenAddress_,
+        address joinTokenAddress_,
+        uint256 waitingBlocks_
+    ) ExtensionBase(factory_, tokenAddress_) {
         if (joinTokenAddress_ == address(0)) {
-            revert ITokenJoin.InvalidJoinTokenAddress();
+            revert InvalidJoinTokenAddress();
         }
         joinTokenAddress = joinTokenAddress_;
         waitingBlocks = waitingBlocks_;
@@ -67,10 +93,10 @@ abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
     }
 
     // ============================================
-    // ITOKENJOIN INTERFACE
+    // ILOVE20EXTENSIONTOKENJOIN INTERFACE
     // ============================================
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionTokenJoin
     function join(
         uint256 amount,
         string[] memory verificationInfos
@@ -128,7 +154,7 @@ abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
         );
     }
 
-    /// @inheritdoc IExit
+    /// @inheritdoc IExtensionTokenJoin
     function exit() public virtual nonReentrant {
         uint256 joinedBlock = _joinedBlockByAccount[msg.sender];
         if (joinedBlock == 0) {
@@ -163,7 +189,7 @@ abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
     // VIEW FUNCTIONS
     // ============================================
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionTokenJoin
     function joinInfo(
         address account
     )
@@ -186,19 +212,19 @@ abstract contract TokenJoin is ExtensionCore, ReentrancyGuard, ITokenJoin {
         );
     }
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionTokenJoin
     function totalJoinedAmount() public view returns (uint256) {
         return _totalJoinedAmountHistory.latestValue();
     }
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionTokenJoin
     function totalJoinedAmountByRound(
         uint256 round
     ) public view returns (uint256) {
         return _totalJoinedAmountHistory.value(round);
     }
 
-    /// @inheritdoc ITokenJoin
+    /// @inheritdoc IExtensionTokenJoin
     function amountByAccountByRound(
         address account,
         uint256 round

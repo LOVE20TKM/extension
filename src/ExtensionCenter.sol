@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ILOVE20ExtensionCenter} from "./interface/ILOVE20ExtensionCenter.sol";
+import {IExtensionCenter} from "./interface/IExtensionCenter.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
@@ -9,10 +9,10 @@ import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
-import {IExtensionCore} from "./interface/base/IExtensionCore.sol";
-import {ILOVE20ExtensionFactory} from "./interface/ILOVE20ExtensionFactory.sol";
+import {IExtension} from "./interface/IExtension.sol";
+import {IExtensionFactory} from "./interface/IExtensionFactory.sol";
 
-contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
+contract ExtensionCenter is IExtensionCenter {
     using RoundHistoryUint256 for RoundHistoryUint256.History;
     using RoundHistoryAddress for RoundHistoryAddress.History;
     using RoundHistoryString for RoundHistoryString.History;
@@ -166,7 +166,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
     }
 
     // ------ extension delegate management ------
-    /// @inheritdoc ILOVE20ExtensionCenter
+    /// @inheritdoc IExtensionCenter
     function setExtensionDelegate(address delegate) external {
         address extensionAddress = msg.sender;
 
@@ -175,7 +175,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         emit ExtensionDelegateSet(extensionAddress, delegate);
     }
 
-    /// @inheritdoc ILOVE20ExtensionCenter
+    /// @inheritdoc IExtensionCenter
     function extensionDelegate(
         address extensionAddress
     ) external view returns (address) {
@@ -219,7 +219,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
         address factoryAddress = _factoryByActionId[tokenAddress][actionId];
         if (factoryAddress == address(0)) {
             // Get factory from extension and verify
-            try IExtensionCore(extensionAddress).factory() returns (
+            try IExtension(extensionAddress).factory() returns (
                 address factory
             ) {
                 if (factory == address(0)) {
@@ -231,7 +231,7 @@ contract LOVE20ExtensionCenter is ILOVE20ExtensionCenter {
             }
             // Verify extension exists in factory
             if (
-                !ILOVE20ExtensionFactory(factoryAddress).exists(
+                !IExtensionFactory(factoryAddress).exists(
                     extensionAddress
                 )
             ) {

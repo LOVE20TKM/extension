@@ -2,10 +2,10 @@
 pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
-import {LOVE20ExtensionBaseJoin} from "../../src/LOVE20ExtensionBaseJoin.sol";
-import {IJoin} from "../../src/interface/base/IJoin.sol";
-import {IExtensionReward} from "../../src/interface/base/IExtensionReward.sol";
-import {ExtensionReward} from "../../src/base/ExtensionReward.sol";
+import {ExtensionBaseJoin} from "../../src/ExtensionBaseJoin.sol";
+import {IExtensionJoin} from "../../src/interface/IExtensionJoin.sol";
+import {IExtension} from "../../src/interface/IExtension.sol";
+import {ExtensionBase} from "../../src/ExtensionBase.sol";
 import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
@@ -15,13 +15,13 @@ import {
  * @title MockExtensionForJoin
  * @notice Mock extension for testing Join
  */
-contract MockExtensionForJoin is LOVE20ExtensionBaseJoin {
+contract MockExtensionForJoin is ExtensionBaseJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
         address factory_,
         address tokenAddress_
-    ) LOVE20ExtensionBaseJoin(factory_, tokenAddress_) {}
+    ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueCalculated() external pure override returns (bool) {
         return true;
@@ -43,7 +43,7 @@ contract MockExtensionForJoin is LOVE20ExtensionBaseJoin {
     )
         public
         pure
-        override(IExtensionReward, ExtensionReward)
+        override(ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -58,11 +58,11 @@ contract MockExtensionForJoin is LOVE20ExtensionBaseJoin {
 }
 
 /**
- * @title JoinTest
- * @notice Test suite for Join (token-free join/exit)
+ * @title ExtensionBaseJoinTest
+ * @notice Test suite for ExtensionBaseJoin
  * @dev Tests join, exit, and verification info integration
  */
-contract JoinTest is BaseExtensionTest {
+contract ExtensionBaseJoinTest is BaseExtensionTest {
     MockExtensionFactory public mockFactory;
     MockExtensionForJoin public extension;
 
@@ -139,7 +139,7 @@ contract JoinTest is BaseExtensionTest {
         vm.startPrank(user1);
         extension.join(new string[](0));
 
-        vm.expectRevert(IJoin.AlreadyJoined.selector);
+        vm.expectRevert(IExtensionJoin.AlreadyJoined.selector);
         extension.join(new string[](0));
         vm.stopPrank();
     }
@@ -205,7 +205,7 @@ contract JoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(IJoin.NotJoined.selector);
+        vm.expectRevert(IExtensionJoin.NotJoined.selector);
         extension.exit();
     }
 

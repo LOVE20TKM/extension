@@ -2,10 +2,10 @@
 pragma solidity =0.8.17;
 
 import {Test} from "forge-std/Test.sol";
-import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
+import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {
-    ILOVE20ExtensionCenter
-} from "../src/interface/ILOVE20ExtensionCenter.sol";
+    IExtensionCenter
+} from "../src/interface/IExtensionCenter.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
 import {MockVote} from "./mocks/MockVote.sol";
@@ -14,11 +14,11 @@ import {MockExtension} from "./mocks/MockExtension.sol";
 import {MockToken} from "./mocks/MockToken.sol";
 
 /**
- * @title LOVE20ExtensionCenterTest
- * @dev Test contract for LOVE20ExtensionCenter
+ * @title ExtensionCenterTest
+ * @dev Test contract for ExtensionCenter
  */
-contract LOVE20ExtensionCenterTest is Test {
-    LOVE20ExtensionCenter public extensionCenter;
+contract ExtensionCenterTest is Test {
+    ExtensionCenter public extensionCenter;
     MockSubmit public mockSubmit;
     MockJoin public mockJoin;
     MockVote public mockVote;
@@ -65,7 +65,7 @@ contract LOVE20ExtensionCenterTest is Test {
         mockVote = new MockVote();
 
         // Deploy extension center with all required addresses
-        extensionCenter = new LOVE20ExtensionCenter(
+        extensionCenter = new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -107,9 +107,9 @@ contract LOVE20ExtensionCenterTest is Test {
 
     function testConstructorRevertsOnInvalidUniswapV2FactoryAddress() public {
         vm.expectRevert(
-            ILOVE20ExtensionCenter.InvalidUniswapV2FactoryAddress.selector
+            IExtensionCenter.InvalidUniswapV2FactoryAddress.selector
         );
-        new LOVE20ExtensionCenter(
+        new ExtensionCenter(
             address(0),
             mockLaunch,
             mockStake,
@@ -123,8 +123,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidLaunchAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidLaunchAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidLaunchAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             address(0),
             mockStake,
@@ -138,8 +138,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidStakeAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidStakeAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidStakeAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             address(0),
@@ -153,8 +153,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidSubmitAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidSubmitAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidSubmitAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -168,8 +168,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVoteAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidVoteAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidVoteAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -183,8 +183,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidJoinAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidJoinAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidJoinAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -198,8 +198,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVerifyAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidVerifyAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidVerifyAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -213,8 +213,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidMintAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidMintAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidMintAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -228,8 +228,8 @@ contract LOVE20ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidRandomAddress() public {
-        vm.expectRevert(ILOVE20ExtensionCenter.InvalidRandomAddress.selector);
-        new LOVE20ExtensionCenter(
+        vm.expectRevert(IExtensionCenter.InvalidRandomAddress.selector);
+        new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
             mockStake,
@@ -344,7 +344,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Try to add account from non-extension address
         vm.prank(user1);
-        vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -378,7 +378,7 @@ contract LOVE20ExtensionCenterTest is Test {
         );
 
         // Try to add again
-        vm.expectRevert(ILOVE20ExtensionCenter.AccountAlreadyJoined.selector);
+        vm.expectRevert(IExtensionCenter.AccountAlreadyJoined.selector);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -455,7 +455,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         // Try to remove from non-extension address
         vm.prank(user1);
-        vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
@@ -988,7 +988,7 @@ contract LOVE20ExtensionCenterTest is Test {
         string[] memory infos = new string[](0);
 
         vm.prank(user1);
-        vm.expectRevert(ILOVE20ExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
         extensionCenter.updateVerificationInfo(
             tokenAddress,
             actionId1,
@@ -1098,7 +1098,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         vm.prank(address(mockExtension));
         vm.expectRevert(
-            ILOVE20ExtensionCenter.VerificationInfoLengthMismatch.selector
+            IExtensionCenter.VerificationInfoLengthMismatch.selector
         );
         extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
     }
@@ -1139,7 +1139,7 @@ contract LOVE20ExtensionCenterTest is Test {
 
         vm.prank(address(mockExtension));
         vm.expectRevert(
-            ILOVE20ExtensionCenter.VerificationInfoLengthMismatch.selector
+            IExtensionCenter.VerificationInfoLengthMismatch.selector
         );
         extensionCenter.updateVerificationInfo(
             tokenAddress,

@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {ExampleTokenJoin} from "../src/examples/ExampleTokenJoin.sol";
 import {
     ExampleFactoryTokenJoin
 } from "../src/examples/ExampleFactoryTokenJoin.sol";
 import {
-    ILOVE20ExtensionTokenJoin
-} from "../src/interface/ILOVE20ExtensionTokenJoin.sol";
-import {ITokenJoin} from "../src/interface/base/ITokenJoin.sol";
-import {ILOVE20Extension} from "../src/interface/ILOVE20Extension.sol";
-import {IExtensionReward} from "../src/interface/base/IExtensionReward.sol";
-import {LOVE20ExtensionCenter} from "../src/LOVE20ExtensionCenter.sol";
+    IExtensionTokenJoin
+} from "../src/interface/IExtensionTokenJoin.sol";
+import {IExtension} from "../src/interface/IExtension.sol";
+import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 
 // Import mock contracts
 import {MockERC20} from "./mocks/MockERC20.sol";
@@ -33,7 +31,7 @@ import {MockUniswapV2Factory} from "./mocks/MockUniswapV2Factory.sol";
 contract ExampleTokenJoinTest is Test {
     ExampleFactoryTokenJoin public factory;
     ExampleTokenJoin public extension;
-    LOVE20ExtensionCenter public center;
+    ExtensionCenter public center;
     MockERC20 public token;
     MockERC20 public joinToken;
     MockStake public stake;
@@ -89,8 +87,8 @@ contract ExampleTokenJoinTest is Test {
         random = new MockRandom();
         MockUniswapV2Factory uniswapFactory = new MockUniswapV2Factory();
 
-        // Deploy real LOVE20ExtensionCenter
-        center = new LOVE20ExtensionCenter(
+        // Deploy real ExtensionCenter
+        center = new ExtensionCenter(
             address(uniswapFactory),
             address(launch),
             address(stake),
@@ -221,7 +219,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(IExtensionTokenJoin.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -304,7 +302,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -316,7 +314,7 @@ contract ExampleTokenJoinTest is Test {
         vm.roll(block.number + WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
     }
 
@@ -358,7 +356,7 @@ contract ExampleTokenJoinTest is Test {
 
         // User2 cannot exit yet (only 50 blocks passed since their join)
         vm.prank(user2);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         // Move forward another 50 blocks

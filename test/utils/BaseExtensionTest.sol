@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Test, console} from "forge-std/Test.sol";
-import {LOVE20ExtensionCenter} from "../../src/LOVE20ExtensionCenter.sol";
+import {Test} from "forge-std/Test.sol";
+import {ExtensionCenter} from "../../src/ExtensionCenter.sol";
 import {
-    ILOVE20ExtensionCenter
-} from "../../src/interface/ILOVE20ExtensionCenter.sol";
+    IExtensionCenter
+} from "../../src/interface/IExtensionCenter.sol";
 
 // Import mock contracts
 import {MockERC20} from "../mocks/MockERC20.sol";
@@ -29,7 +29,7 @@ abstract contract BaseExtensionTest is Test {
     // 核心合约
     // ============================================
 
-    LOVE20ExtensionCenter public center;
+    ExtensionCenter public center;
     MockERC20 public token;
     MockERC20 public joinToken;
     MockUniswapV2Factory public uniswapFactory;
@@ -87,7 +87,7 @@ abstract contract BaseExtensionTest is Test {
         uniswapFactory = new MockUniswapV2Factory();
 
         // 部署扩展中心
-        center = new LOVE20ExtensionCenter(
+        center = new ExtensionCenter(
             address(uniswapFactory),
             address(launch),
             address(stake),

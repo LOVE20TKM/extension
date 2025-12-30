@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExit} from "./IExit.sol";
+import {IExtension} from "./IExtension.sol";
 
-/// @title IJoin
-/// @notice Interface for token-free join functionality
-/// @dev Defines join/withdraw operations without token requirements and block-delayed withdrawal
-interface IJoin is IExit {
+/// @title IExtensionJoin
+/// @notice Interface for base join extensions
+/// @dev Combines Extension with token-free join/withdraw mechanisms
+interface IExtensionJoin is IExtension {
     // ============================================
     // ERRORS
     // ============================================
@@ -63,4 +63,9 @@ interface IJoin is IExit {
     /// @notice Join to participate in the extension
     /// @param verificationInfos Optional verification information array
     function join(string[] memory verificationInfos) external;
+
+    /// @notice Exit from the extension
+    /// @dev Implementations should handle cleanup and return of resources to msg.sender
+    function exit() external;
 }
+

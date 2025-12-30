@@ -1,14 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionCore} from "./ExtensionCore.sol";
-import {IJoin} from "../interface/base/IJoin.sol";
-import {IExit} from "../interface/base/IExit.sol";
+import {ExtensionBase} from "./ExtensionBase.sol";
+import {IExtensionJoin} from "./interface/IExtensionJoin.sol";
 
-/// @title Join
-/// @notice Base contract providing token-free join/exit functionality
-/// @dev Implements IJoin interface with block-based waiting period
-abstract contract Join is ExtensionCore, IJoin {
+/// @title ExtensionBaseJoin
+/// @notice Abstract base contract for token-free join extensions
+/// @dev Combines Join with Extension functionality
+///
+/// ==================== IMPLEMENTATION GUIDE ====================
+/// This contract provides a complete join implementation with:
+/// - Join without tokens to participate
+/// - Withdraw at any time
+/// - Integration with extension system
+///
+/// To implement this contract, you need to:
+///
+/// Implement joinedValue calculations from ILOVE20Extension
+///    - isJoinedValueCalculated() - whether joined value is calculated
+///    - joinedValue() - get total joined value
+///    - joinedValueByAccount() - get joined value for specific account
+///
+abstract contract ExtensionBaseJoin is
+    ExtensionBase,
+    IExtensionJoin
+{
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -17,17 +33,29 @@ abstract contract Join is ExtensionCore, IJoin {
     mapping(address => uint256) internal _joinedRound;
 
     // ============================================
-    // IJOIN INTERFACE
+    // CONSTRUCTOR
     // ============================================
 
-    /// @inheritdoc IJoin
+    /// @notice Initialize the join extension
+    /// @param factory_ The factory address
+    /// @param tokenAddress_ The token address
+    constructor(
+        address factory_,
+        address tokenAddress_
+    ) ExtensionBase(factory_, tokenAddress_) {}
+
+    // ============================================
+    // ILOVE20EXTENSIONJOIN INTERFACE
+    // ============================================
+
+    /// @inheritdoc IExtensionJoin
     function joinInfo(
         address account
     ) public view virtual returns (uint256 joinedRound) {
         return _joinedRound[account];
     }
 
-    /// @inheritdoc IJoin
+    /// @inheritdoc IExtensionJoin
     function join(string[] memory verificationInfos) public virtual {
         // Auto-initialize if not initialized
         _autoInitialize();
@@ -51,7 +79,7 @@ abstract contract Join is ExtensionCore, IJoin {
         emit Join(tokenAddress, _join.currentRound(), actionId, msg.sender);
     }
 
-    /// @inheritdoc IExit
+    /// @inheritdoc IExtensionJoin
     function exit() public virtual {
         // Check if joined
         if (_joinedRound[msg.sender] == 0) {

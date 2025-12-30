@@ -2,11 +2,11 @@
 pragma solidity =0.8.17;
 
 import {ExampleTokenJoin} from "./ExampleTokenJoin.sol";
-import {LOVE20ExtensionFactoryBase} from "../LOVE20ExtensionFactoryBase.sol";
+import {ExtensionFactoryBase} from "../ExtensionFactoryBase.sol";
 
 /// @title ExampleFactoryTokenJoin
 /// @notice Factory contract for creating ExampleTokenJoin instances
-contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
+contract ExampleFactoryTokenJoin is ExtensionFactoryBase {
     // ============================================
     // STATE VARIABLES
     // ============================================
@@ -31,7 +31,7 @@ contract ExampleFactoryTokenJoin is LOVE20ExtensionFactoryBase {
 
     /// @notice Initialize the factory
     /// @param center_ The center contract address
-    constructor(address center_) LOVE20ExtensionFactoryBase(center_) {}
+    constructor(address center_) ExtensionFactoryBase(center_) {}
 
     // ============================================
     // FACTORY FUNCTIONS

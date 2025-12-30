@@ -2,18 +2,16 @@
 pragma solidity =0.8.17;
 
 import {
-    LOVE20ExtensionBaseTokenJoin
-} from "../LOVE20ExtensionBaseTokenJoin.sol";
-import {ExtensionReward} from "../base/ExtensionReward.sol";
-import {IExtensionReward} from "../interface/base/IExtensionReward.sol";
+    ExtensionBaseTokenJoin
+} from "../ExtensionBaseTokenJoin.sol";
 import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
 
 using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /// @title ExampleTokenJoin
-/// @notice Example implementation of LOVE20ExtensionBaseTokenJoin
+/// @notice Example implementation of ExtensionBaseTokenJoin
 /// @dev Simple implementation where joined value equals joined amount
-contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
+contract ExampleTokenJoin is ExtensionBaseTokenJoin {
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -29,7 +27,7 @@ contract ExampleTokenJoin is LOVE20ExtensionBaseTokenJoin {
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        LOVE20ExtensionBaseTokenJoin(
+        ExtensionBaseTokenJoin(
             factory_,
             tokenAddress_,
             joinTokenAddress_,
