@@ -3,8 +3,6 @@ pragma solidity =0.8.17;
 
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
-/// @title RoundHistoryAddressArray
-/// @notice Library for tracking historical address array values across rounds
 library RoundHistoryAddressArray {
     using ArrayUtils for uint256[];
 
@@ -13,7 +11,6 @@ library RoundHistoryAddressArray {
         mapping(uint256 => address[]) valueByRound;
     }
 
-    /// @notice Record address array at a specific round
     function record(
         History storage self,
         uint256 round,
@@ -31,7 +28,6 @@ library RoundHistoryAddressArray {
         }
     }
 
-    /// @notice Get address array at a specific round using binary search
     function values(
         History storage self,
         uint256 round
@@ -42,7 +38,6 @@ library RoundHistoryAddressArray {
         return found ? self.valueByRound[nearestRound] : new address[](0);
     }
 
-    /// @notice Get the latest recorded address array
     function latestValues(
         History storage self
     ) internal view returns (address[] memory) {
@@ -53,7 +48,6 @@ library RoundHistoryAddressArray {
         return self.valueByRound[latestRound];
     }
 
-    /// @notice Add address if not exists
     function add(History storage self, uint256 round, address value) internal {
         address[] memory arr = values(self, round);
         for (uint256 i; i < arr.length; ) {
@@ -73,7 +67,6 @@ library RoundHistoryAddressArray {
         record(self, round, updated);
     }
 
-    /// @notice Remove address, returns true if removed
     function remove(
         History storage self,
         uint256 round,

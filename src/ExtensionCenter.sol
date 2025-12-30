@@ -17,7 +17,6 @@ contract ExtensionCenter is IExtensionCenter {
     using RoundHistoryAddress for RoundHistoryAddress.History;
     using RoundHistoryString for RoundHistoryString.History;
 
-    // ------ state variables ------
     address public immutable uniswapV2FactoryAddress;
     address public immutable launchAddress;
     address public immutable stakeAddress;
@@ -28,41 +27,40 @@ contract ExtensionCenter is IExtensionCenter {
     address public immutable mintAddress;
     address public immutable randomAddress;
 
-    // tokenAddress => actionId => account => bool
+    // tokenAddress => actionId => account => isJoined
     mapping(address => mapping(uint256 => mapping(address => bool)))
         internal _isAccountJoined;
 
-    // tokenAddress => account => actionIds array
+    // tokenAddress => account => actionIds
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
 
-    // tokenAddress => actionId => accountsCount history
+    // tokenAddress => actionId => accountsCount
     mapping(address => mapping(uint256 => RoundHistoryUint256.History))
         internal _accountsCountHistory;
 
-    // tokenAddress => actionId => index => account history
+    // tokenAddress => actionId => index => account
     mapping(address => mapping(uint256 => mapping(uint256 => RoundHistoryAddress.History)))
         internal _accountsAtIndexHistory;
 
-    // tokenAddress => actionId => account => index history
+    // tokenAddress => actionId => account => index
     mapping(address => mapping(uint256 => mapping(address => RoundHistoryUint256.History)))
         internal _accountsIndexHistory;
 
-    // tokenAddress => actionId => account => verificationKey => History
+    // tokenAddress => actionId => account => verificationKey => verificationInfo
     mapping(address => mapping(uint256 => mapping(address => mapping(string => RoundHistoryString.History))))
         internal _verificationInfoHistory;
 
-    // extension => delegate address
+    // extension => delegate
     mapping(address => address) internal _extensionDelegate;
 
-    // tokenAddress => actionId => extension address
+    // tokenAddress => actionId => extension
     mapping(address => mapping(uint256 => address))
         internal _extensionByActionId;
 
-    // tokenAddress => actionId => factory address
+    // tokenAddress => actionId => factory
     mapping(address => mapping(uint256 => address)) internal _factoryByActionId;
 
-    // ------ modifiers ------
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
         if (!_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender)) {
             revert OnlyExtensionCanCall();
@@ -70,7 +68,6 @@ contract ExtensionCenter is IExtensionCenter {
         _;
     }
 
-    // ------ internal helpers ------
     function _isValidExtensionOrDelegate(
         address tokenAddress,
         uint256 actionId,
@@ -105,7 +102,6 @@ contract ExtensionCenter is IExtensionCenter {
         return address(0);
     }
 
-    // ------ constructor ------
     constructor(
         address uniswapV2FactoryAddress_,
         address launchAddress_,
@@ -139,7 +135,6 @@ contract ExtensionCenter is IExtensionCenter {
         randomAddress = randomAddress_;
     }
 
-    // ------ extension query ------
     function extension(
         address tokenAddress,
         uint256 actionId
@@ -165,8 +160,6 @@ contract ExtensionCenter is IExtensionCenter {
         return _factoryByActionId[tokenAddress][actionId];
     }
 
-    // ------ extension delegate management ------
-    /// @inheritdoc IExtensionCenter
     function setExtensionDelegate(address delegate) external {
         address extensionAddress = msg.sender;
 
@@ -175,14 +168,12 @@ contract ExtensionCenter is IExtensionCenter {
         emit ExtensionDelegateSet(extensionAddress, delegate);
     }
 
-    /// @inheritdoc IExtensionCenter
     function extensionDelegate(
         address extensionAddress
     ) external view returns (address) {
         return _extensionDelegate[extensionAddress];
     }
 
-    // ------ account management (only extension can call) ------
     function addAccount(
         address tokenAddress,
         uint256 actionId,
@@ -205,7 +196,6 @@ contract ExtensionCenter is IExtensionCenter {
             revert AccountAlreadyJoined();
         }
 
-        // Get extension address and verify factory
         address extensionAddress = _getExtensionAddress(
             tokenAddress,
             actionId,
@@ -215,10 +205,8 @@ contract ExtensionCenter is IExtensionCenter {
             revert OnlyExtensionCanCall();
         }
 
-        // If extension and factory are already recorded, skip verification
         address factoryAddress = _factoryByActionId[tokenAddress][actionId];
         if (factoryAddress == address(0)) {
-            // Get factory from extension and verify
             try IExtension(extensionAddress).factory() returns (
                 address factory
             ) {
@@ -229,27 +217,18 @@ contract ExtensionCenter is IExtensionCenter {
             } catch {
                 revert InvalidExtensionFactory();
             }
-            // Verify extension exists in factory
-            if (
-                !IExtensionFactory(factoryAddress).exists(
-                    extensionAddress
-                )
-            ) {
+            if (!IExtensionFactory(factoryAddress).exists(extensionAddress)) {
                 revert ExtensionNotFoundInFactory();
             }
 
-            // Record extension and factory for this actionId
             _extensionByActionId[tokenAddress][actionId] = extensionAddress;
             _factoryByActionId[tokenAddress][actionId] = factoryAddress;
         }
 
-        // set account joined
         _isAccountJoined[tokenAddress][actionId][account] = true;
 
-        // add actionId to account's list
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
-        // add account to action's list using RoundHistory
         uint256 accountCount = _accountsCountHistory[tokenAddress][actionId]
             .latestValue();
         _accountsAtIndexHistory[tokenAddress][actionId][accountCount].record(
@@ -265,7 +244,6 @@ contract ExtensionCenter is IExtensionCenter {
             accountCount + 1
         );
 
-        // store verification info
         _storeVerificationInfo(
             tokenAddress,
             actionId,
@@ -300,13 +278,10 @@ contract ExtensionCenter is IExtensionCenter {
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
-        // set account joined to false
         _isAccountJoined[tokenAddress][actionId][account] = false;
 
-        // remove actionId from account's list
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 
-        // remove account from action's list using swap-and-pop
         uint256 index = _accountsIndexHistory[tokenAddress][actionId][account]
             .latestValue();
         uint256 lastIndex = _accountsCountHistory[tokenAddress][actionId]
@@ -329,7 +304,6 @@ contract ExtensionCenter is IExtensionCenter {
                 address(0)
             );
         } else {
-            // Clear the last index when removing the last element
             _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
                 currentRound,
                 address(0)
@@ -347,7 +321,6 @@ contract ExtensionCenter is IExtensionCenter {
         emit AccountRemoved(tokenAddress, actionId, account);
     }
 
-    // ------ account status queries ------
     function isAccountJoined(
         address tokenAddress,
         uint256 actionId,
@@ -374,20 +347,16 @@ contract ExtensionCenter is IExtensionCenter {
         ];
         uint256 length = allActionIds.length;
 
-        // Pre-allocate arrays with max size
         actionIds = new uint256[](length);
         extensions = new address[](length);
         factories_ = new address[](length);
         uint256 count = 0;
         bool noFilter = factories.length == 0;
 
-        // Single pass: collect matching actionIds
-        // If factories is empty, all actionIds match; otherwise check if factory is in array
         for (uint256 i = 0; i < length; ) {
             uint256 actionId = allActionIds[i];
             address factory = _factoryByActionId[tokenAddress][actionId];
 
-            // If no filter or factory is in factories array, include it
             if (noFilter || _isFactoryInArray(factory, factories)) {
                 actionIds[count] = actionId;
                 extensions[count] = _extensionByActionId[tokenAddress][
@@ -404,8 +373,6 @@ contract ExtensionCenter is IExtensionCenter {
             }
         }
 
-        // Resize arrays to exact count using mstore
-        // Always resize if count != length to ensure correct array size
         if (count != length) {
             assembly {
                 mstore(actionIds, count)
@@ -431,7 +398,6 @@ contract ExtensionCenter is IExtensionCenter {
         return false;
     }
 
-    // ------ accounts by action queries (current) ------
     function accounts(
         address tokenAddress,
         uint256 actionId
@@ -463,7 +429,6 @@ contract ExtensionCenter is IExtensionCenter {
                 .latestValue();
     }
 
-    // ------ accounts by action queries (by round) ------
     function accountsByRound(
         address tokenAddress,
         uint256 actionId,
@@ -498,7 +463,6 @@ contract ExtensionCenter is IExtensionCenter {
             _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
     }
 
-    // ------ verification info (only extension can call) ------
     function updateVerificationInfo(
         address tokenAddress,
         uint256 actionId,
@@ -515,7 +479,6 @@ contract ExtensionCenter is IExtensionCenter {
         );
     }
 
-    // ------ verification info queries ------
     function verificationInfo(
         address tokenAddress,
         uint256 actionId,
@@ -541,7 +504,6 @@ contract ExtensionCenter is IExtensionCenter {
             ].value(round);
     }
 
-    // ------ internal functions ------
     function _storeVerificationInfo(
         address tokenAddress,
         uint256 actionId,

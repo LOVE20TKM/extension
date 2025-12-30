@@ -3,8 +3,6 @@ pragma solidity =0.8.17;
 
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 
-/// @title RoundHistoryUint256Array
-/// @notice Library for tracking historical uint256 array values across rounds
 library RoundHistoryUint256Array {
     using ArrayUtils for uint256[];
 
@@ -13,7 +11,6 @@ library RoundHistoryUint256Array {
         mapping(uint256 => uint256[]) valueByRound;
     }
 
-    /// @notice Record uint256 array at a specific round
     function record(
         History storage self,
         uint256 round,
@@ -31,7 +28,6 @@ library RoundHistoryUint256Array {
         }
     }
 
-    /// @notice Get uint256 array at a specific round using binary search
     function values(
         History storage self,
         uint256 round
@@ -42,7 +38,6 @@ library RoundHistoryUint256Array {
         return found ? self.valueByRound[nearestRound] : new uint256[](0);
     }
 
-    /// @notice Get the latest recorded uint256 array
     function latestValues(
         History storage self
     ) internal view returns (uint256[] memory) {
@@ -53,7 +48,6 @@ library RoundHistoryUint256Array {
         return self.valueByRound[latestRound];
     }
 
-    /// @notice Add value if not exists
     function add(History storage self, uint256 round, uint256 value) internal {
         uint256[] memory arr = values(self, round);
         for (uint256 i; i < arr.length; ) {
@@ -73,7 +67,6 @@ library RoundHistoryUint256Array {
         record(self, round, updated);
     }
 
-    /// @notice Remove value, returns true if removed
     function remove(
         History storage self,
         uint256 round,

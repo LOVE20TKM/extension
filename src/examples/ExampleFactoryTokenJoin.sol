@@ -4,44 +4,17 @@ pragma solidity =0.8.17;
 import {ExampleTokenJoin} from "./ExampleTokenJoin.sol";
 import {ExtensionFactoryBase} from "../ExtensionFactoryBase.sol";
 
-/// @title ExampleFactoryTokenJoin
-/// @notice Factory contract for creating ExampleTokenJoin instances
 contract ExampleFactoryTokenJoin is ExtensionFactoryBase {
-    // ============================================
-    // STATE VARIABLES
-    // ============================================
-
-    /// @dev Mapping from extension address to its parameters
     mapping(address => ExtensionParams) private _extensionParams;
 
-    // ============================================
-    // STRUCTS
-    // ============================================
-
-    /// @notice Parameters for ExampleTokenJoin extension
     struct ExtensionParams {
         address tokenAddress;
         address joinTokenAddress;
         uint256 waitingBlocks;
     }
 
-    // ============================================
-    // CONSTRUCTOR
-    // ============================================
-
-    /// @notice Initialize the factory
-    /// @param center_ The center contract address
     constructor(address center_) ExtensionFactoryBase(center_) {}
 
-    // ============================================
-    // FACTORY FUNCTIONS
-    // ============================================
-
-    /// @notice Create a new ExampleTokenJoin extension
-    /// @param tokenAddress_ The token address
-    /// @param joinTokenAddress_ The token to join with
-    /// @param waitingBlocks_ Number of blocks to wait before withdrawal
-    /// @return The address of the created extension
     function createExtension(
         address tokenAddress_,
         address joinTokenAddress_,
@@ -65,11 +38,6 @@ contract ExampleFactoryTokenJoin is ExtensionFactoryBase {
         return address(extension);
     }
 
-    /// @notice Get the parameters of an extension
-    /// @param extension_ The extension address
-    /// @return tokenAddress The token address
-    /// @return joinTokenAddress The join token address
-    /// @return waitingBlocks The waiting blocks
     function extensionParams(
         address extension_
     )
