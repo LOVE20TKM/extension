@@ -3,9 +3,7 @@ pragma solidity =0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
-import {
-    IExtensionCenter
-} from "../src/interface/IExtensionCenter.sol";
+import {IExtensionCenter} from "../src/interface/IExtensionCenter.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
 import {MockVote} from "./mocks/MockVote.sol";
@@ -975,7 +973,7 @@ contract ExtensionCenterTest is Test {
         );
     }
 
-    function testUpdateVerificationInfoRevertsIfNotExtension() public {
+    function testUpdateVerificationInfoRevertsIfNotExtensionOrAccount() public {
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
         );
@@ -988,7 +986,17 @@ contract ExtensionCenterTest is Test {
         string[] memory infos = new string[](0);
 
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            infos
+        );
+
+        vm.prank(user2);
+        vm.expectRevert(
+            IExtensionCenter.OnlyExtensionOrAccountCanCall.selector
+        );
         extensionCenter.updateVerificationInfo(
             tokenAddress,
             actionId1,
