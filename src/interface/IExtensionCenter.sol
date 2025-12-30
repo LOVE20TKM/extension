@@ -34,6 +34,7 @@ interface IExtensionCenter {
     error InvalidMintAddress();
     error InvalidRandomAddress();
     error OnlyExtensionCanCall();
+    error OnlyExtensionOrAccountCanCall();
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();

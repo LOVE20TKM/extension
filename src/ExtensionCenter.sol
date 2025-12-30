@@ -468,7 +468,14 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account,
         string[] calldata verificationInfos
-    ) external onlyExtension(tokenAddress, actionId) {
+    ) external {
+        if (
+            !_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender) &&
+            account != msg.sender
+        ) {
+            revert OnlyExtensionOrAccountCanCall();
+        }
+
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
         _storeVerificationInfo(
             tokenAddress,
