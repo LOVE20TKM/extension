@@ -117,7 +117,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
     function test_Constructor_ImmutableVariables() public view {
         assertEq(extension.joinTokenAddress(), address(joinToken));
-        assertEq(extension.waitingBlocks(), WAITING_BLOCKS);
+        assertEq(extension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertEq(extension.factory(), address(mockFactory));
     }
 

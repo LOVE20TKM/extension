@@ -98,7 +98,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
         assertEq(exampleExtension.tokenAddress(), address(token));
         assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
-        assertEq(exampleExtension.waitingBlocks(), WAITING_BLOCKS);
+        assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertEq(exampleExtension.factory(), address(factory));
     }
 
@@ -128,9 +128,9 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         ExampleTokenJoin ext2 = ExampleTokenJoin(extension2);
         ExampleTokenJoin ext3 = ExampleTokenJoin(extension3);
 
-        assertEq(ext1.waitingBlocks(), WAITING_BLOCKS);
-        assertEq(ext2.waitingBlocks(), WAITING_BLOCKS + 50);
-        assertEq(ext3.waitingBlocks(), WAITING_BLOCKS + 100);
+        assertEq(ext1.WAITING_BLOCKS(), WAITING_BLOCKS);
+        assertEq(ext2.WAITING_BLOCKS(), WAITING_BLOCKS + 50);
+        assertEq(ext3.WAITING_BLOCKS(), WAITING_BLOCKS + 100);
     }
 
     // ============================================
@@ -219,7 +219,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         // Verify extension is properly initialized
         assertEq(exampleExtension.tokenAddress(), address(token));
         assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
-        assertEq(exampleExtension.waitingBlocks(), WAITING_BLOCKS);
+        assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertEq(exampleExtension.factory(), address(factory));
 
         // Verify factory can retrieve params
@@ -288,7 +288,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         );
 
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
-        assertEq(exampleExtension.waitingBlocks(), 0);
+        assertEq(exampleExtension.WAITING_BLOCKS(), 0);
     }
 
     function test_CreateExtension_LargeWaitingBlocks() public {
@@ -303,7 +303,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         );
 
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
-        assertEq(exampleExtension.waitingBlocks(), largeWaitingBlocks);
+        assertEq(exampleExtension.WAITING_BLOCKS(), largeWaitingBlocks);
     }
 }
 

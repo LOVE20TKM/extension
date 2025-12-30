@@ -143,7 +143,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_ImmutableVariables() public view {
         assertEq(extension.joinTokenAddress(), address(joinToken));
-        assertEq(extension.waitingBlocks(), WAITING_BLOCKS);
+        assertEq(extension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertTrue(extension.factory() != address(0));
     }
 

@@ -28,7 +28,7 @@ interface IExtensionTokenJoin is IExtension {
 
     function joinTokenAddress() external view returns (address);
 
-    function waitingBlocks() external view returns (uint256);
+    function WAITING_BLOCKS() external view returns (uint256);
 
     function totalJoinedAmount() external view returns (uint256);
 

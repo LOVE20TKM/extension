@@ -18,7 +18,7 @@ using RoundHistoryUint256 for RoundHistoryUint256.History;
 abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
     address public immutable joinTokenAddress;
 
-    uint256 public immutable waitingBlocks;
+    uint256 public immutable WAITING_BLOCKS;
 
     // account => joinedRound
     mapping(address => uint256) internal _joinedRoundByAccount;
@@ -44,7 +44,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
             revert InvalidJoinTokenAddress();
         }
         joinTokenAddress = joinTokenAddress_;
-        waitingBlocks = waitingBlocks_;
+        WAITING_BLOCKS = waitingBlocks_;
         _joinToken = IERC20(joinTokenAddress_);
     }
 
@@ -104,7 +104,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
         if (joinedBlock == 0) {
             revert NoJoinedAmount();
         }
-        if (block.number < joinedBlock + waitingBlocks) {
+        if (block.number < joinedBlock + WAITING_BLOCKS) {
             revert NotEnoughWaitingBlocks();
         }
 
@@ -144,7 +144,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
             _joinedRoundByAccount[account],
             _amountHistoryByAccount[account].latestValue(),
             joinedBlock,
-            joinedBlock == 0 ? 0 : joinedBlock + waitingBlocks
+            joinedBlock == 0 ? 0 : joinedBlock + WAITING_BLOCKS
         );
     }
 
