@@ -14,14 +14,11 @@ import {
 import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
-import {ILOVE20Stake} from "@core/interfaces/ILOVE20Stake.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
-import {ILOVE20Random} from "@core/interfaces/ILOVE20Random.sol";
 
 /// @title ExtensionBase
 /// @notice Core base contract providing fundamental extension functionality
@@ -47,10 +44,6 @@ abstract contract ExtensionBase is IExtension, ReentrancyGuard {
     /// @notice The action ID this extension is associated with
     uint256 public actionId;
 
-    /// @notice The launch contract address
-    ILOVE20Launch internal immutable _launch;
-    /// @notice The stake contract address
-    ILOVE20Stake internal immutable _stake;
     /// @notice The submit contract address
     ILOVE20Submit internal immutable _submit;
     /// @notice The vote contract address
@@ -61,8 +54,6 @@ abstract contract ExtensionBase is IExtension, ReentrancyGuard {
     ILOVE20Verify internal immutable _verify;
     /// @notice The mint contract address
     ILOVE20Mint internal immutable _mint;
-    /// @notice The random contract address
-    ILOVE20Random internal immutable _random;
 
     /// @dev round => reward
     mapping(uint256 => uint256) internal _reward;
@@ -83,14 +74,11 @@ abstract contract ExtensionBase is IExtension, ReentrancyGuard {
         factory = factory_;
         tokenAddress = tokenAddress_;
         _center = IExtensionCenter(IExtensionFactory(factory_).center());
-        _launch = ILOVE20Launch(_center.launchAddress());
-        _stake = ILOVE20Stake(_center.stakeAddress());
         _submit = ILOVE20Submit(_center.submitAddress());
         _vote = ILOVE20Vote(_center.voteAddress());
         _join = ILOVE20Join(_center.joinAddress());
         _verify = ILOVE20Verify(_center.verifyAddress());
         _mint = ILOVE20Mint(_center.mintAddress());
-        _random = ILOVE20Random(_center.randomAddress());
     }
 
     // ============================================
