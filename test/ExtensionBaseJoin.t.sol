@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
-import {ExtensionBaseJoin} from "../../src/ExtensionBaseJoin.sol";
-import {IExtensionJoin} from "../../src/interface/IExtensionJoin.sol";
-import {IExtension} from "../../src/interface/IExtension.sol";
-import {ExtensionBase} from "../../src/ExtensionBase.sol";
-import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
+import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
+import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
+import {IExtensionJoin} from "../src/interface/IExtensionJoin.sol";
+import {IExtension} from "../src/interface/IExtension.sol";
+import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -43,7 +43,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(IExtension, ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);

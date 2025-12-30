@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {BaseExtensionTest} from "../utils/BaseExtensionTest.sol";
-import {ExtensionBaseTokenJoin} from "../../src/ExtensionBaseTokenJoin.sol";
-import {IExtensionTokenJoin} from "../../src/interface/IExtensionTokenJoin.sol";
-import {IExtension} from "../../src/interface/IExtension.sol";
-import {ExtensionBase} from "../../src/ExtensionBase.sol";
-import {MockExtensionFactory} from "../mocks/MockExtensionFactory.sol";
+import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
+import {ExtensionBaseTokenJoin} from "../src/ExtensionBaseTokenJoin.sol";
+import {IExtensionTokenJoin} from "../src/interface/IExtensionTokenJoin.sol";
+import {IExtension} from "../src/interface/IExtension.sol";
+import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 
 /**
  * @title MockExtensionForTokenJoin
@@ -48,7 +48,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(IExtension, ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);

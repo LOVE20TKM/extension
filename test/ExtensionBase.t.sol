@@ -42,7 +42,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(IExtension, ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);

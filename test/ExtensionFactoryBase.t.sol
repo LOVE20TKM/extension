@@ -3,9 +3,22 @@ pragma solidity =0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ExtensionFactoryBase} from "../src/ExtensionFactoryBase.sol";
-import {IExtensionFactory} from "../src/interface/IExtensionFactory.sol";
+import {
+    IExtensionFactory,
+    DEFAULT_JOIN_AMOUNT
+} from "../src/interface/IExtensionFactory.sol";
+import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockExtension} from "./mocks/MockExtension.sol";
+import {MockStake} from "./mocks/MockStake.sol";
+import {MockJoin} from "./mocks/MockJoin.sol";
+import {MockVerify} from "./mocks/MockVerify.sol";
+import {MockMint} from "./mocks/MockMint.sol";
+import {MockSubmit} from "./mocks/MockSubmit.sol";
+import {MockLaunch} from "./mocks/MockLaunch.sol";
+import {MockVote} from "./mocks/MockVote.sol";
+import {MockRandom} from "./mocks/MockRandom.sol";
+import {MockUniswapV2Factory} from "./mocks/MockUniswapV2Factory.sol";
 
 /**
  * @title MockExtensionFactory
@@ -15,7 +28,7 @@ contract MockExtensionFactoryForBaseTest is ExtensionFactoryBase {
     constructor(address center_) ExtensionFactoryBase(center_) {}
 
     function createExtension(address tokenAddress) external returns (address) {
-        MockExtension extension = new MockExtension();
+        MockExtension extension = new MockExtension(address(this), tokenAddress);
         _registerExtension(address(extension), tokenAddress);
         return address(extension);
     }
@@ -27,11 +40,47 @@ contract MockExtensionFactoryForBaseTest is ExtensionFactoryBase {
  */
 contract ExtensionFactoryBaseTest is Test {
     MockExtensionFactoryForBaseTest public factory;
-    address public center = address(0x1000);
+    ExtensionCenter public center;
     MockERC20 public token;
+    MockStake public stake;
+    MockJoin public join;
+    MockVerify public verify;
+    MockMint public mint;
+    MockSubmit public submit;
+    MockLaunch public launch;
+    MockVote public vote;
+    MockRandom public random;
+    MockUniswapV2Factory public uniswapFactory;
 
     function setUp() public {
-        factory = new MockExtensionFactoryForBaseTest(center);
+        // Deploy mock contracts
+        stake = new MockStake();
+        join = new MockJoin();
+        verify = new MockVerify();
+        mint = new MockMint();
+        submit = new MockSubmit();
+        launch = new MockLaunch();
+        vote = new MockVote();
+        random = new MockRandom();
+        uniswapFactory = new MockUniswapV2Factory();
+
+        // Deploy ExtensionCenter
+        center = new ExtensionCenter(
+            address(uniswapFactory),
+            address(launch),
+            address(stake),
+            address(submit),
+            address(vote),
+            address(join),
+            address(verify),
+            address(mint),
+            address(random)
+        );
+
+        // Initialize current round
+        verify.setCurrentRound(0);
+
+        factory = new MockExtensionFactoryForBaseTest(address(center));
         token = new MockERC20();
     }
 
@@ -40,7 +89,7 @@ contract ExtensionFactoryBaseTest is Test {
     // ============================================
 
     function test_Constructor() public view {
-        assertEq(factory.center(), center);
+        assertEq(factory.center(), address(center));
     }
 
     // ============================================
@@ -160,8 +209,8 @@ contract ExtensionFactoryBaseTest is Test {
         address extension = factory.createExtension(address(token));
 
         // Check that tokens were transferred to extension
-        assertEq(token.balanceOf(extension), IExtensionFactory.DEFAULT_JOIN_AMOUNT());
-        assertEq(token.balanceOf(address(this)), amount - IExtensionFactory.DEFAULT_JOIN_AMOUNT());
+        assertEq(token.balanceOf(extension), DEFAULT_JOIN_AMOUNT);
+        assertEq(token.balanceOf(address(this)), amount - DEFAULT_JOIN_AMOUNT);
     }
 
     function test_RegisterExtension_RegistersExtension() public {
@@ -190,7 +239,7 @@ contract ExtensionFactoryBaseTest is Test {
     }
 
     function test_RegisterExtension_RevertIfInsufficientBalance() public {
-        token.mint(address(this), IExtensionFactory.DEFAULT_JOIN_AMOUNT() - 1);
+        token.mint(address(this), DEFAULT_JOIN_AMOUNT - 1);
         token.approve(address(factory), type(uint256).max);
 
         vm.expectRevert();
@@ -199,7 +248,7 @@ contract ExtensionFactoryBaseTest is Test {
 
     function test_RegisterExtension_RevertIfInsufficientAllowance() public {
         token.mint(address(this), 1e18);
-        token.approve(address(factory), IExtensionFactory.DEFAULT_JOIN_AMOUNT() - 1);
+        token.approve(address(factory), DEFAULT_JOIN_AMOUNT - 1);
 
         vm.expectRevert();
         factory.createExtension(address(token));

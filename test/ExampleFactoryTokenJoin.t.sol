@@ -6,6 +6,7 @@ import {ExampleFactoryTokenJoin} from "../src/examples/ExampleFactoryTokenJoin.s
 import {ExampleTokenJoin} from "../src/examples/ExampleTokenJoin.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
+import {MockERC20} from "./mocks/MockERC20.sol";
 
 /**
  * @title ExampleFactoryTokenJoinTest
@@ -14,9 +15,7 @@ import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
     ExampleFactoryTokenJoin public factory;
 
-    uint256 constant WAITING_BLOCKS = 100;
-
-    function setUp() public override {
+    function setUp() public {
         setUpBase();
 
         factory = new ExampleFactoryTokenJoin(address(center));
@@ -50,6 +49,10 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
     }
 
     function test_CreateExtension_RegistersInFactory() public {
+        // Mint enough tokens for two extensions
+        token.mint(address(this), 1e18);
+        token.approve(address(factory), type(uint256).max);
+
         address extension1 = factory.createExtension(
             address(token),
             address(joinToken),

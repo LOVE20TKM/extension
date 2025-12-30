@@ -36,7 +36,6 @@ using RoundHistoryUint256 for RoundHistoryUint256.History;
 ///
 abstract contract ExtensionBaseTokenJoin is
     ExtensionBase,
-    ReentrancyGuard,
     IExtensionTokenJoin
 {
     // ============================================
