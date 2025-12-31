@@ -20,7 +20,7 @@ contract MockExtension is ExtensionBase {
         actionId = actionId_;
     }
 
-    function isJoinedValueCalculated() external pure returns (bool) {
+    function isJoinedValueConverted() external pure returns (bool) {
         return true;
     }
 

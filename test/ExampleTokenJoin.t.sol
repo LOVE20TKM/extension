@@ -6,9 +6,7 @@ import {ExampleTokenJoin} from "../src/examples/ExampleTokenJoin.sol";
 import {
     ExampleFactoryTokenJoin
 } from "../src/examples/ExampleFactoryTokenJoin.sol";
-import {
-    IExtensionTokenJoin
-} from "../src/interface/IExtensionTokenJoin.sol";
+import {IExtensionTokenJoin} from "../src/interface/IExtensionTokenJoin.sol";
 import {IExtension} from "../src/interface/IExtension.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 
@@ -393,8 +391,8 @@ contract ExampleTokenJoinTest is Test {
     // JOINED VALUE CALCULATION TESTS
     // ============================================
 
-    function test_IsJoinedValueCalculated() public view {
-        assertTrue(extension.isJoinedValueCalculated());
+    function test_isJoinedValueConverted() public view {
+        assertTrue(extension.isJoinedValueConverted());
     }
 
     function test_JoinedValue_Empty() public view {

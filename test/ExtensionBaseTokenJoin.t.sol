@@ -27,7 +27,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
         )
     {}
 
-    function isJoinedValueCalculated() external pure override returns (bool) {
+    function isJoinedValueConverted() external pure override returns (bool) {
         return true;
     }
 
@@ -532,8 +532,8 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(extension.joinedValueByAccount(user1), 0);
     }
 
-    function test_IsJoinedValueCalculated() public view {
-        assertTrue(extension.isJoinedValueCalculated());
+    function test_isJoinedValueConverted() public view {
+        assertTrue(extension.isJoinedValueConverted());
     }
 
     // ============================================

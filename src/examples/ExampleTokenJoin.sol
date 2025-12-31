@@ -21,7 +21,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
         )
     {}
 
-    function isJoinedValueCalculated() external pure override returns (bool) {
+    function isJoinedValueConverted() external pure override returns (bool) {
         return true;
     }
 

@@ -22,7 +22,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
         address tokenAddress_
     ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueCalculated() external pure override returns (bool) {
+    function isJoinedValueConverted() external pure override returns (bool) {
         return false;
     }
 
@@ -73,7 +73,7 @@ contract MockExtensionForReward is ExtensionBaseJoin {
         address tokenAddress_
     ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueCalculated() external pure override returns (bool) {
+    function isJoinedValueConverted() external pure override returns (bool) {
         return true;
     }
 
@@ -345,7 +345,11 @@ contract ExtensionBaseTest is BaseExtensionTest {
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(rewardExtension), address(token));
 
-        submit.setActionInfo(address(token), ACTION_ID, address(rewardExtension));
+        submit.setActionInfo(
+            address(token),
+            ACTION_ID,
+            address(rewardExtension)
+        );
         token.mint(address(rewardExtension), 1000e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -740,4 +744,3 @@ contract ExtensionBaseTest is BaseExtensionTest {
         }
     }
 }
-

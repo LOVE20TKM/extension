@@ -26,7 +26,7 @@ interface IExtension {
     function tokenAddress() external view returns (address);
     function actionId() external view returns (uint256);
 
-    function isJoinedValueCalculated() external view returns (bool);
+    function isJoinedValueConverted() external view returns (bool);
     function joinedValue() external view returns (uint256);
     function joinedValueByAccount(
         address account
