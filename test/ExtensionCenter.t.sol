@@ -298,7 +298,7 @@ contract ExtensionCenterTest is Test {
             address(mockExtension)
         );
         assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            extensionCenter.factory(tokenAddress, actionId1),
             address(mockFactory)
         );
 
@@ -649,12 +649,12 @@ contract ExtensionCenterTest is Test {
 
         // Verify factories are recorded
         assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            extensionCenter.factory(tokenAddress, actionId1),
             address(mockFactory),
             "Factory should be recorded for actionId1"
         );
         assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId2),
+            extensionCenter.factory(tokenAddress, actionId2),
             address(mockFactory2),
             "Factory should be recorded for actionId2"
         );
@@ -725,7 +725,7 @@ contract ExtensionCenterTest is Test {
             tokenAddress,
             actionId1
         );
-        address recordedFactory = extensionCenter.factoryByActionId(
+        address recordedFactory = extensionCenter.factory(
             tokenAddress,
             actionId1
         );
@@ -744,7 +744,7 @@ contract ExtensionCenterTest is Test {
             recordedExtension
         );
         assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId1),
+            extensionCenter.factory(tokenAddress, actionId1),
             recordedFactory
         );
     }

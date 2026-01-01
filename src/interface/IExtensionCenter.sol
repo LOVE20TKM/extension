@@ -86,7 +86,7 @@ interface IExtensionCenter {
         uint256 actionId
     ) external view returns (address);
 
-    function factoryByActionId(
+    function factory(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address);

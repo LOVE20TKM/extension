@@ -144,12 +144,12 @@ contract ExtensionCenter is IExtensionCenter {
         address extensionAddress
     ) internal view returns (address factoryAddress) {
         try IExtensionCore(extensionAddress).factory() returns (
-            address factory
+            address factory_
         ) {
-            if (factory == address(0)) {
+            if (factory_ == address(0)) {
                 return address(0);
             }
-            factoryAddress = factory;
+            factoryAddress = factory_;
         } catch {
             return address(0);
         }
@@ -199,7 +199,7 @@ contract ExtensionCenter is IExtensionCenter {
         return _getExtensionAddress(tokenAddress, actionId);
     }
 
-    function factoryByActionId(
+    function factory(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
@@ -399,14 +399,14 @@ contract ExtensionCenter is IExtensionCenter {
 
         for (uint256 i = 0; i < length; ) {
             uint256 actionId = allActionIds[i];
-            address factory = _factoryByActionId[tokenAddress][actionId];
+            address factory_ = _factoryByActionId[tokenAddress][actionId];
 
-            if (noFilter || _isFactoryInArray(factory, factories)) {
+            if (noFilter || _isFactoryInArray(factory_, factories)) {
                 actionIds[count] = actionId;
                 extensions[count] = _extensionByActionId[tokenAddress][
                     actionId
                 ];
-                factories_[count] = factory;
+                factories_[count] = factory_;
                 unchecked {
                     count++;
                 }
@@ -427,12 +427,12 @@ contract ExtensionCenter is IExtensionCenter {
     }
 
     function _isFactoryInArray(
-        address factory,
+        address factory_,
         address[] calldata factories
     ) private pure returns (bool) {
         uint256 len = factories.length;
         for (uint256 i = 0; i < len; ) {
-            if (factories[i] == factory) {
+            if (factories[i] == factory_) {
                 return true;
             }
             unchecked {
