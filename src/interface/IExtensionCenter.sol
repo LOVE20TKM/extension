@@ -63,6 +63,12 @@ interface IExtensionCenter {
     function mintAddress() external view returns (address);
     function randomAddress() external view returns (address);
 
+    // must be called before any other function or will revert
+    function registerActionIfNeeded(
+        address tokenAddress,
+        uint256 actionId
+    ) external returns (address extensionAddress);
+
     function addAccount(
         address tokenAddress,
         uint256 actionId,
@@ -86,11 +92,6 @@ interface IExtensionCenter {
     ) external;
 
     function setExtensionDelegate(address delegate) external;
-
-    function registerActionIfNeeded(
-        address tokenAddress,
-        uint256 actionId
-    ) external returns (address extensionAddress);
 
     function extension(
         address tokenAddress,

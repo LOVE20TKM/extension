@@ -9,6 +9,7 @@ library RoundHistoryUint256 {
     struct History {
         uint256[] changeRounds;
         mapping(uint256 => uint256) valueByRound;
+        mapping(uint256 => bool) isRecorded;
     }
 
     function record(
@@ -23,12 +24,18 @@ library RoundHistoryUint256 {
             self.changeRounds.push(round);
         }
         self.valueByRound[round] = newValue;
+        self.isRecorded[round] = true;
     }
 
     function value(
         History storage self,
         uint256 round
     ) internal view returns (uint256) {
+        // Fast path: exact round match
+        if (self.isRecorded[round]) {
+            return self.valueByRound[round];
+        }
+        // Slow path: binary search
         (bool found, uint256 nearestRound) = self
             .changeRounds
             .findLeftNearestOrEqualValue(round);

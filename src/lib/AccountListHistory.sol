@@ -44,12 +44,17 @@ library AccountListHistory {
         address account,
         uint256 currentRound
     ) internal {
+        uint256 count = self
+            .accountsCountHistory[tokenAddress][actionId]
+            .latestValue();
+        if (count == 0) {
+            return;
+        }
+
         uint256 index = self
             .accountsIndexHistory[tokenAddress][actionId][account]
             .latestValue();
-        uint256 lastIndex = self
-            .accountsCountHistory[tokenAddress][actionId]
-            .latestValue() - 1;
+        uint256 lastIndex = count - 1;
 
         if (index != lastIndex) {
             address lastAccount = self

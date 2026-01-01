@@ -558,7 +558,8 @@ contract ExtensionCenter is IExtensionCenter {
             revert VerificationInfoLengthMismatch();
         }
 
-        for (uint256 i = 0; i < verificationKeys.length; i++) {
+        uint256 len = verificationKeys.length;
+        for (uint256 i = 0; i < len; ) {
             _verificationInfoHistory[tokenAddress][actionId][account][
                 verificationKeys[i]
             ].record(currentRound, verificationInfos[i]);
@@ -571,6 +572,10 @@ contract ExtensionCenter is IExtensionCenter {
                 verificationKeys[i],
                 verificationInfos[i]
             );
+
+            unchecked {
+                i++;
+            }
         }
     }
 }
