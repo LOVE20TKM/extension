@@ -150,13 +150,6 @@ contract ExtensionCenter is IExtensionCenter {
         return actionInfo.body.whiteListAddress;
     }
 
-    function extensionByActionId(
-        address tokenAddress,
-        uint256 actionId
-    ) external view returns (address) {
-        return _extensionByActionId[tokenAddress][actionId];
-    }
-
     function factoryByActionId(
         address tokenAddress,
         uint256 actionId

@@ -294,7 +294,7 @@ contract ExtensionCenterTest is Test {
 
         // Verify extension and factory are recorded
         assertEq(
-            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            extensionCenter.extension(tokenAddress, actionId1),
             address(mockExtension)
         );
         assertEq(
@@ -576,50 +576,6 @@ contract ExtensionCenterTest is Test {
     }
 
     // ------ Extension and Factory queries tests ------
-    function testExtensionByActionId() public {
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-        mockVote.setVotedActionIds(
-            tokenAddress,
-            mockJoin.currentRound(),
-            actionId1
-        );
-
-        // Before addAccount, extensionByActionId should return address(0)
-        assertEq(
-            extensionCenter.extensionByActionId(tokenAddress, actionId1),
-            address(0)
-        );
-        assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId1),
-            address(0)
-        );
-
-        // Add account to record extension and factory
-        vm.prank(address(mockExtension));
-        extensionCenter.addAccount(
-            tokenAddress,
-            actionId1,
-            user1,
-            new string[](0)
-        );
-
-        // After addAccount, extension and factory should be recorded
-        assertEq(
-            extensionCenter.extensionByActionId(tokenAddress, actionId1),
-            address(mockExtension)
-        );
-        assertEq(
-            extensionCenter.factoryByActionId(tokenAddress, actionId1),
-            address(mockFactory)
-        );
-    }
 
     function testActionIdsByAccountWithFactoryFilter() public {
         // Create two extensions with different factories
@@ -765,7 +721,7 @@ contract ExtensionCenterTest is Test {
             new string[](0)
         );
 
-        address recordedExtension = extensionCenter.extensionByActionId(
+        address recordedExtension = extensionCenter.extension(
             tokenAddress,
             actionId1
         );
@@ -784,7 +740,7 @@ contract ExtensionCenterTest is Test {
         );
 
         assertEq(
-            extensionCenter.extensionByActionId(tokenAddress, actionId1),
+            extensionCenter.extension(tokenAddress, actionId1),
             recordedExtension
         );
         assertEq(
