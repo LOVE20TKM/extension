@@ -375,7 +375,16 @@ contract ExtensionCenter is IExtensionCenter {
         string[] calldata verificationInfos
     ) external {
         if (account != msg.sender) {
-            _registerActionIfNeeded(tokenAddress, actionId);
+            address extensionAddress = _registerActionIfNeeded(
+                tokenAddress,
+                actionId
+            );
+            if (
+                msg.sender != extensionAddress &&
+                msg.sender != _extensionDelegate[extensionAddress]
+            ) {
+                revert OnlyExtensionCanCall();
+            }
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
@@ -445,26 +454,6 @@ contract ExtensionCenter is IExtensionCenter {
         return extensionAddress;
     }
 
-    function _getActualExtensionAddress(
-        address tokenAddress,
-        uint256 actionId,
-        address caller
-    ) internal view returns (address) {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-
-        if (extensionAddress == address(0)) {
-            ActionInfo memory actionInfo = ILOVE20Submit(submitAddress)
-                .actionInfo(tokenAddress, actionId);
-            extensionAddress = actionInfo.body.whiteListAddress;
-        }
-
-        if (caller == extensionAddress) return extensionAddress;
-        if (caller == _extensionDelegate[extensionAddress])
-            return extensionAddress;
-
-        return address(0);
-    }
-
     function _getValidFactory(
         address extensionAddress
     ) internal view returns (address factoryAddress) {
@@ -493,13 +482,13 @@ contract ExtensionCenter is IExtensionCenter {
             return extensionAddress;
         }
 
-        extensionAddress = _getActualExtensionAddress(
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
             tokenAddress,
-            actionId,
-            msg.sender
+            actionId
         );
+        extensionAddress = actionInfo.body.whiteListAddress;
         if (extensionAddress == address(0)) {
-            revert OnlyExtensionCanCall();
+            return address(0);
         }
 
         address factoryAddress = _getValidFactory(extensionAddress);
