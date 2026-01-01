@@ -457,33 +457,9 @@ contract ExtensionCenterTest is Test {
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
-    function testRemoveAccountIdempotent() public {
-        MockExtension mockExtension = MockExtension(
-            mockFactory.createExtension(tokenAddress)
-        );
-        mockSubmit.setActionInfo(
-            tokenAddress,
-            actionId1,
-            address(mockExtension)
-        );
-
-        // Try to remove account that was never added (should succeed silently)
-        vm.prank(address(mockExtension));
-        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
-
-        // Verify state unchanged
-        assertFalse(
-            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
-        );
-        (uint256[] memory actionIds, , ) = extensionCenter.actionIdsByAccount(
-            tokenAddress,
-            user1,
-            new address[](0)
-        );
-        assertEq(actionIds.length, 0);
-
-        // Try to remove again (should still succeed silently)
-        vm.prank(address(mockExtension));
+    function testRemoveAccountRevertsIfNotBoundToExtension() public {
+        vm.prank(user1);
+        vm.expectRevert(IExtensionCenter.ActionNotBoundToExtension.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 

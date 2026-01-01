@@ -49,8 +49,9 @@ interface IExtensionCenter {
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
-    error InvalidExtensionFactory();
     error ExtensionNotFoundInFactory();
+    error ActionAlreadyBoundToOtherAction();
+    error ActionNotBoundToExtension();
 
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);

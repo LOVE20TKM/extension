@@ -169,7 +169,7 @@ contract ExtensionCenter is IExtensionCenter {
                 existingPair.tokenAddress != tokenAddress ||
                 existingPair.actionId != actionId
             ) {
-                revert InvalidExtensionFactory();
+                revert ActionAlreadyBoundToOtherAction();
             }
             return extensionAddress;
         }
@@ -350,7 +350,10 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) external {
-        address extensionAddress = _bindActionIfNeeded(tokenAddress, actionId);
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress == address(0)) {
+            revert ActionNotBoundToExtension();
+        }
         if (
             msg.sender != extensionAddress &&
             msg.sender != _extensionDelegate[extensionAddress]
