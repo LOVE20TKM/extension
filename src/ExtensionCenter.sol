@@ -342,7 +342,7 @@ contract ExtensionCenter is IExtensionCenter {
             currentRound
         );
 
-        emit AccountAdded(tokenAddress, actionId, account);
+        emit AddAccount(tokenAddress, actionId, account);
     }
 
     function removeAccount(
@@ -412,7 +412,7 @@ contract ExtensionCenter is IExtensionCenter {
             type(uint256).max
         );
 
-        emit AccountRemoved(tokenAddress, actionId, account);
+        emit RemoveAccount(tokenAddress, actionId, account);
     }
 
     function isAccountJoined(

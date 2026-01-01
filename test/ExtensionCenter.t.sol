@@ -37,12 +37,12 @@ contract ExtensionCenterTest is Test {
     uint256 public actionId1 = 1;
     uint256 public actionId2 = 2;
 
-    event AccountAdded(
+    event AddAccount(
         address indexed tokenAddress,
         uint256 indexed actionId,
         address indexed account
     );
-    event AccountRemoved(
+    event RemoveAccount(
         address indexed tokenAddress,
         uint256 indexed actionId,
         address indexed account
@@ -279,7 +279,7 @@ contract ExtensionCenterTest is Test {
         // Add account from extension
         vm.prank(address(mockExtension));
         vm.expectEmit(true, true, true, false);
-        emit AccountAdded(tokenAddress, actionId1, user1);
+        emit AddAccount(tokenAddress, actionId1, user1);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -412,7 +412,7 @@ contract ExtensionCenterTest is Test {
 
         // Remove account
         vm.expectEmit(true, true, true, false);
-        emit AccountRemoved(tokenAddress, actionId1, user1);
+        emit RemoveAccount(tokenAddress, actionId1, user1);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
         vm.stopPrank();
 
@@ -1153,7 +1153,7 @@ contract ExtensionCenterTest is Test {
         // User exits by themselves
         vm.prank(user1);
         vm.expectEmit(true, true, true, false);
-        emit AccountRemoved(tokenAddress, actionId1, user1);
+        emit RemoveAccount(tokenAddress, actionId1, user1);
         extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify

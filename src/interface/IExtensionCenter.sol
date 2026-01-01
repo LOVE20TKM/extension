@@ -7,12 +7,12 @@ struct TokenActionPair {
 }
 
 interface IExtensionCenter {
-    event AccountAdded(
+    event AddAccount(
         address indexed tokenAddress,
         uint256 indexed actionId,
         address indexed account
     );
-    event AccountRemoved(
+    event RemoveAccount(
         address indexed tokenAddress,
         uint256 indexed actionId,
         address indexed account
