@@ -49,12 +49,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
 
     function joinedValueByAccount(
         address account
-    )
-        external
-        view
-        override(ExtensionCore, IExtensionCore)
-        returns (uint256)
-    {
+    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
         (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
@@ -93,8 +88,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         uint256 round,
         uint256 indexed actionId,
         address indexed account,
-        uint256 amount,
-        uint256 joinedBlock
+        uint256 amount
     );
     event Exit(
         address indexed tokenAddress,
@@ -186,8 +180,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
             join.currentRound(),
             ACTION_ID,
             user1,
-            amount,
-            block.number
+            amount
         );
 
         vm.prank(user1);
@@ -304,14 +297,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         advanceBlocks(10);
 
         vm.expectEmit(true, true, true, true);
-        emit Join(
-            address(token),
-            join.currentRound(),
-            ACTION_ID,
-            user1,
-            50e18,
-            block.number
-        );
+        emit Join(address(token), join.currentRound(), ACTION_ID, user1, 50e18);
 
         vm.prank(user1);
         extension.join(50e18, new string[](0));

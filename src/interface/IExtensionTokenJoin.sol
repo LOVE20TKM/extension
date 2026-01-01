@@ -14,8 +14,7 @@ interface IExtensionTokenJoin is IExtension {
         uint256 round,
         uint256 indexed actionId,
         address indexed account,
-        uint256 amount,
-        uint256 joinedBlock
+        uint256 amount
     );
 
     event Exit(

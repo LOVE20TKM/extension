@@ -53,8 +53,7 @@ contract ExampleTokenJoinTest is Test {
         uint256 round,
         uint256 indexed actionId,
         address indexed account,
-        uint256 amount,
-        uint256 joinedBlock
+        uint256 amount
     );
     event Exit(
         address indexed tokenAddress,
@@ -193,8 +192,7 @@ contract ExampleTokenJoinTest is Test {
             join.currentRound(),
             ACTION_ID,
             user1,
-            amount,
-            block.number
+            amount
         );
 
         vm.prank(user1);

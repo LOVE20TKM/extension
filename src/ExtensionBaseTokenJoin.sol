@@ -89,14 +89,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
 
         _joinToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        emit Join(
-            tokenAddress,
-            currentRound,
-            actionId,
-            msg.sender,
-            amount,
-            block.number
-        );
+        emit Join(tokenAddress, currentRound, actionId, msg.sender, amount);
     }
 
     function exit() public virtual nonReentrant {
