@@ -87,7 +87,7 @@ interface IExtensionCenter {
 
     function setExtensionDelegate(address delegate) external;
 
-    function bindActionIfNeeded(
+    function registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId
     ) external returns (address extensionAddress);

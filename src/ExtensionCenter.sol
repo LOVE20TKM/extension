@@ -138,10 +138,15 @@ contract ExtensionCenter is IExtensionCenter {
         return factoryAddress;
     }
 
-    function _bindActionIfNeeded(
+    function _registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId
     ) internal returns (address extensionAddress) {
+        extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress != address(0)) {
+            return extensionAddress;
+        }
+
         extensionAddress = _getActualExtensionAddress(
             tokenAddress,
             actionId,
@@ -151,12 +156,7 @@ contract ExtensionCenter is IExtensionCenter {
             revert OnlyExtensionCanCall();
         }
 
-        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
-        if (factoryAddress != address(0)) {
-            return extensionAddress;
-        }
-
-        factoryAddress = _getValidFactory(extensionAddress);
+        address factoryAddress = _getValidFactory(extensionAddress);
         if (factoryAddress == address(0)) {
             revert ExtensionNotFoundInFactory();
         }
@@ -272,11 +272,11 @@ contract ExtensionCenter is IExtensionCenter {
         emit ExtensionDelegateSet(extensionAddress, delegate);
     }
 
-    function bindActionIfNeeded(
+    function registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId
     ) external returns (address extensionAddress) {
-        return _bindActionIfNeeded(tokenAddress, actionId);
+        return _registerActionIfNeeded(tokenAddress, actionId);
     }
 
     function extensionDelegate(
@@ -291,7 +291,10 @@ contract ExtensionCenter is IExtensionCenter {
         address account,
         string[] calldata verificationInfos
     ) external {
-        address extensionAddress = _bindActionIfNeeded(tokenAddress, actionId);
+        address extensionAddress = _registerActionIfNeeded(
+            tokenAddress,
+            actionId
+        );
         if (
             msg.sender != extensionAddress &&
             msg.sender != _extensionDelegate[extensionAddress]
@@ -567,7 +570,7 @@ contract ExtensionCenter is IExtensionCenter {
         string[] calldata verificationInfos
     ) external {
         if (account != msg.sender) {
-            _bindActionIfNeeded(tokenAddress, actionId);
+            _registerActionIfNeeded(tokenAddress, actionId);
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
