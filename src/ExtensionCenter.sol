@@ -67,6 +67,352 @@ contract ExtensionCenter is IExtensionCenter {
     // extension => TokenActionPair
     mapping(address => TokenActionPair) internal _extensionTokenActionPair;
 
+    constructor(
+        address uniswapV2FactoryAddress_,
+        address launchAddress_,
+        address stakeAddress_,
+        address submitAddress_,
+        address voteAddress_,
+        address joinAddress_,
+        address verifyAddress_,
+        address mintAddress_,
+        address randomAddress_
+    ) {
+        if (uniswapV2FactoryAddress_ == address(0))
+            revert InvalidUniswapV2FactoryAddress();
+        if (launchAddress_ == address(0)) revert InvalidLaunchAddress();
+        if (stakeAddress_ == address(0)) revert InvalidStakeAddress();
+        if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
+        if (voteAddress_ == address(0)) revert InvalidVoteAddress();
+        if (joinAddress_ == address(0)) revert InvalidJoinAddress();
+        if (verifyAddress_ == address(0)) revert InvalidVerifyAddress();
+        if (mintAddress_ == address(0)) revert InvalidMintAddress();
+        if (randomAddress_ == address(0)) revert InvalidRandomAddress();
+
+        uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
+        launchAddress = launchAddress_;
+        stakeAddress = stakeAddress_;
+        submitAddress = submitAddress_;
+        voteAddress = voteAddress_;
+        joinAddress = joinAddress_;
+        verifyAddress = verifyAddress_;
+        mintAddress = mintAddress_;
+        randomAddress = randomAddress_;
+    }
+
+    function extension(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address) {
+        return _getExtensionAddress(tokenAddress, actionId);
+    }
+
+    function factory(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address) {
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress != address(0)) {
+            return factoryAddress;
+        }
+
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        address extensionAddress = actionInfo.body.whiteListAddress;
+        if (extensionAddress == address(0)) {
+            return address(0);
+        }
+
+        if (
+            _extensionTokenActionPair[extensionAddress].tokenAddress !=
+            address(0)
+        ) {
+            return address(0);
+        }
+
+        return _getValidFactory(extensionAddress);
+    }
+
+    function setExtensionDelegate(address delegate) external {
+        address extensionAddress = msg.sender;
+
+        _extensionDelegate[extensionAddress] = delegate;
+
+        emit ExtensionDelegateSet(extensionAddress, delegate);
+    }
+
+    function registerActionIfNeeded(
+        address tokenAddress,
+        uint256 actionId
+    ) external returns (address extensionAddress) {
+        return _registerActionIfNeeded(tokenAddress, actionId);
+    }
+
+    function extensionDelegate(
+        address extensionAddress
+    ) external view returns (address) {
+        return _extensionDelegate[extensionAddress];
+    }
+
+    function addAccount(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string[] calldata verificationInfos
+    ) external {
+        address extensionAddress = _registerActionIfNeeded(
+            tokenAddress,
+            actionId
+        );
+        if (
+            msg.sender != extensionAddress &&
+            msg.sender != _extensionDelegate[extensionAddress]
+        ) {
+            revert OnlyExtensionCanCall();
+        }
+
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+
+        if (
+            !ILOVE20Vote(voteAddress).isActionIdVoted(
+                tokenAddress,
+                currentRound,
+                actionId
+            )
+        ) {
+            revert ActionNotVotedInCurrentRound();
+        }
+
+        if (_isAccountJoined[tokenAddress][actionId][account]) {
+            revert AccountAlreadyJoined();
+        }
+
+        _isAccountJoined[tokenAddress][actionId][account] = true;
+
+        _actionIdsByAccount[tokenAddress][account].push(actionId);
+
+        uint256 accountCount = _accountsCountHistory[tokenAddress][actionId]
+            .latestValue();
+        _accountsAtIndexHistory[tokenAddress][actionId][accountCount].record(
+            currentRound,
+            account
+        );
+        _accountsIndexHistory[tokenAddress][actionId][account].record(
+            currentRound,
+            accountCount
+        );
+        _accountsCountHistory[tokenAddress][actionId].record(
+            currentRound,
+            accountCount + 1
+        );
+
+        _storeVerificationInfo(
+            tokenAddress,
+            actionId,
+            account,
+            verificationInfos,
+            currentRound
+        );
+
+        emit AddAccount(tokenAddress, actionId, account);
+    }
+
+    function removeAccount(
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) external {
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress == address(0)) {
+            revert ActionNotBoundToExtension();
+        }
+        if (
+            msg.sender != extensionAddress &&
+            msg.sender != _extensionDelegate[extensionAddress]
+        ) {
+            revert OnlyExtensionCanCall();
+        }
+
+        _removeAccount(tokenAddress, actionId, account);
+    }
+
+    function forceRemove(address tokenAddress, uint256 actionId) external {
+        _removeAccount(tokenAddress, actionId, msg.sender);
+    }
+
+    function isAccountJoined(
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) external view returns (bool) {
+        return _isAccountJoined[tokenAddress][actionId][account];
+    }
+
+    function actionIdsByAccount(
+        address tokenAddress,
+        address account,
+        address[] calldata factories
+    )
+        external
+        view
+        returns (
+            uint256[] memory actionIds,
+            address[] memory extensions,
+            address[] memory factories_
+        )
+    {
+        uint256[] memory allActionIds = _actionIdsByAccount[tokenAddress][
+            account
+        ];
+        uint256 length = allActionIds.length;
+
+        actionIds = new uint256[](length);
+        extensions = new address[](length);
+        factories_ = new address[](length);
+        uint256 count = 0;
+        bool noFilter = factories.length == 0;
+
+        for (uint256 i = 0; i < length; ) {
+            uint256 actionId = allActionIds[i];
+            address factory_ = _factoryByActionId[tokenAddress][actionId];
+
+            if (noFilter || _isFactoryInArray(factory_, factories)) {
+                actionIds[count] = actionId;
+                extensions[count] = _extensionByActionId[tokenAddress][
+                    actionId
+                ];
+                factories_[count] = factory_;
+                unchecked {
+                    count++;
+                }
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+
+        if (count != length) {
+            assembly {
+                mstore(actionIds, count)
+                mstore(extensions, count)
+                mstore(factories_, count)
+            }
+        }
+    }
+
+    function accounts(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (address[] memory) {
+        uint256 count = _accountsCountHistory[tokenAddress][actionId]
+            .latestValue();
+        address[] memory result = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
+                .latestValue();
+        }
+        return result;
+    }
+
+    function accountsCount(
+        address tokenAddress,
+        uint256 actionId
+    ) external view returns (uint256) {
+        return _accountsCountHistory[tokenAddress][actionId].latestValue();
+    }
+
+    function accountsAtIndex(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 index
+    ) external view returns (address) {
+        return
+            _accountsAtIndexHistory[tokenAddress][actionId][index]
+                .latestValue();
+    }
+
+    function accountsByRound(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 round
+    ) external view returns (address[] memory) {
+        uint256 count = _accountsCountHistory[tokenAddress][actionId].value(
+            round
+        );
+        address[] memory result = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
+                .value(round);
+        }
+        return result;
+    }
+
+    function accountsByRoundCount(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 round
+    ) external view returns (uint256) {
+        return _accountsCountHistory[tokenAddress][actionId].value(round);
+    }
+
+    function accountsByRoundAtIndex(
+        address tokenAddress,
+        uint256 actionId,
+        uint256 index,
+        uint256 round
+    ) external view returns (address) {
+        return
+            _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
+    }
+
+    function updateVerificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string[] calldata verificationInfos
+    ) external {
+        if (account != msg.sender) {
+            _registerActionIfNeeded(tokenAddress, actionId);
+        }
+
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+        _storeVerificationInfo(
+            tokenAddress,
+            actionId,
+            account,
+            verificationInfos,
+            currentRound
+        );
+    }
+
+    function verificationInfo(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey
+    ) external view returns (string memory) {
+        return
+            _verificationInfoHistory[tokenAddress][actionId][account][
+                verificationKey
+            ].latestValue();
+    }
+
+    function verificationInfoByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        string calldata verificationKey,
+        uint256 round
+    ) external view returns (string memory) {
+        return
+            _verificationInfoHistory[tokenAddress][actionId][account][
+                verificationKey
+            ].value(round);
+    }
+
     function _getExtensionAddress(
         address tokenAddress,
         uint256 actionId
@@ -191,186 +537,6 @@ contract ExtensionCenter is IExtensionCenter {
         return extensionAddress;
     }
 
-    constructor(
-        address uniswapV2FactoryAddress_,
-        address launchAddress_,
-        address stakeAddress_,
-        address submitAddress_,
-        address voteAddress_,
-        address joinAddress_,
-        address verifyAddress_,
-        address mintAddress_,
-        address randomAddress_
-    ) {
-        if (uniswapV2FactoryAddress_ == address(0))
-            revert InvalidUniswapV2FactoryAddress();
-        if (launchAddress_ == address(0)) revert InvalidLaunchAddress();
-        if (stakeAddress_ == address(0)) revert InvalidStakeAddress();
-        if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
-        if (voteAddress_ == address(0)) revert InvalidVoteAddress();
-        if (joinAddress_ == address(0)) revert InvalidJoinAddress();
-        if (verifyAddress_ == address(0)) revert InvalidVerifyAddress();
-        if (mintAddress_ == address(0)) revert InvalidMintAddress();
-        if (randomAddress_ == address(0)) revert InvalidRandomAddress();
-
-        uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
-        launchAddress = launchAddress_;
-        stakeAddress = stakeAddress_;
-        submitAddress = submitAddress_;
-        voteAddress = voteAddress_;
-        joinAddress = joinAddress_;
-        verifyAddress = verifyAddress_;
-        mintAddress = mintAddress_;
-        randomAddress = randomAddress_;
-    }
-
-    function extension(
-        address tokenAddress,
-        uint256 actionId
-    ) external view returns (address) {
-        return _getExtensionAddress(tokenAddress, actionId);
-    }
-
-    function factory(
-        address tokenAddress,
-        uint256 actionId
-    ) external view returns (address) {
-        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
-        if (factoryAddress != address(0)) {
-            return factoryAddress;
-        }
-
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (extensionAddress != address(0)) {
-            return _getValidFactory(extensionAddress);
-        }
-
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        extensionAddress = actionInfo.body.whiteListAddress;
-        if (extensionAddress == address(0)) {
-            return address(0);
-        }
-
-        if (
-            _extensionTokenActionPair[extensionAddress].tokenAddress !=
-            address(0)
-        ) {
-            return address(0);
-        }
-
-        return _getValidFactory(extensionAddress);
-    }
-
-    function setExtensionDelegate(address delegate) external {
-        address extensionAddress = msg.sender;
-
-        _extensionDelegate[extensionAddress] = delegate;
-
-        emit ExtensionDelegateSet(extensionAddress, delegate);
-    }
-
-    function registerActionIfNeeded(
-        address tokenAddress,
-        uint256 actionId
-    ) external returns (address extensionAddress) {
-        return _registerActionIfNeeded(tokenAddress, actionId);
-    }
-
-    function extensionDelegate(
-        address extensionAddress
-    ) external view returns (address) {
-        return _extensionDelegate[extensionAddress];
-    }
-
-    function addAccount(
-        address tokenAddress,
-        uint256 actionId,
-        address account,
-        string[] calldata verificationInfos
-    ) external {
-        address extensionAddress = _registerActionIfNeeded(
-            tokenAddress,
-            actionId
-        );
-        if (
-            msg.sender != extensionAddress &&
-            msg.sender != _extensionDelegate[extensionAddress]
-        ) {
-            revert OnlyExtensionCanCall();
-        }
-
-        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
-
-        if (
-            !ILOVE20Vote(voteAddress).isActionIdVoted(
-                tokenAddress,
-                currentRound,
-                actionId
-            )
-        ) {
-            revert ActionNotVotedInCurrentRound();
-        }
-
-        if (_isAccountJoined[tokenAddress][actionId][account]) {
-            revert AccountAlreadyJoined();
-        }
-
-        _isAccountJoined[tokenAddress][actionId][account] = true;
-
-        _actionIdsByAccount[tokenAddress][account].push(actionId);
-
-        uint256 accountCount = _accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
-        _accountsAtIndexHistory[tokenAddress][actionId][accountCount].record(
-            currentRound,
-            account
-        );
-        _accountsIndexHistory[tokenAddress][actionId][account].record(
-            currentRound,
-            accountCount
-        );
-        _accountsCountHistory[tokenAddress][actionId].record(
-            currentRound,
-            accountCount + 1
-        );
-
-        _storeVerificationInfo(
-            tokenAddress,
-            actionId,
-            account,
-            verificationInfos,
-            currentRound
-        );
-
-        emit AddAccount(tokenAddress, actionId, account);
-    }
-
-    function removeAccount(
-        address tokenAddress,
-        uint256 actionId,
-        address account
-    ) external {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (extensionAddress == address(0)) {
-            revert ActionNotBoundToExtension();
-        }
-        if (
-            msg.sender != extensionAddress &&
-            msg.sender != _extensionDelegate[extensionAddress]
-        ) {
-            revert OnlyExtensionCanCall();
-        }
-
-        _removeAccount(tokenAddress, actionId, account);
-    }
-
-    function forceRemove(address tokenAddress, uint256 actionId) external {
-        _removeAccount(tokenAddress, actionId, msg.sender);
-    }
-
     function _removeAccount(
         address tokenAddress,
         uint256 actionId,
@@ -421,67 +587,6 @@ contract ExtensionCenter is IExtensionCenter {
         emit RemoveAccount(tokenAddress, actionId, account);
     }
 
-    function isAccountJoined(
-        address tokenAddress,
-        uint256 actionId,
-        address account
-    ) external view returns (bool) {
-        return _isAccountJoined[tokenAddress][actionId][account];
-    }
-
-    function actionIdsByAccount(
-        address tokenAddress,
-        address account,
-        address[] calldata factories
-    )
-        external
-        view
-        returns (
-            uint256[] memory actionIds,
-            address[] memory extensions,
-            address[] memory factories_
-        )
-    {
-        uint256[] memory allActionIds = _actionIdsByAccount[tokenAddress][
-            account
-        ];
-        uint256 length = allActionIds.length;
-
-        actionIds = new uint256[](length);
-        extensions = new address[](length);
-        factories_ = new address[](length);
-        uint256 count = 0;
-        bool noFilter = factories.length == 0;
-
-        for (uint256 i = 0; i < length; ) {
-            uint256 actionId = allActionIds[i];
-            address factory_ = _factoryByActionId[tokenAddress][actionId];
-
-            if (noFilter || _isFactoryInArray(factory_, factories)) {
-                actionIds[count] = actionId;
-                extensions[count] = _extensionByActionId[tokenAddress][
-                    actionId
-                ];
-                factories_[count] = factory_;
-                unchecked {
-                    count++;
-                }
-            }
-
-            unchecked {
-                i++;
-            }
-        }
-
-        if (count != length) {
-            assembly {
-                mstore(actionIds, count)
-                mstore(extensions, count)
-                mstore(factories_, count)
-            }
-        }
-    }
-
     function _isFactoryInArray(
         address factory_,
         address[] calldata factories
@@ -496,116 +601,6 @@ contract ExtensionCenter is IExtensionCenter {
             }
         }
         return false;
-    }
-
-    function accounts(
-        address tokenAddress,
-        uint256 actionId
-    ) external view returns (address[] memory) {
-        uint256 count = _accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
-                .latestValue();
-        }
-        return result;
-    }
-
-    function accountsCount(
-        address tokenAddress,
-        uint256 actionId
-    ) external view returns (uint256) {
-        return _accountsCountHistory[tokenAddress][actionId].latestValue();
-    }
-
-    function accountsAtIndex(
-        address tokenAddress,
-        uint256 actionId,
-        uint256 index
-    ) external view returns (address) {
-        return
-            _accountsAtIndexHistory[tokenAddress][actionId][index]
-                .latestValue();
-    }
-
-    function accountsByRound(
-        address tokenAddress,
-        uint256 actionId,
-        uint256 round
-    ) external view returns (address[] memory) {
-        uint256 count = _accountsCountHistory[tokenAddress][actionId].value(
-            round
-        );
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
-                .value(round);
-        }
-        return result;
-    }
-
-    function accountsByRoundCount(
-        address tokenAddress,
-        uint256 actionId,
-        uint256 round
-    ) external view returns (uint256) {
-        return _accountsCountHistory[tokenAddress][actionId].value(round);
-    }
-
-    function accountsByRoundAtIndex(
-        address tokenAddress,
-        uint256 actionId,
-        uint256 index,
-        uint256 round
-    ) external view returns (address) {
-        return
-            _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
-    }
-
-    function updateVerificationInfo(
-        address tokenAddress,
-        uint256 actionId,
-        address account,
-        string[] calldata verificationInfos
-    ) external {
-        if (account != msg.sender) {
-            _registerActionIfNeeded(tokenAddress, actionId);
-        }
-
-        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
-        _storeVerificationInfo(
-            tokenAddress,
-            actionId,
-            account,
-            verificationInfos,
-            currentRound
-        );
-    }
-
-    function verificationInfo(
-        address tokenAddress,
-        uint256 actionId,
-        address account,
-        string calldata verificationKey
-    ) external view returns (string memory) {
-        return
-            _verificationInfoHistory[tokenAddress][actionId][account][
-                verificationKey
-            ].latestValue();
-    }
-
-    function verificationInfoByRound(
-        address tokenAddress,
-        uint256 actionId,
-        address account,
-        string calldata verificationKey,
-        uint256 round
-    ) external view returns (string memory) {
-        return
-            _verificationInfoHistory[tokenAddress][actionId][account][
-                verificationKey
-            ].value(round);
     }
 
     function _storeVerificationInfo(
