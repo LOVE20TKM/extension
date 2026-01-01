@@ -67,29 +67,6 @@ contract ExtensionCenter is IExtensionCenter {
     // extension => TokenActionPair
     mapping(address => TokenActionPair) internal _extensionTokenActionPair;
 
-    modifier onlyExtension(address tokenAddress, uint256 actionId) {
-        if (!_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender)) {
-            revert OnlyExtensionCanCall();
-        }
-        _;
-    }
-
-    function _isValidExtensionOrDelegate(
-        address tokenAddress,
-        uint256 actionId,
-        address caller
-    ) internal view returns (bool) {
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        address extensionAddress = actionInfo.body.whiteListAddress;
-        if (caller == extensionAddress) return true;
-
-        address delegateAddress = _extensionDelegate[extensionAddress];
-        return caller == delegateAddress;
-    }
-
     function _getExtensionAddress(
         address tokenAddress,
         uint256 actionId
@@ -127,15 +104,17 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address caller
     ) internal view returns (address) {
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        address extensionAddress = actionInfo.body.whiteListAddress;
-        if (caller == extensionAddress) return extensionAddress;
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
 
-        address delegateAddress = _extensionDelegate[extensionAddress];
-        if (caller == delegateAddress) return extensionAddress;
+        if (extensionAddress == address(0)) {
+            ActionInfo memory actionInfo = ILOVE20Submit(submitAddress)
+                .actionInfo(tokenAddress, actionId);
+            extensionAddress = actionInfo.body.whiteListAddress;
+        }
+
+        if (caller == extensionAddress) return extensionAddress;
+        if (caller == _extensionDelegate[extensionAddress])
+            return extensionAddress;
 
         return address(0);
     }
@@ -157,6 +136,59 @@ contract ExtensionCenter is IExtensionCenter {
             return address(0);
         }
         return factoryAddress;
+    }
+
+    function _bindActionIfNeeded(
+        address tokenAddress,
+        uint256 actionId
+    ) internal returns (address extensionAddress) {
+        extensionAddress = _getActualExtensionAddress(
+            tokenAddress,
+            actionId,
+            msg.sender
+        );
+        if (extensionAddress == address(0)) {
+            revert OnlyExtensionCanCall();
+        }
+
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress != address(0)) {
+            return extensionAddress;
+        }
+
+        factoryAddress = _getValidFactory(extensionAddress);
+        if (factoryAddress == address(0)) {
+            revert ExtensionNotFoundInFactory();
+        }
+
+        TokenActionPair memory existingPair = _extensionTokenActionPair[
+            extensionAddress
+        ];
+        if (existingPair.tokenAddress != address(0)) {
+            if (
+                existingPair.tokenAddress != tokenAddress ||
+                existingPair.actionId != actionId
+            ) {
+                revert InvalidExtensionFactory();
+            }
+            return extensionAddress;
+        }
+
+        _extensionByActionId[tokenAddress][actionId] = extensionAddress;
+        _factoryByActionId[tokenAddress][actionId] = factoryAddress;
+        _extensionTokenActionPair[extensionAddress] = TokenActionPair({
+            tokenAddress: tokenAddress,
+            actionId: actionId
+        });
+
+        emit BindAction(
+            tokenAddress,
+            actionId,
+            extensionAddress,
+            factoryAddress
+        );
+
+        return extensionAddress;
     }
 
     constructor(
@@ -208,7 +240,27 @@ contract ExtensionCenter is IExtensionCenter {
             return factoryAddress;
         }
 
-        address extensionAddress = _getExtensionAddress(tokenAddress, actionId);
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress != address(0)) {
+            return _getValidFactory(extensionAddress);
+        }
+
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        extensionAddress = actionInfo.body.whiteListAddress;
+        if (extensionAddress == address(0)) {
+            return address(0);
+        }
+
+        if (
+            _extensionTokenActionPair[extensionAddress].tokenAddress !=
+            address(0)
+        ) {
+            return address(0);
+        }
+
         return _getValidFactory(extensionAddress);
     }
 
@@ -218,6 +270,13 @@ contract ExtensionCenter is IExtensionCenter {
         _extensionDelegate[extensionAddress] = delegate;
 
         emit ExtensionDelegateSet(extensionAddress, delegate);
+    }
+
+    function bindActionIfNeeded(
+        address tokenAddress,
+        uint256 actionId
+    ) external returns (address extensionAddress) {
+        return _bindActionIfNeeded(tokenAddress, actionId);
     }
 
     function extensionDelegate(
@@ -231,7 +290,15 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account,
         string[] calldata verificationInfos
-    ) external onlyExtension(tokenAddress, actionId) {
+    ) external {
+        address extensionAddress = _bindActionIfNeeded(tokenAddress, actionId);
+        if (
+            msg.sender != extensionAddress &&
+            msg.sender != _extensionDelegate[extensionAddress]
+        ) {
+            revert OnlyExtensionCanCall();
+        }
+
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
         if (
@@ -246,27 +313,6 @@ contract ExtensionCenter is IExtensionCenter {
 
         if (_isAccountJoined[tokenAddress][actionId][account]) {
             revert AccountAlreadyJoined();
-        }
-
-        address extensionAddress = _getActualExtensionAddress(
-            tokenAddress,
-            actionId,
-            msg.sender
-        );
-        if (extensionAddress == address(0)) {
-            revert OnlyExtensionCanCall();
-        }
-
-        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
-        if (factoryAddress == address(0)) {
-            factoryAddress = _getValidFactory(extensionAddress);
-
-            _extensionByActionId[tokenAddress][actionId] = extensionAddress;
-            _factoryByActionId[tokenAddress][actionId] = factoryAddress;
-            _extensionTokenActionPair[extensionAddress] = TokenActionPair({
-                tokenAddress: tokenAddress,
-                actionId: actionId
-            });
         }
 
         _isAccountJoined[tokenAddress][actionId][account] = true;
@@ -303,7 +349,15 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) external onlyExtension(tokenAddress, actionId) {
+    ) external {
+        address extensionAddress = _bindActionIfNeeded(tokenAddress, actionId);
+        if (
+            msg.sender != extensionAddress &&
+            msg.sender != _extensionDelegate[extensionAddress]
+        ) {
+            revert OnlyExtensionCanCall();
+        }
+
         _removeAccount(tokenAddress, actionId, account);
     }
 
@@ -509,11 +563,8 @@ contract ExtensionCenter is IExtensionCenter {
         address account,
         string[] calldata verificationInfos
     ) external {
-        if (
-            !_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender) &&
-            account != msg.sender
-        ) {
-            revert OnlyExtensionOrAccountCanCall();
+        if (account != msg.sender) {
+            _bindActionIfNeeded(tokenAddress, actionId);
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();

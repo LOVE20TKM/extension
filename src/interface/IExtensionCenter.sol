@@ -29,6 +29,12 @@ interface IExtensionCenter {
         address indexed extension,
         address indexed delegate
     );
+    event BindAction(
+        address indexed tokenAddress,
+        uint256 indexed actionId,
+        address indexed extension,
+        address factory
+    );
 
     error InvalidUniswapV2FactoryAddress();
     error InvalidLaunchAddress();
@@ -40,7 +46,6 @@ interface IExtensionCenter {
     error InvalidMintAddress();
     error InvalidRandomAddress();
     error OnlyExtensionCanCall();
-    error OnlyExtensionOrAccountCanCall();
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
@@ -80,6 +85,11 @@ interface IExtensionCenter {
     ) external;
 
     function setExtensionDelegate(address delegate) external;
+
+    function bindActionIfNeeded(
+        address tokenAddress,
+        uint256 actionId
+    ) external returns (address extensionAddress);
 
     function extension(
         address tokenAddress,

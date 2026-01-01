@@ -950,9 +950,7 @@ contract ExtensionCenterTest is Test {
         );
 
         vm.prank(user2);
-        vm.expectRevert(
-            IExtensionCenter.OnlyExtensionOrAccountCanCall.selector
-        );
+        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
         extensionCenter.updateVerificationInfo(
             tokenAddress,
             actionId1,
