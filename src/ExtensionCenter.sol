@@ -67,6 +67,36 @@ contract ExtensionCenter is IExtensionCenter {
     // extension => TokenActionPair
     mapping(address => TokenActionPair) internal _extensionTokenActionPair;
 
+    modifier onlyExtensionOrDelegate(address tokenAddress, uint256 actionId) {
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (
+            msg.sender != extensionAddress &&
+            msg.sender != _extensionDelegate[extensionAddress]
+        ) {
+            revert OnlyExtensionOrDelegate();
+        }
+        _;
+    }
+
+    modifier onlyUserOrExtensionOrDelegate(
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) {
+        if (msg.sender != account) {
+            address extensionAddress = _extensionByActionId[tokenAddress][
+                actionId
+            ];
+            if (
+                msg.sender != extensionAddress &&
+                msg.sender != _extensionDelegate[extensionAddress]
+            ) {
+                revert OnlyUserOrExtensionOrDelegate();
+            }
+        }
+        _;
+    }
+
     constructor(
         address uniswapV2FactoryAddress_,
         address launchAddress_,
@@ -161,18 +191,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account,
         string[] calldata verificationInfos
-    ) external {
-        address extensionAddress = _registerActionIfNeeded(
-            tokenAddress,
-            actionId
-        );
-        if (
-            msg.sender != extensionAddress &&
-            msg.sender != _extensionDelegate[extensionAddress]
-        ) {
-            revert OnlyExtensionCanCall();
-        }
-
+    ) external onlyExtensionOrDelegate(tokenAddress, actionId) {
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
         if (
@@ -223,18 +242,7 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) external {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (extensionAddress == address(0)) {
-            revert ActionNotBoundToExtension();
-        }
-        if (
-            msg.sender != extensionAddress &&
-            msg.sender != _extensionDelegate[extensionAddress]
-        ) {
-            revert OnlyExtensionCanCall();
-        }
-
+    ) external onlyExtensionOrDelegate(tokenAddress, actionId) {
         _removeAccount(tokenAddress, actionId, account);
     }
 
@@ -373,20 +381,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account,
         string[] calldata verificationInfos
-    ) external {
-        if (account != msg.sender) {
-            address extensionAddress = _registerActionIfNeeded(
-                tokenAddress,
-                actionId
-            );
-            if (
-                msg.sender != extensionAddress &&
-                msg.sender != _extensionDelegate[extensionAddress]
-            ) {
-                revert OnlyExtensionCanCall();
-            }
-        }
-
+    ) external onlyUserOrExtensionOrDelegate(tokenAddress, actionId, account) {
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
         _storeVerificationInfo(
             tokenAddress,

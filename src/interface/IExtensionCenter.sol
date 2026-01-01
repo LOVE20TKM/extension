@@ -45,13 +45,13 @@ interface IExtensionCenter {
     error InvalidVerifyAddress();
     error InvalidMintAddress();
     error InvalidRandomAddress();
-    error OnlyExtensionCanCall();
+    error OnlyExtensionOrDelegate();
+    error OnlyUserOrExtensionOrDelegate();
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
     error ExtensionNotFoundInFactory();
     error ActionAlreadyBoundToOtherAction();
-    error ActionNotBoundToExtension();
 
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);

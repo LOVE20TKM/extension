@@ -114,6 +114,7 @@ abstract contract ExtensionCore is IExtensionCore {
 
         uint256 foundActionId = _findMatchingActionId();
         _doInitialize(foundActionId);
+        _center.registerActionIfNeeded(tokenAddress, foundActionId);
     }
 
     function _prepareRewardIfNeeded(uint256 round) internal virtual {

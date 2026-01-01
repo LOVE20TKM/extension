@@ -87,6 +87,13 @@ contract ExtensionCenterTest is Test {
         token.approve(address(mockFactory), type(uint256).max);
     }
 
+    function _registerAction(
+        address tokenAddress_,
+        uint256 actionId_
+    ) internal {
+        extensionCenter.registerActionIfNeeded(tokenAddress_, actionId_);
+    }
+
     // ------ Constructor tests ------
     function testConstructor() public view {
         assertEq(
@@ -276,6 +283,9 @@ contract ExtensionCenterTest is Test {
             actionId1
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Add account from extension
         vm.prank(address(mockExtension));
         vm.expectEmit(true, true, true, false);
@@ -340,9 +350,12 @@ contract ExtensionCenterTest is Test {
             address(mockExtension)
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Try to add account from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -365,6 +378,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add account first time
         vm.startPrank(address(mockExtension));
@@ -401,6 +417,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         vm.startPrank(address(mockExtension));
         extensionCenter.addAccount(
@@ -443,6 +462,9 @@ contract ExtensionCenterTest is Test {
             actionId1
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(
             tokenAddress,
@@ -453,13 +475,14 @@ contract ExtensionCenterTest is Test {
 
         // Try to remove from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
     function testRemoveAccountRevertsIfNotBoundToExtension() public {
+        // No registration, should revert
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.ActionNotBoundToExtension.selector);
+        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
@@ -492,6 +515,10 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId2
         );
+
+        // Register actions before calling write functions
+        _registerAction(tokenAddress, actionId1);
+        _registerAction(tokenAddress, actionId2);
 
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
@@ -592,6 +619,10 @@ contract ExtensionCenterTest is Test {
             actionId2
         );
 
+        // Register actions before calling write functions
+        _registerAction(tokenAddress, actionId1);
+        _registerAction(tokenAddress, actionId2);
+
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
         extensionCenter.addAccount(
@@ -688,6 +719,9 @@ contract ExtensionCenterTest is Test {
             actionId1
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // First addAccount should record extension and factory
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(
@@ -776,6 +810,9 @@ contract ExtensionCenterTest is Test {
         keys[1] = "twitter";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Add account with verification info
         string[] memory infos = new string[](2);
         infos[0] = "user1@example.com";
@@ -824,6 +861,9 @@ contract ExtensionCenterTest is Test {
         string[] memory keys = new string[](1);
         keys[0] = "email";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add account first
         string[] memory infos = new string[](1);
@@ -874,6 +914,9 @@ contract ExtensionCenterTest is Test {
         keys[0] = "email";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(
             tokenAddress,
@@ -915,6 +958,9 @@ contract ExtensionCenterTest is Test {
             address(mockExtension)
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         string[] memory infos = new string[](0);
 
         vm.prank(user1);
@@ -926,7 +972,9 @@ contract ExtensionCenterTest is Test {
         );
 
         vm.prank(user2);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionCanCall.selector);
+        vm.expectRevert(
+            IExtensionCenter.OnlyUserOrExtensionOrDelegate.selector
+        );
         extensionCenter.updateVerificationInfo(
             tokenAddress,
             actionId1,
@@ -953,6 +1001,9 @@ contract ExtensionCenterTest is Test {
         string[] memory keys = new string[](1);
         keys[0] = "email";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add account at round 1
         string[] memory infos1 = new string[](1);
@@ -1030,6 +1081,9 @@ contract ExtensionCenterTest is Test {
         keys[1] = "twitter";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Try to add with only 1 info (mismatch)
         string[] memory infos = new string[](1);
         infos[0] = "user1@example.com";
@@ -1061,6 +1115,9 @@ contract ExtensionCenterTest is Test {
         keys[0] = "email";
         keys[1] = "twitter";
         mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add account without verification info (empty array skips check)
         vm.prank(address(mockExtension));
@@ -1116,6 +1173,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add account from extension
         vm.prank(address(mockExtension));
@@ -1190,6 +1250,9 @@ contract ExtensionCenterTest is Test {
             actionId1
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Add account
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(
@@ -1227,6 +1290,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         // Add multiple accounts
         vm.startPrank(address(mockExtension));
@@ -1279,6 +1345,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         address user3 = address(0x1004);
 
@@ -1365,6 +1434,10 @@ contract ExtensionCenterTest is Test {
             actionId2
         );
 
+        // Register actions before calling write functions
+        _registerAction(tokenAddress, actionId1);
+        _registerAction(tokenAddress, actionId2);
+
         // Add user1 to both actions
         vm.prank(address(mockExtension1));
         extensionCenter.addAccount(
@@ -1431,6 +1504,9 @@ contract ExtensionCenterTest is Test {
             actionId1
         );
 
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
         // Add both users
         vm.startPrank(address(mockExtension));
         extensionCenter.addAccount(
@@ -1475,6 +1551,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         uint256 round1 = mockJoin.currentRound();
 
@@ -1563,6 +1642,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         uint256 round1 = mockJoin.currentRound();
 
@@ -1659,6 +1741,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         uint256 round1 = mockJoin.currentRound();
 
@@ -1758,6 +1843,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         uint256 round1 = mockJoin.currentRound();
 
@@ -1868,6 +1956,9 @@ contract ExtensionCenterTest is Test {
             mockJoin.currentRound(),
             actionId1
         );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
 
         uint256 round1 = mockJoin.currentRound();
 
