@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtensionCenter} from "./interface/IExtensionCenter.sol";
+import {
+    IExtensionCenter,
+    TokenActionPair
+} from "./interface/IExtensionCenter.sol";
 import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
@@ -9,8 +12,8 @@ import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
-import {IExtension} from "./interface/IExtension.sol";
 import {IExtensionFactory} from "./interface/IExtensionFactory.sol";
+import {IExtensionCore} from "./interface/IExtensionCore.sol";
 
 contract ExtensionCenter is IExtensionCenter {
     using RoundHistoryUint256 for RoundHistoryUint256.History;
@@ -61,6 +64,9 @@ contract ExtensionCenter is IExtensionCenter {
     // tokenAddress => actionId => factory
     mapping(address => mapping(uint256 => address)) internal _factoryByActionId;
 
+    // extension => TokenActionPair
+    mapping(address => TokenActionPair) internal _extensionTokenActionPair;
+
     modifier onlyExtension(address tokenAddress, uint256 actionId) {
         if (!_isValidExtensionOrDelegate(tokenAddress, actionId, msg.sender)) {
             revert OnlyExtensionCanCall();
@@ -86,6 +92,38 @@ contract ExtensionCenter is IExtensionCenter {
 
     function _getExtensionAddress(
         address tokenAddress,
+        uint256 actionId
+    ) internal view returns (address) {
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress != address(0)) {
+            return extensionAddress;
+        }
+
+        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
+            tokenAddress,
+            actionId
+        );
+        extensionAddress = actionInfo.body.whiteListAddress;
+        if (extensionAddress == address(0)) {
+            return address(0);
+        }
+        address factoryAddress = _getValidFactory(extensionAddress);
+        if (factoryAddress == address(0)) {
+            return address(0);
+        }
+
+        if (
+            _extensionTokenActionPair[extensionAddress].tokenAddress !=
+            address(0)
+        ) {
+            return address(0);
+        }
+
+        return extensionAddress;
+    }
+
+    function _getActualExtensionAddress(
+        address tokenAddress,
         uint256 actionId,
         address caller
     ) internal view returns (address) {
@@ -100,6 +138,25 @@ contract ExtensionCenter is IExtensionCenter {
         if (caller == delegateAddress) return extensionAddress;
 
         return address(0);
+    }
+
+    function _getValidFactory(
+        address extensionAddress
+    ) internal view returns (address factoryAddress) {
+        try IExtensionCore(extensionAddress).factory() returns (
+            address factory
+        ) {
+            if (factory == address(0)) {
+                return address(0);
+            }
+            factoryAddress = factory;
+        } catch {
+            return address(0);
+        }
+        if (!IExtensionFactory(factoryAddress).exists(extensionAddress)) {
+            return address(0);
+        }
+        return factoryAddress;
     }
 
     constructor(
@@ -139,22 +196,20 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (extensionAddress != address(0)) {
-            return extensionAddress;
-        }
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        return actionInfo.body.whiteListAddress;
+        return _getExtensionAddress(tokenAddress, actionId);
     }
 
     function factoryByActionId(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
-        return _factoryByActionId[tokenAddress][actionId];
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress != address(0)) {
+            return factoryAddress;
+        }
+
+        address extensionAddress = _getExtensionAddress(tokenAddress, actionId);
+        return _getValidFactory(extensionAddress);
     }
 
     function setExtensionDelegate(address delegate) external {
@@ -193,7 +248,7 @@ contract ExtensionCenter is IExtensionCenter {
             revert AccountAlreadyJoined();
         }
 
-        address extensionAddress = _getExtensionAddress(
+        address extensionAddress = _getActualExtensionAddress(
             tokenAddress,
             actionId,
             msg.sender
@@ -204,22 +259,14 @@ contract ExtensionCenter is IExtensionCenter {
 
         address factoryAddress = _factoryByActionId[tokenAddress][actionId];
         if (factoryAddress == address(0)) {
-            try IExtension(extensionAddress).factory() returns (
-                address factory
-            ) {
-                if (factory == address(0)) {
-                    revert InvalidExtensionFactory();
-                }
-                factoryAddress = factory;
-            } catch {
-                revert InvalidExtensionFactory();
-            }
-            if (!IExtensionFactory(factoryAddress).exists(extensionAddress)) {
-                revert ExtensionNotFoundInFactory();
-            }
+            factoryAddress = _getValidFactory(extensionAddress);
 
             _extensionByActionId[tokenAddress][actionId] = extensionAddress;
             _factoryByActionId[tokenAddress][actionId] = factoryAddress;
+            _extensionTokenActionPair[extensionAddress] = TokenActionPair({
+                tokenAddress: tokenAddress,
+                actionId: actionId
+            });
         }
 
         _isAccountJoined[tokenAddress][actionId][account] = true;

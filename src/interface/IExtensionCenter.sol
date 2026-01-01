@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
+
+struct TokenActionPair {
+    address tokenAddress;
+    uint256 actionId;
+}
+
 interface IExtensionCenter {
     event AccountAdded(
         address indexed tokenAddress,
