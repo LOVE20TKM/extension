@@ -9,16 +9,14 @@ import {ILOVE20Submit, ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
-import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
-import {RoundHistoryAddress} from "./lib/RoundHistoryAddress.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
+import {AccountListHistory} from "./lib/AccountListHistory.sol";
 import {IExtensionFactory} from "./interface/IExtensionFactory.sol";
 import {IExtensionCore} from "./interface/IExtensionCore.sol";
 
 contract ExtensionCenter is IExtensionCenter {
-    using RoundHistoryUint256 for RoundHistoryUint256.History;
-    using RoundHistoryAddress for RoundHistoryAddress.History;
     using RoundHistoryString for RoundHistoryString.History;
+    using AccountListHistory for AccountListHistory.Storage;
 
     address public immutable uniswapV2FactoryAddress;
     address public immutable launchAddress;
@@ -38,17 +36,7 @@ contract ExtensionCenter is IExtensionCenter {
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
 
-    // tokenAddress => actionId => accountsCount
-    mapping(address => mapping(uint256 => RoundHistoryUint256.History))
-        internal _accountsCountHistory;
-
-    // tokenAddress => actionId => index => account
-    mapping(address => mapping(uint256 => mapping(uint256 => RoundHistoryAddress.History)))
-        internal _accountsAtIndexHistory;
-
-    // tokenAddress => actionId => account => index
-    mapping(address => mapping(uint256 => mapping(address => RoundHistoryUint256.History)))
-        internal _accountsIndexHistory;
+    AccountListHistory.Storage internal _accountListHistory;
 
     // tokenAddress => actionId => account => verificationKey => verificationInfo
     mapping(address => mapping(uint256 => mapping(address => mapping(string => RoundHistoryString.History))))
@@ -212,19 +200,11 @@ contract ExtensionCenter is IExtensionCenter {
 
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
-        uint256 accountCount = _accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
-        _accountsAtIndexHistory[tokenAddress][actionId][accountCount].record(
-            currentRound,
-            account
-        );
-        _accountsIndexHistory[tokenAddress][actionId][account].record(
-            currentRound,
-            accountCount
-        );
-        _accountsCountHistory[tokenAddress][actionId].record(
-            currentRound,
-            accountCount + 1
+        _accountListHistory.addAccount(
+            tokenAddress,
+            actionId,
+            account,
+            currentRound
         );
 
         _storeVerificationInfo(
@@ -315,21 +295,14 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address[] memory) {
-        uint256 count = _accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
-                .latestValue();
-        }
-        return result;
+        return _accountListHistory.accounts(tokenAddress, actionId);
     }
 
     function accountsCount(
         address tokenAddress,
         uint256 actionId
     ) external view returns (uint256) {
-        return _accountsCountHistory[tokenAddress][actionId].latestValue();
+        return _accountListHistory.accountsCount(tokenAddress, actionId);
     }
 
     function accountsAtIndex(
@@ -338,8 +311,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 index
     ) external view returns (address) {
         return
-            _accountsAtIndexHistory[tokenAddress][actionId][index]
-                .latestValue();
+            _accountListHistory.accountsAtIndex(tokenAddress, actionId, index);
     }
 
     function accountsByRound(
@@ -347,15 +319,8 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 round
     ) external view returns (address[] memory) {
-        uint256 count = _accountsCountHistory[tokenAddress][actionId].value(
-            round
-        );
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = _accountsAtIndexHistory[tokenAddress][actionId][i]
-                .value(round);
-        }
-        return result;
+        return
+            _accountListHistory.accountsByRound(tokenAddress, actionId, round);
     }
 
     function accountsByRoundCount(
@@ -363,7 +328,12 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 round
     ) external view returns (uint256) {
-        return _accountsCountHistory[tokenAddress][actionId].value(round);
+        return
+            _accountListHistory.accountsCountByRound(
+                tokenAddress,
+                actionId,
+                round
+            );
     }
 
     function accountsByRoundAtIndex(
@@ -373,7 +343,12 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 round
     ) external view returns (address) {
         return
-            _accountsAtIndexHistory[tokenAddress][actionId][index].value(round);
+            _accountListHistory.accountsByRoundAtIndex(
+                tokenAddress,
+                actionId,
+                index,
+                round
+            );
     }
 
     function updateVerificationInfo(
@@ -536,36 +511,11 @@ contract ExtensionCenter is IExtensionCenter {
 
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 
-        uint256 index = _accountsIndexHistory[tokenAddress][actionId][account]
-            .latestValue();
-        uint256 lastIndex = _accountsCountHistory[tokenAddress][actionId]
-            .latestValue() - 1;
-
-        if (index != lastIndex) {
-            address lastAccount = _accountsAtIndexHistory[tokenAddress][
-                actionId
-            ][lastIndex].latestValue();
-            _accountsAtIndexHistory[tokenAddress][actionId][index].record(
-                currentRound,
-                lastAccount
-            );
-            _accountsIndexHistory[tokenAddress][actionId][lastAccount].record(
-                currentRound,
-                index
-            );
-        }
-
-        _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
-            currentRound,
-            address(0)
-        );
-        _accountsCountHistory[tokenAddress][actionId].record(
-            currentRound,
-            lastIndex
-        );
-        _accountsIndexHistory[tokenAddress][actionId][account].record(
-            currentRound,
-            type(uint256).max
+        _accountListHistory.removeAccount(
+            tokenAddress,
+            actionId,
+            account,
+            currentRound
         );
 
         emit RemoveAccount(tokenAddress, actionId, account);
