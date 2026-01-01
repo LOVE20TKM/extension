@@ -139,6 +139,10 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        if (extensionAddress != address(0)) {
+            return extensionAddress;
+        }
         ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
             tokenAddress,
             actionId
@@ -263,7 +267,7 @@ contract ExtensionCenter is IExtensionCenter {
         _removeAccount(tokenAddress, actionId, account);
     }
 
-    function forceExit(address tokenAddress, uint256 actionId) external {
+    function forceRemove(address tokenAddress, uint256 actionId) external {
         _removeAccount(tokenAddress, actionId, msg.sender);
     }
 

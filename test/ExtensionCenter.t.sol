@@ -1170,7 +1170,7 @@ contract ExtensionCenterTest is Test {
         );
     }
 
-    // ------ forceExit tests ------
+    // ------ forceRemove tests ------
     function testForceExit() public {
         // Setup extension as whitelist
         MockExtension mockExtension = MockExtension(
@@ -1200,7 +1200,7 @@ contract ExtensionCenterTest is Test {
         vm.prank(user1);
         vm.expectEmit(true, true, true, false);
         emit AccountRemoved(tokenAddress, actionId1, user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify
         assertFalse(
@@ -1227,7 +1227,7 @@ contract ExtensionCenterTest is Test {
 
         // Try to exit account that was never added (should succeed silently)
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify state unchanged
         assertFalse(
@@ -1242,7 +1242,7 @@ contract ExtensionCenterTest is Test {
 
         // Try to exit again (should still succeed silently)
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
     }
 
     function testForceExitAfterRemove() public {
@@ -1275,7 +1275,7 @@ contract ExtensionCenterTest is Test {
 
         // User tries to force exit (should succeed silently)
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify state unchanged
         assertFalse(
@@ -1319,7 +1319,7 @@ contract ExtensionCenterTest is Test {
 
         // User1 exits
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify user1 is removed, user2 remains
         assertFalse(
@@ -1379,7 +1379,7 @@ contract ExtensionCenterTest is Test {
 
         // User2 (middle account) exits
         vm.prank(user2);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify user2 is removed, user1 and user3 remain
         assertFalse(
@@ -1468,7 +1468,7 @@ contract ExtensionCenterTest is Test {
 
         // User1 exits from action1 only
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify user1 is removed from action1 but still in action2
         assertFalse(
@@ -1519,7 +1519,7 @@ contract ExtensionCenterTest is Test {
 
         // User1 tries to exit user2 (should only exit themselves)
         vm.prank(user1);
-        extensionCenter.forceExit(tokenAddress, actionId1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify user1 is removed, user2 remains
         assertFalse(
