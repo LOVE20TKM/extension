@@ -2,6 +2,8 @@
 pragma solidity =0.8.17;
 
 import {ExtensionBaseTokenJoin} from "../ExtensionBaseTokenJoin.sol";
+import {ExtensionCore} from "../ExtensionCore.sol";
+import {IExtensionCore} from "../interface/IExtensionCore.sol";
 import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
 
 using RoundHistoryUint256 for RoundHistoryUint256.History;
@@ -21,17 +23,32 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
         )
     {}
 
-    function isJoinedValueConverted() external pure override returns (bool) {
+    function isJoinedValueConverted()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (bool)
+    {
         return true;
     }
 
-    function joinedValue() external view override returns (uint256) {
+    function joinedValue()
+        external
+        view
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return totalJoinedAmount();
     }
 
     function joinedValueByAccount(
         address account
-    ) external view override returns (uint256) {
+    )
+        external
+        view
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return _amountHistoryByAccount[account].latestValue();
     }
 

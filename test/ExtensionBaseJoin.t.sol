@@ -6,6 +6,8 @@ import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
 import {IExtensionJoin} from "../src/interface/IExtensionJoin.sol";
 import {IExtension} from "../src/interface/IExtension.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {ExtensionCore} from "../src/ExtensionCore.sol";
+import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
@@ -23,17 +25,32 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
         address tokenAddress_
     ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted() external pure override returns (bool) {
+    function isJoinedValueConverted()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (bool)
+    {
         return true;
     }
 
-    function joinedValue() external view override returns (uint256) {
+    function joinedValue()
+        external
+        view
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return _center.accountsCount(tokenAddress, actionId);
     }
 
     function joinedValueByAccount(
         address account
-    ) external view override returns (uint256) {
+    )
+        external
+        view
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
     }
 

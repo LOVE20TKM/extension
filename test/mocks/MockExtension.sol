@@ -3,6 +3,8 @@ pragma solidity =0.8.17;
 
 import {IExtension} from "../../src/interface/IExtension.sol";
 import {ExtensionBase} from "../../src/ExtensionBase.sol";
+import {ExtensionCore} from "../../src/ExtensionCore.sol";
+import {IExtensionCore} from "../../src/interface/IExtensionCore.sol";
 
 /**
  * @title MockExtension
@@ -20,17 +22,32 @@ contract MockExtension is ExtensionBase {
         actionId = actionId_;
     }
 
-    function isJoinedValueConverted() external pure returns (bool) {
+    function isJoinedValueConverted()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (bool)
+    {
         return true;
     }
 
-    function joinedValue() external pure returns (uint256) {
+    function joinedValue()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return 0;
     }
 
     function joinedValueByAccount(
         address /*account*/
-    ) external pure returns (uint256) {
+    )
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return 0;
     }
 

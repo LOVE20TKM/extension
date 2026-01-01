@@ -5,6 +5,8 @@ import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
 import {IExtension} from "../src/interface/IExtension.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {ExtensionCore} from "../src/ExtensionCore.sol";
+import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
@@ -22,17 +24,27 @@ contract MockExtensionForCore is ExtensionBaseJoin {
         address tokenAddress_
     ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted() external pure override returns (bool) {
+    function isJoinedValueConverted()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (bool)
+    {
         return false;
     }
 
-    function joinedValue() external pure override returns (uint256) {
+    function joinedValue()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return 0;
     }
 
     function joinedValueByAccount(
         address
-    ) external pure override returns (uint256) {
+    ) external pure override(ExtensionCore, IExtensionCore) returns (uint256) {
         return 0;
     }
 
@@ -73,17 +85,27 @@ contract MockExtensionForReward is ExtensionBaseJoin {
         address tokenAddress_
     ) ExtensionBaseJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted() external pure override returns (bool) {
+    function isJoinedValueConverted()
+        external
+        pure
+        override(ExtensionCore, IExtensionCore)
+        returns (bool)
+    {
         return true;
     }
 
-    function joinedValue() external view override returns (uint256) {
+    function joinedValue()
+        external
+        view
+        override(ExtensionCore, IExtensionCore)
+        returns (uint256)
+    {
         return _center.accountsCount(tokenAddress, actionId);
     }
 
     function joinedValueByAccount(
         address account
-    ) external view override returns (uint256) {
+    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
         return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
     }
 
@@ -410,7 +432,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
         verify.setCurrentRound(0);
 
         vm.prank(user1);
-        vm.expectRevert(IExtension.RoundNotFinished.selector);
+        vm.expectRevert(IExtensionCore.RoundNotFinished.selector);
         rewardExtension.claimReward(0);
     }
 
@@ -423,7 +445,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
         verify.setCurrentRound(5);
 
         vm.prank(user1);
-        vm.expectRevert(IExtension.RoundNotFinished.selector);
+        vm.expectRevert(IExtensionCore.RoundNotFinished.selector);
         rewardExtension.claimReward(5);
     }
 
