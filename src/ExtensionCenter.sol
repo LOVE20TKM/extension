@@ -343,16 +343,12 @@ contract ExtensionCenter is IExtensionCenter {
                 currentRound,
                 index
             );
-            _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
-                currentRound,
-                address(0)
-            );
-        } else {
-            _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
-                currentRound,
-                address(0)
-            );
         }
+
+        _accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
+            currentRound,
+            address(0)
+        );
         _accountsCountHistory[tokenAddress][actionId].record(
             currentRound,
             lastIndex
