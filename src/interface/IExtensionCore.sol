@@ -8,7 +8,7 @@ interface IExtensionCore {
     error MultipleActionIdsFound();
     error RoundNotFinished();
 
-    function initializeAction() external;
+    function initializeIfNeeded() external;
     function initialized() external view returns (bool);
 
     function center() external view returns (address);

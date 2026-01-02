@@ -57,19 +57,16 @@ abstract contract ExtensionCore is IExtensionCore {
         return address(_center);
     }
 
-    function initializeAction() external {
-        if (initialized) return;
-
-        _autoInitialize();
+    function initializeIfNeeded() external {
+        _initializeIfNeeded();
     }
 
-    function _doInitialize(uint256 actionId_) internal {
-        if (initialized) {
-            revert AlreadyInitialized();
-        }
+    function _initializeIfNeeded() internal {
+        if (initialized) return;
+
+        actionId = _findMatchingActionId();
 
         initialized = true;
-        actionId = actionId_;
 
         IERC20(tokenAddress).safeIncreaseAllowance(
             address(_join),
@@ -82,6 +79,7 @@ abstract contract ExtensionCore is IExtensionCore {
             DEFAULT_JOIN_AMOUNT,
             new string[](0)
         );
+        _center.registerActionIfNeeded(tokenAddress, actionId);
     }
 
     function _findMatchingActionId() internal view returns (uint256) {
@@ -105,16 +103,6 @@ abstract contract ExtensionCore is IExtensionCore {
         }
         if (!found) revert ActionIdNotFound();
         return foundActionId;
-    }
-
-    function _autoInitialize() internal {
-        if (initialized) {
-            return;
-        }
-
-        uint256 foundActionId = _findMatchingActionId();
-        _doInitialize(foundActionId);
-        _center.registerActionIfNeeded(tokenAddress, foundActionId);
     }
 
     function _prepareRewardIfNeeded(uint256 round) internal virtual {

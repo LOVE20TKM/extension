@@ -52,7 +52,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
         uint256 amount,
         string[] memory verificationInfos
     ) public virtual nonReentrant {
-        _autoInitialize();
+        _initializeIfNeeded();
 
         if (amount == 0) {
             revert JoinAmountZero();

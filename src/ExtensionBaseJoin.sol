@@ -20,7 +20,7 @@ abstract contract ExtensionBaseJoin is ExtensionBase, IExtensionJoin {
     }
 
     function join(string[] memory verificationInfos) public virtual {
-        _autoInitialize();
+        _initializeIfNeeded();
 
         if (_joinedRound[msg.sender] != 0) {
             revert AlreadyJoined();
