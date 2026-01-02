@@ -122,7 +122,7 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
-        return _getExtensionAddress(tokenAddress, actionId);
+        return _extensionByActionId[tokenAddress][actionId];
     }
 
     function factory(
@@ -390,38 +390,6 @@ contract ExtensionCenter is IExtensionCenter {
             _verificationInfoHistory[tokenAddress][actionId][account][
                 verificationKey
             ].value(round);
-    }
-
-    function _getExtensionAddress(
-        address tokenAddress,
-        uint256 actionId
-    ) internal view returns (address) {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (extensionAddress != address(0)) {
-            return extensionAddress;
-        }
-
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        extensionAddress = actionInfo.body.whiteListAddress;
-        if (extensionAddress == address(0)) {
-            return address(0);
-        }
-        address factoryAddress = _getValidFactory(extensionAddress);
-        if (factoryAddress == address(0)) {
-            return address(0);
-        }
-
-        if (
-            _extensionTokenActionPair[extensionAddress].tokenAddress !=
-            address(0)
-        ) {
-            return address(0);
-        }
-
-        return extensionAddress;
     }
 
     function _getValidFactory(
