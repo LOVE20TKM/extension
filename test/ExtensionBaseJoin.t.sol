@@ -40,18 +40,14 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
         override(ExtensionCore, IExtensionCore)
         returns (uint256)
     {
-        return _center.accountsCount(tokenAddress, actionId);
+        return _center.accountsCount(TOKEN_ADDRESS, actionId);
     }
 
     function joinedValueByAccount(
         address account
-    )
-        external
-        view
-        override(ExtensionCore, IExtensionCore)
-        returns (uint256)
-    {
-        return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
+    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
+        return
+            _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
     }
 
     function rewardByAccount(

@@ -29,13 +29,13 @@ abstract contract ExtensionBaseJoin is ExtensionBase, IExtensionJoin {
         _joinedRound[msg.sender] = _join.currentRound();
 
         _center.addAccount(
-            tokenAddress,
+            TOKEN_ADDRESS,
             actionId,
             msg.sender,
             verificationInfos
         );
 
-        emit Join(tokenAddress, _join.currentRound(), actionId, msg.sender);
+        emit Join(TOKEN_ADDRESS, _join.currentRound(), actionId, msg.sender);
     }
 
     function exit() public virtual {
@@ -45,8 +45,8 @@ abstract contract ExtensionBaseJoin is ExtensionBase, IExtensionJoin {
 
         _joinedRound[msg.sender] = 0;
 
-        _center.removeAccount(tokenAddress, actionId, msg.sender);
+        _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 
-        emit Exit(tokenAddress, _join.currentRound(), actionId, msg.sender);
+        emit Exit(TOKEN_ADDRESS, _join.currentRound(), actionId, msg.sender);
     }
 }

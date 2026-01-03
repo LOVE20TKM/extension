@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 uint256 constant DEFAULT_JOIN_AMOUNT = 1e18;
 
 interface IExtensionFactory {
-    function center() external view returns (address);
+    function CENTER_ADDRESS() external view returns (address);
 
     function exists(address extension) external view returns (bool);
 

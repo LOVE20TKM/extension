@@ -2,7 +2,9 @@
 pragma solidity =0.8.17;
 
 import {Test} from "forge-std/Test.sol";
-import {ExampleFactoryTokenJoin} from "../src/examples/ExampleFactoryTokenJoin.sol";
+import {
+    ExampleFactoryTokenJoin
+} from "../src/examples/ExampleFactoryTokenJoin.sol";
 import {ExampleTokenJoin} from "../src/examples/ExampleTokenJoin.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
@@ -28,7 +30,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
     // ============================================
 
     function test_Constructor() public view {
-        assertEq(factory.center(), address(center));
+        assertEq(factory.CENTER_ADDRESS(), address(center));
     }
 
     // ============================================
@@ -82,10 +84,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
 
         // Check that tokens were transferred to extension
         assertEq(token.balanceOf(extension), 1e18);
-        assertEq(
-            token.balanceOf(address(this)),
-            balanceBefore - 1e18
-        );
+        assertEq(token.balanceOf(address(this)), balanceBefore - 1e18);
     }
 
     function test_CreateExtension_ReturnsExampleTokenJoin() public {
@@ -96,10 +95,10 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         );
 
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
-        assertEq(exampleExtension.tokenAddress(), address(token));
+        assertEq(exampleExtension.TOKEN_ADDRESS(), address(token));
         assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
         assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
-        assertEq(exampleExtension.factory(), address(factory));
+        assertEq(exampleExtension.FACTORY_ADDRESS(), address(factory));
     }
 
     function test_CreateExtension_MultipleExtensions() public {
@@ -217,10 +216,10 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
 
         // Verify extension is properly initialized
-        assertEq(exampleExtension.tokenAddress(), address(token));
+        assertEq(exampleExtension.TOKEN_ADDRESS(), address(token));
         assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
         assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
-        assertEq(exampleExtension.factory(), address(factory));
+        assertEq(exampleExtension.FACTORY_ADDRESS(), address(factory));
 
         // Verify factory can retrieve params
         (
@@ -306,4 +305,3 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         assertEq(exampleExtension.WAITING_BLOCKS(), largeWaitingBlocks);
     }
 }
-

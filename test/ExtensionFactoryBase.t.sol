@@ -28,7 +28,10 @@ contract MockExtensionFactoryForBaseTest is ExtensionFactoryBase {
     constructor(address center_) ExtensionFactoryBase(center_) {}
 
     function createExtension(address tokenAddress) external returns (address) {
-        MockExtension extension = new MockExtension(address(this), tokenAddress);
+        MockExtension extension = new MockExtension(
+            address(this),
+            tokenAddress
+        );
         _registerExtension(address(extension), tokenAddress);
         return address(extension);
     }
@@ -89,7 +92,7 @@ contract ExtensionFactoryBaseTest is Test {
     // ============================================
 
     function test_Constructor() public view {
-        assertEq(factory.center(), address(center));
+        assertEq(factory.CENTER_ADDRESS(), address(center));
     }
 
     // ============================================
@@ -277,4 +280,3 @@ contract ExtensionFactoryBaseTest is Test {
         }
     }
 }
-

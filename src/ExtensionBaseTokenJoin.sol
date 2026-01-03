@@ -73,14 +73,14 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
         if (isFirstJoin) {
             _joinedRoundByAccount[msg.sender] = currentRound;
             _center.addAccount(
-                tokenAddress,
+                TOKEN_ADDRESS,
                 actionId,
                 msg.sender,
                 verificationInfos
             );
         } else if (verificationInfos.length > 0) {
             _center.updateVerificationInfo(
-                tokenAddress,
+                TOKEN_ADDRESS,
                 actionId,
                 msg.sender,
                 verificationInfos
@@ -89,7 +89,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
 
         _joinToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        emit Join(tokenAddress, currentRound, actionId, msg.sender, amount);
+        emit Join(TOKEN_ADDRESS, currentRound, actionId, msg.sender, amount);
     }
 
     function exit() public virtual nonReentrant {
@@ -112,11 +112,11 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
         delete _joinedRoundByAccount[msg.sender];
         delete _joinedBlockByAccount[msg.sender];
 
-        _center.removeAccount(tokenAddress, actionId, msg.sender);
+        _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 
         _joinToken.safeTransfer(msg.sender, amount);
 
-        emit Exit(tokenAddress, currentRound, actionId, msg.sender, amount);
+        emit Exit(TOKEN_ADDRESS, currentRound, actionId, msg.sender, amount);
     }
 
     function joinInfo(

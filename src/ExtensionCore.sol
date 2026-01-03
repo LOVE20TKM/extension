@@ -20,11 +20,13 @@ import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 abstract contract ExtensionCore is IExtensionCore {
     using SafeERC20 for IERC20;
 
-    address public immutable factory;
+    address public immutable CENTER_ADDRESS;
+
+    address public immutable FACTORY_ADDRESS;
 
     IExtensionCenter internal immutable _center;
 
-    address public tokenAddress;
+    address public immutable TOKEN_ADDRESS;
 
     bool public initialized;
 
@@ -43,18 +45,15 @@ abstract contract ExtensionCore is IExtensionCore {
         if (tokenAddress_ == address(0)) {
             revert InvalidTokenAddress();
         }
-        factory = factory_;
-        tokenAddress = tokenAddress_;
-        _center = IExtensionCenter(IExtensionFactory(factory_).center());
+        FACTORY_ADDRESS = factory_;
+        TOKEN_ADDRESS = tokenAddress_;
+        CENTER_ADDRESS = IExtensionFactory(factory_).CENTER_ADDRESS();
+        _center = IExtensionCenter(CENTER_ADDRESS);
         _submit = ILOVE20Submit(_center.submitAddress());
         _vote = ILOVE20Vote(_center.voteAddress());
         _join = ILOVE20Join(_center.joinAddress());
         _verify = ILOVE20Verify(_center.verifyAddress());
         _mint = ILOVE20Mint(_center.mintAddress());
-    }
-
-    function center() public view returns (address) {
-        return address(_center);
     }
 
     function initializeIfNeeded() external {
@@ -68,33 +67,33 @@ abstract contract ExtensionCore is IExtensionCore {
 
         initialized = true;
 
-        IERC20(tokenAddress).safeIncreaseAllowance(
+        IERC20(TOKEN_ADDRESS).safeIncreaseAllowance(
             address(_join),
             DEFAULT_JOIN_AMOUNT
         );
 
         _join.join(
-            tokenAddress,
+            TOKEN_ADDRESS,
             actionId,
             DEFAULT_JOIN_AMOUNT,
             new string[](0)
         );
-        _center.registerActionIfNeeded(tokenAddress, actionId);
+        _center.registerActionIfNeeded(TOKEN_ADDRESS, actionId);
     }
 
     function _findMatchingActionId() internal view returns (uint256) {
         uint256 currentRound = _join.currentRound();
-        uint256 count = _vote.votedActionIdsCount(tokenAddress, currentRound);
+        uint256 count = _vote.votedActionIdsCount(TOKEN_ADDRESS, currentRound);
         uint256 foundActionId = 0;
         bool found = false;
 
         for (uint256 i = 0; i < count; i++) {
             uint256 aid = _vote.votedActionIdsAtIndex(
-                tokenAddress,
+                TOKEN_ADDRESS,
                 currentRound,
                 i
             );
-            ActionInfo memory info = _submit.actionInfo(tokenAddress, aid);
+            ActionInfo memory info = _submit.actionInfo(TOKEN_ADDRESS, aid);
             if (info.body.whiteListAddress == address(this)) {
                 if (found) revert MultipleActionIdsFound();
                 foundActionId = aid;
@@ -110,7 +109,7 @@ abstract contract ExtensionCore is IExtensionCore {
             return;
         }
         uint256 totalActionReward = _mint.mintActionReward(
-            tokenAddress,
+            TOKEN_ADDRESS,
             round,
             actionId
         );

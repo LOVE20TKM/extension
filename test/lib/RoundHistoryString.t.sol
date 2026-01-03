@@ -26,11 +26,11 @@ contract MockRoundHistoryStringConsumer {
     }
 
     function changeRoundsCount() external view returns (uint256) {
-        return _history.changeRoundsCount();
+        return _history.changeRounds.length;
     }
 
     function changeRoundAtIndex(uint256 index) external view returns (uint256) {
-        return _history.changeRoundAtIndex(index);
+        return _history.changeRounds[index];
     }
 }
 
@@ -78,14 +78,18 @@ contract RoundHistoryStringTest is Test {
         assertEq(consumer.value(5), "third");
     }
 
-    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound() public {
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound()
+        public
+    {
         consumer.record(10, "first");
 
         vm.expectRevert(RoundHistoryString.InvalidRound.selector);
         consumer.record(5, "second");
     }
 
-    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds() public {
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds()
+        public
+    {
         consumer.record(5, "first");
         consumer.record(10, "second");
         consumer.record(15, "third");

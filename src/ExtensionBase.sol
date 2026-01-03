@@ -51,7 +51,7 @@ abstract contract ExtensionBase is ExtensionCore, IExtension, ReentrancyGuard {
             return _reward[round];
         }
         (uint256 expectedReward, ) = _mint.actionRewardByActionIdByAccount(
-            tokenAddress,
+            TOKEN_ADDRESS,
             round,
             actionId,
             address(this)
@@ -75,9 +75,9 @@ abstract contract ExtensionBase is ExtensionCore, IExtension, ReentrancyGuard {
         _claimedReward[round][msg.sender] = amount;
 
         if (amount > 0) {
-            IERC20(tokenAddress).safeTransfer(msg.sender, amount);
+            IERC20(TOKEN_ADDRESS).safeTransfer(msg.sender, amount);
         }
 
-        emit ClaimReward(tokenAddress, round, actionId, msg.sender, amount);
+        emit ClaimReward(TOKEN_ADDRESS, round, actionId, msg.sender, amount);
     }
 }

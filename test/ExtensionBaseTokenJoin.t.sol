@@ -129,7 +129,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     function test_Constructor_ImmutableVariables() public view {
         assertEq(extension.joinTokenAddress(), address(joinToken));
         assertEq(extension.WAITING_BLOCKS(), WAITING_BLOCKS);
-        assertEq(extension.factory(), address(mockFactory));
+        assertEq(extension.FACTORY_ADDRESS(), address(mockFactory));
     }
 
     function test_Constructor_InitialState() public view {
@@ -777,7 +777,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     // ============================================
 
     function test_Interface_TokenAddressIsView() public view {
-        address tokenAddr = extension.tokenAddress();
+        address tokenAddr = extension.TOKEN_ADDRESS();
         assertEq(tokenAddr, address(token));
     }
 
@@ -815,7 +815,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.tokenAddress(), address(token));
+        assertEq(extension.TOKEN_ADDRESS(), address(token));
         assertTrue(extension.initialized());
         assertEq(extension.actionId(), ACTION_ID);
     }

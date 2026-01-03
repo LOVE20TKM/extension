@@ -43,12 +43,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
 
     function joinedValueByAccount(
         address account
-    )
-        external
-        view
-        override(ExtensionCore, IExtensionCore)
-        returns (uint256)
-    {
+    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
         return _amountHistoryByAccount[account].latestValue();
     }
 
@@ -57,7 +52,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
         address account
     ) internal view virtual override returns (uint256 reward) {
         (uint256 totalActionReward, ) = _mint.actionRewardByActionIdByAccount(
-            tokenAddress,
+            TOKEN_ADDRESS,
             round,
             actionId,
             address(this)

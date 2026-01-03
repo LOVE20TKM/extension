@@ -13,7 +13,7 @@ import {
 abstract contract ExtensionFactoryBase is IExtensionFactory {
     using SafeERC20 for IERC20;
 
-    address public immutable center;
+    address public immutable CENTER_ADDRESS;
 
     address[] internal _extensions;
 
@@ -21,7 +21,7 @@ abstract contract ExtensionFactoryBase is IExtensionFactory {
     mapping(address => bool) internal _isExtension;
 
     constructor(address _center) {
-        center = _center;
+        CENTER_ADDRESS = _center;
     }
 
     function extensions() external view override returns (address[] memory) {

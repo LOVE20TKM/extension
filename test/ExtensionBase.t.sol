@@ -100,13 +100,14 @@ contract MockExtensionForReward is ExtensionBaseJoin {
         override(ExtensionCore, IExtensionCore)
         returns (uint256)
     {
-        return _center.accountsCount(tokenAddress, actionId);
+        return _center.accountsCount(TOKEN_ADDRESS, actionId);
     }
 
     function joinedValueByAccount(
         address account
     ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
-        return _center.isAccountJoined(tokenAddress, actionId, account) ? 1 : 0;
+        return
+            _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
     }
 
     // Configure reward calculation
@@ -132,8 +133,8 @@ contract MockExtensionForReward is ExtensionBaseJoin {
         }
         // Default: equal distribution if account has joined
         if (
-            _center.isAccountJoined(tokenAddress, actionId, account) &&
-            _center.accountsCount(tokenAddress, actionId) > 0
+            _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) &&
+            _center.accountsCount(TOKEN_ADDRESS, actionId) > 0
         ) {
             return rewardPerAccount;
         }
@@ -190,7 +191,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
     function test_Constructor_StoresFactory() public view {
         assertEq(
-            extension.factory(),
+            extension.FACTORY_ADDRESS(),
             address(mockFactory),
             "Factory should be stored"
         );
@@ -198,7 +199,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
     function test_Constructor_RetrievesCenter() public view {
         assertEq(
-            extension.center(),
+            extension.CENTER_ADDRESS(),
             address(center),
             "Center should be retrieved from factory"
         );
@@ -213,7 +214,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
     function test_Constructor_TokenAddressSet() public view {
         assertEq(
-            extension.tokenAddress(),
+            extension.TOKEN_ADDRESS(),
             address(token),
             "Token address should be set at construction"
         );
@@ -242,7 +243,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
         assertTrue(extension.initialized(), "Should be initialized");
         assertEq(
-            extension.tokenAddress(),
+            extension.TOKEN_ADDRESS(),
             address(token),
             "Token address should be set"
         );
@@ -254,16 +255,16 @@ contract ExtensionBaseTest is BaseExtensionTest {
     // ============================================
 
     function test_Center_ReturnsCorrectAddress() public view {
-        assertEq(extension.center(), address(center));
+        assertEq(extension.CENTER_ADDRESS(), address(center));
     }
 
     function test_Factory_ReturnsCorrectAddress() public view {
-        assertEq(extension.factory(), address(mockFactory));
+        assertEq(extension.FACTORY_ADDRESS(), address(mockFactory));
     }
 
     function test_TokenAddress_SetAtConstruction() public view {
         // tokenAddress is now set at construction, not at initialization
-        assertEq(extension.tokenAddress(), address(token));
+        assertEq(extension.TOKEN_ADDRESS(), address(token));
     }
 
     function test_TokenAddress_AfterInit() public {
@@ -275,7 +276,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.tokenAddress(), address(token));
+        assertEq(extension.TOKEN_ADDRESS(), address(token));
     }
 
     function test_ActionId_BeforeInit() public view {

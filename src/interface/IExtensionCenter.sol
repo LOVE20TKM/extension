@@ -44,6 +44,7 @@ interface IExtensionCenter {
     error ExtensionNotFoundInFactory();
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
+    error RoundExceedsJoinRound();
 
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);

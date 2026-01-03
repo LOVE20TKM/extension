@@ -72,6 +72,14 @@ contract ExtensionCenter is IExtensionCenter {
         _;
     }
 
+    modifier validRound(uint256 round) {
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+        if (round > currentRound) {
+            revert RoundExceedsJoinRound();
+        }
+        _;
+    }
+
     function _isExtensionOrDelegate(
         address tokenAddress,
         uint256 actionId
@@ -218,7 +226,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account,
         uint256 round
-    ) external view returns (bool) {
+    ) external view validRound(round) returns (bool) {
         return
             _accountListHistory.containsByRound(
                 tokenAddress,
@@ -308,7 +316,7 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         uint256 round
-    ) external view returns (address[] memory) {
+    ) external view validRound(round) returns (address[] memory) {
         return
             _accountListHistory.accountsByRound(tokenAddress, actionId, round);
     }
@@ -317,7 +325,7 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         uint256 round
-    ) external view returns (uint256) {
+    ) external view validRound(round) returns (uint256) {
         return
             _accountListHistory.accountsCountByRound(
                 tokenAddress,
@@ -331,7 +339,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 index,
         uint256 round
-    ) external view returns (address) {
+    ) external view validRound(round) returns (address) {
         return
             _accountListHistory.accountsByRoundAtIndex(
                 tokenAddress,
@@ -375,7 +383,7 @@ contract ExtensionCenter is IExtensionCenter {
         address account,
         string calldata verificationKey,
         uint256 round
-    ) external view returns (string memory) {
+    ) external view validRound(round) returns (string memory) {
         return
             _verificationInfoHistory[tokenAddress][actionId][account][
                 verificationKey
@@ -385,7 +393,7 @@ contract ExtensionCenter is IExtensionCenter {
     function _getValidFactory(
         address extensionAddress
     ) internal view returns (address factoryAddress) {
-        try IExtensionCore(extensionAddress).factory() returns (
+        try IExtensionCore(extensionAddress).FACTORY_ADDRESS() returns (
             address factory_
         ) {
             if (factory_ == address(0)) {

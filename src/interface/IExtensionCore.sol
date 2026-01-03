@@ -8,13 +8,13 @@ interface IExtensionCore {
     error MultipleActionIdsFound();
     error RoundNotFinished();
 
+    function CENTER_ADDRESS() external view returns (address);
+    function FACTORY_ADDRESS() external view returns (address);
+    function TOKEN_ADDRESS() external view returns (address);
+
     function initializeIfNeeded() external;
     function initialized() external view returns (bool);
 
-    function center() external view returns (address);
-    function factory() external view returns (address);
-
-    function tokenAddress() external view returns (address);
     function actionId() external view returns (uint256);
 
     function isJoinedValueConverted() external view returns (bool);

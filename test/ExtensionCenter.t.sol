@@ -2540,13 +2540,12 @@ contract ExtensionCenterTest is Test {
         );
 
         // Query future round (should return false as account not joined in future)
-        assertFalse(
-            extensionCenter.isAccountJoinedByRound(
-                tokenAddress,
-                actionId1,
-                user1,
-                round1 + 100
-            )
+        vm.expectRevert(IExtensionCenter.RoundExceedsJoinRound.selector);
+        extensionCenter.isAccountJoinedByRound(
+            tokenAddress,
+            actionId1,
+            user1,
+            round1 + 100
         );
     }
 
