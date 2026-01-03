@@ -188,7 +188,6 @@ contract ExtensionCenter is IExtensionCenter {
             account,
             currentRound
         );
-
         _updateVerificationInfo(
             tokenAddress,
             actionId,

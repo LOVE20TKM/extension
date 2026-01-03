@@ -83,14 +83,6 @@ contract MockAccountListHistoryConsumer {
                 round
             );
     }
-
-    function accountIndex(
-        address tokenAddress,
-        uint256 actionId,
-        address account
-    ) external view returns (uint256) {
-        return _storage.accountIndex(tokenAddress, actionId, account);
-    }
 }
 
 /**
@@ -125,7 +117,6 @@ contract AccountListHistoryTest is Test {
         assertEq(accounts.length, 1);
         assertEq(accounts[0], account1);
         assertEq(consumer.accountsAtIndex(tokenAddress, actionId, 0), account1);
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account1), 0);
     }
 
     function test_AddAccount_MultipleAccounts() public {
@@ -139,10 +130,6 @@ contract AccountListHistoryTest is Test {
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account2);
         assertEq(accounts[2], account3);
-
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account1), 0);
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account2), 1);
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account3), 2);
     }
 
     function test_AddAccount_DifferentRounds() public {
@@ -194,10 +181,6 @@ contract AccountListHistoryTest is Test {
         assertEq(consumer.accountsCount(tokenAddress, actionId), 0);
         address[] memory accounts = consumer.accounts(tokenAddress, actionId);
         assertEq(accounts.length, 0);
-        assertEq(
-            consumer.accountIndex(tokenAddress, actionId, account1),
-            type(uint256).max
-        );
     }
 
     function test_RemoveAccount_LastAccount() public {
@@ -212,10 +195,6 @@ contract AccountListHistoryTest is Test {
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account2);
-        assertEq(
-            consumer.accountIndex(tokenAddress, actionId, account3),
-            type(uint256).max
-        );
     }
 
     function test_RemoveAccount_MiddleAccount() public {
@@ -230,13 +209,6 @@ contract AccountListHistoryTest is Test {
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account3);
-
-        // account3 should now be at index 1 (swapped from index 2)
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account3), 1);
-        assertEq(
-            consumer.accountIndex(tokenAddress, actionId, account2),
-            type(uint256).max
-        );
     }
 
     function test_RemoveAccount_FirstAccount() public {
@@ -251,13 +223,6 @@ contract AccountListHistoryTest is Test {
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account3); // account3 swapped to index 0
         assertEq(accounts[1], account2);
-
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account3), 0);
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account2), 1);
-        assertEq(
-            consumer.accountIndex(tokenAddress, actionId, account1),
-            type(uint256).max
-        );
     }
 
     function test_RemoveAccount_MultipleRemovals() public {
@@ -469,7 +434,6 @@ contract AccountListHistoryTest is Test {
         address[] memory accounts = consumer.accounts(tokenAddress, actionId);
         assertEq(accounts.length, 1);
         assertEq(accounts[0], account1);
-        assertEq(consumer.accountIndex(tokenAddress, actionId, account1), 0);
     }
 
     function test_RemoveAllAccounts() public {
@@ -501,10 +465,6 @@ contract AccountListHistoryTest is Test {
 
         for (uint256 i = 0; i < count; i++) {
             assertEq(accounts[i], testAccounts[i]);
-            assertEq(
-                consumer.accountIndex(tokenAddress, actionId, testAccounts[i]),
-                i
-            );
         }
     }
 
@@ -531,13 +491,5 @@ contract AccountListHistoryTest is Test {
 
         // Last account should be swapped to removeIndex
         assertEq(accounts[removeIndex], testAccounts[count - 1]);
-        assertEq(
-            consumer.accountIndex(
-                tokenAddress,
-                actionId,
-                testAccounts[count - 1]
-            ),
-            removeIndex
-        );
     }
 }
