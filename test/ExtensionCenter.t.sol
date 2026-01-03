@@ -248,7 +248,7 @@ contract ExtensionCenterTest is Test {
     }
 
     // ------ Extension query tests ------
-    function testExtensionQuery() public {
+    function testExtensionQueryWithNoRegistration() public {
         // Setup extension as whitelist
         MockExtension mockExtension = MockExtension(
             mockFactory.createExtension(tokenAddress)
@@ -259,10 +259,10 @@ contract ExtensionCenterTest is Test {
             address(mockExtension)
         );
 
-        // Verify extension() returns whiteListAddress from submit
+        // Verify extension() returns 0 if not registered
         assertEq(
             extensionCenter.extension(tokenAddress, actionId1),
-            address(mockExtension)
+            address(0)
         );
     }
 
