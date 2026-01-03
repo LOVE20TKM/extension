@@ -10,7 +10,9 @@ library RoundHistoryAddress {
 
     struct History {
         uint256[] changeRounds;
+        // round => value
         mapping(uint256 => address) valueByRound;
+        // round => isRecorded
         mapping(uint256 => bool) isRecorded;
     }
 

@@ -10,7 +10,9 @@ library RoundHistoryString {
 
     struct History {
         uint256[] changeRounds;
+        // round => value
         mapping(uint256 => string) valueByRound;
+        // round => isRecorded
         mapping(uint256 => bool) isRecorded;
     }
 
@@ -52,18 +54,5 @@ library RoundHistoryString {
         }
         uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
         return self.valueByRound[latestRound];
-    }
-
-    function changeRoundsCount(
-        History storage self
-    ) internal view returns (uint256) {
-        return self.changeRounds.length;
-    }
-
-    function changeRoundAtIndex(
-        History storage self,
-        uint256 index
-    ) internal view returns (uint256) {
-        return self.changeRounds[index];
     }
 }
