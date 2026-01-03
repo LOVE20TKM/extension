@@ -97,16 +97,18 @@ contract ExtensionCenter is IExtensionCenter {
         address mintAddress_,
         address randomAddress_
     ) {
-        if (uniswapV2FactoryAddress_ == address(0))
-            revert InvalidUniswapV2FactoryAddress();
-        if (launchAddress_ == address(0)) revert InvalidLaunchAddress();
-        if (stakeAddress_ == address(0)) revert InvalidStakeAddress();
-        if (submitAddress_ == address(0)) revert InvalidSubmitAddress();
-        if (voteAddress_ == address(0)) revert InvalidVoteAddress();
-        if (joinAddress_ == address(0)) revert InvalidJoinAddress();
-        if (verifyAddress_ == address(0)) revert InvalidVerifyAddress();
-        if (mintAddress_ == address(0)) revert InvalidMintAddress();
-        if (randomAddress_ == address(0)) revert InvalidRandomAddress();
+        require(
+            uniswapV2FactoryAddress_ != address(0),
+            "uniswapV2FactoryAddress is not set"
+        );
+        require(launchAddress_ != address(0), "launchAddress is not set");
+        require(stakeAddress_ != address(0), "stakeAddress is not set");
+        require(submitAddress_ != address(0), "submitAddress is not set");
+        require(voteAddress_ != address(0), "voteAddress is not set");
+        require(joinAddress_ != address(0), "joinAddress is not set");
+        require(verifyAddress_ != address(0), "verifyAddress is not set");
+        require(mintAddress_ != address(0), "mintAddress is not set");
+        require(randomAddress_ != address(0), "randomAddress is not set");
 
         uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
         launchAddress = launchAddress_;
@@ -130,43 +132,13 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address) {
-        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
-        if (factoryAddress != address(0)) {
-            return factoryAddress;
-        }
-
-        ActionInfo memory actionInfo = ILOVE20Submit(submitAddress).actionInfo(
-            tokenAddress,
-            actionId
-        );
-        address extensionAddress = actionInfo.body.whiteListAddress;
-        if (extensionAddress == address(0)) {
-            return address(0);
-        }
-
-        if (
-            _extensionTokenActionPair[extensionAddress].tokenAddress !=
-            address(0)
-        ) {
-            return address(0);
-        }
-
-        return _getValidFactory(extensionAddress);
+        return _factoryByActionId[tokenAddress][actionId];
     }
 
     function setExtensionDelegate(address delegate) external {
-        address extensionAddress = msg.sender;
+        _extensionDelegate[msg.sender] = delegate;
 
-        _extensionDelegate[extensionAddress] = delegate;
-
-        emit ExtensionDelegateSet(extensionAddress, delegate);
-    }
-
-    function registerActionIfNeeded(
-        address tokenAddress,
-        uint256 actionId
-    ) external returns (address extensionAddress) {
-        return _registerActionIfNeeded(tokenAddress, actionId);
+        emit SetExtensionDelegate({extension: msg.sender, delegate: delegate});
     }
 
     function extensionDelegate(
@@ -217,7 +189,7 @@ contract ExtensionCenter is IExtensionCenter {
             currentRound
         );
 
-        _storeVerificationInfo(
+        _updateVerificationInfo(
             tokenAddress,
             actionId,
             account,
@@ -368,7 +340,7 @@ contract ExtensionCenter is IExtensionCenter {
         string[] calldata verificationInfos
     ) external onlyUserOrExtensionOrDelegate(tokenAddress, actionId, account) {
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
-        _storeVerificationInfo(
+        _updateVerificationInfo(
             tokenAddress,
             actionId,
             account,
@@ -421,10 +393,10 @@ contract ExtensionCenter is IExtensionCenter {
         return factoryAddress;
     }
 
-    function _registerActionIfNeeded(
+    function registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId
-    ) internal returns (address extensionAddress) {
+    ) external returns (address extensionAddress) {
         extensionAddress = _extensionByActionId[tokenAddress][actionId];
         if (extensionAddress != address(0)) {
             return extensionAddress;
@@ -448,13 +420,7 @@ contract ExtensionCenter is IExtensionCenter {
             extensionAddress
         ];
         if (existingPair.tokenAddress != address(0)) {
-            if (
-                existingPair.tokenAddress != tokenAddress ||
-                existingPair.actionId != actionId
-            ) {
-                revert ActionAlreadyBoundToOtherAction();
-            }
-            return extensionAddress;
+            revert ActionAlreadyRegisteredToOtherAction();
         }
 
         _extensionByActionId[tokenAddress][actionId] = extensionAddress;
@@ -464,12 +430,12 @@ contract ExtensionCenter is IExtensionCenter {
             actionId: actionId
         });
 
-        emit BindAction(
-            tokenAddress,
-            actionId,
-            extensionAddress,
-            factoryAddress
-        );
+        emit RegisterAction({
+            tokenAddress: tokenAddress,
+            actionId: actionId,
+            extension: extensionAddress,
+            factory: factoryAddress
+        });
 
         return extensionAddress;
     }
@@ -515,7 +481,7 @@ contract ExtensionCenter is IExtensionCenter {
         return false;
     }
 
-    function _storeVerificationInfo(
+    function _updateVerificationInfo(
         address tokenAddress,
         uint256 actionId,
         address account,
@@ -542,14 +508,14 @@ contract ExtensionCenter is IExtensionCenter {
                 verificationKeys[i]
             ].record(currentRound, verificationInfos[i]);
 
-            emit UpdateVerificationInfo(
-                tokenAddress,
-                currentRound,
-                actionId,
-                account,
-                verificationKeys[i],
-                verificationInfos[i]
-            );
+            emit UpdateVerificationInfo({
+                tokenAddress: tokenAddress,
+                round: currentRound,
+                actionId: actionId,
+                account: account,
+                verificationKey: verificationKeys[i],
+                verificationInfo: verificationInfos[i]
+            });
 
             unchecked {
                 i++;

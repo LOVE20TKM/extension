@@ -78,6 +78,28 @@ contract RoundHistoryUint256Test is Test {
         assertEq(consumer.value(5), 300);
     }
 
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound() public {
+        consumer.record(10, 100);
+
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.record(5, 200);
+    }
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds() public {
+        consumer.record(5, 100);
+        consumer.record(10, 200);
+        consumer.record(15, 300);
+
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.record(1, 50);
+
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.record(7, 150);
+
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.record(12, 250);
+    }
+
     function test_Record_ZeroValue() public {
         consumer.record(1, 100);
         consumer.record(2, 0);

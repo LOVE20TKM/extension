@@ -266,5 +266,63 @@ contract RoundHistoryUint256ArrayTest is Test {
         assertEq(result.length, 1);
         assertEq(result[0], 999);
     }
+
+    // ============================================
+    // InvalidRound Tests
+    // ============================================
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound() public {
+        uint256[] memory values1 = new uint256[](1);
+        values1[0] = 100;
+        consumer.record(10, values1);
+
+        uint256[] memory values2 = new uint256[](1);
+        values2[0] = 200;
+        vm.expectRevert(RoundHistoryUint256Array.InvalidRound.selector);
+        consumer.record(5, values2);
+    }
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds() public {
+        uint256[] memory values1 = new uint256[](1);
+        values1[0] = 100;
+        consumer.record(5, values1);
+
+        uint256[] memory values2 = new uint256[](1);
+        values2[0] = 200;
+        consumer.record(10, values2);
+
+        uint256[] memory values3 = new uint256[](1);
+        values3[0] = 300;
+        consumer.record(15, values3);
+
+        uint256[] memory invalid = new uint256[](1);
+        invalid[0] = 50;
+
+        vm.expectRevert(RoundHistoryUint256Array.InvalidRound.selector);
+        consumer.record(1, invalid);
+
+        vm.expectRevert(RoundHistoryUint256Array.InvalidRound.selector);
+        consumer.record(7, invalid);
+
+        vm.expectRevert(RoundHistoryUint256Array.InvalidRound.selector);
+        consumer.record(12, invalid);
+    }
+
+    function test_Record_SameRoundUpdatesValue() public {
+        uint256[] memory values1 = new uint256[](2);
+        values1[0] = 100;
+        values1[1] = 200;
+        consumer.record(5, values1);
+
+        uint256[] memory values2 = new uint256[](1);
+        values2[0] = 300;
+        consumer.record(5, values2);
+
+        // Should only have one entry for round 5
+        assertEq(consumer.changeRoundsLength(), 1);
+        uint256[] memory result = consumer.values(5);
+        assertEq(result.length, 1);
+        assertEq(result[0], 300);
+    }
 }
 

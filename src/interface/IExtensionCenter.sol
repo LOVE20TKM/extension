@@ -25,33 +25,24 @@ interface IExtensionCenter {
         string verificationKey,
         string verificationInfo
     );
-    event ExtensionDelegateSet(
+    event SetExtensionDelegate(
         address indexed extension,
         address indexed delegate
     );
-    event BindAction(
+    event RegisterAction(
         address indexed tokenAddress,
         uint256 indexed actionId,
         address indexed extension,
         address factory
     );
 
-    error InvalidUniswapV2FactoryAddress();
-    error InvalidLaunchAddress();
-    error InvalidStakeAddress();
-    error InvalidSubmitAddress();
-    error InvalidVoteAddress();
-    error InvalidJoinAddress();
-    error InvalidVerifyAddress();
-    error InvalidMintAddress();
-    error InvalidRandomAddress();
     error OnlyExtensionOrDelegate();
     error OnlyUserOrExtensionOrDelegate();
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch();
     error ActionNotVotedInCurrentRound();
     error ExtensionNotFoundInFactory();
-    error ActionAlreadyBoundToOtherAction();
+    error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
 
     function uniswapV2FactoryAddress() external view returns (address);
@@ -64,7 +55,7 @@ interface IExtensionCenter {
     function mintAddress() external view returns (address);
     function randomAddress() external view returns (address);
 
-    // must be called before any other function or will revert
+    // must be called before any other function
     function registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId

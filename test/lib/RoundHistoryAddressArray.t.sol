@@ -2,7 +2,9 @@
 pragma solidity =0.8.17;
 
 import "forge-std/Test.sol";
-import {RoundHistoryAddressArray} from "../../src/lib/RoundHistoryAddressArray.sol";
+import {
+    RoundHistoryAddressArray
+} from "../../src/lib/RoundHistoryAddressArray.sol";
 
 using RoundHistoryAddressArray for RoundHistoryAddressArray.History;
 
@@ -271,5 +273,66 @@ contract RoundHistoryAddressArrayTest is Test {
         assertEq(result.length, 1);
         assertEq(result[0], ADDR3);
     }
-}
 
+    // ============================================
+    // InvalidRound Tests
+    // ============================================
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound()
+        public
+    {
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        consumer.record(10, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR2;
+        vm.expectRevert(RoundHistoryAddressArray.InvalidRound.selector);
+        consumer.record(5, values2);
+    }
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds()
+        public
+    {
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        consumer.record(5, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR2;
+        consumer.record(10, values2);
+
+        address[] memory values3 = new address[](1);
+        values3[0] = ADDR3;
+        consumer.record(15, values3);
+
+        address[] memory invalid = new address[](1);
+        invalid[0] = ADDR_NOT_EXIST;
+
+        vm.expectRevert(RoundHistoryAddressArray.InvalidRound.selector);
+        consumer.record(1, invalid);
+
+        vm.expectRevert(RoundHistoryAddressArray.InvalidRound.selector);
+        consumer.record(7, invalid);
+
+        vm.expectRevert(RoundHistoryAddressArray.InvalidRound.selector);
+        consumer.record(12, invalid);
+    }
+
+    function test_Record_SameRoundUpdatesValue() public {
+        address[] memory values1 = new address[](2);
+        values1[0] = ADDR1;
+        values1[1] = ADDR2;
+        consumer.record(5, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR3;
+        consumer.record(5, values2);
+
+        // Should only have one entry for round 5
+        assertEq(consumer.changeRoundsLength(), 1);
+        address[] memory result = consumer.values(5);
+        assertEq(result.length, 1);
+        assertEq(result[0], ADDR3);
+    }
+}

@@ -87,6 +87,36 @@ contract RoundHistoryAddressTest is Test {
         assertEq(consumer.value(5), addr3);
     }
 
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound() public {
+        address addr1 = address(0x1001);
+        address addr2 = address(0x1002);
+
+        consumer.record(10, addr1);
+
+        vm.expectRevert(RoundHistoryAddress.InvalidRound.selector);
+        consumer.record(5, addr2);
+    }
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds() public {
+        address addr1 = address(0x1001);
+        address addr2 = address(0x1002);
+        address addr3 = address(0x1003);
+        address addr4 = address(0x1004);
+
+        consumer.record(5, addr1);
+        consumer.record(10, addr2);
+        consumer.record(15, addr3);
+
+        vm.expectRevert(RoundHistoryAddress.InvalidRound.selector);
+        consumer.record(1, addr4);
+
+        vm.expectRevert(RoundHistoryAddress.InvalidRound.selector);
+        consumer.record(7, addr4);
+
+        vm.expectRevert(RoundHistoryAddress.InvalidRound.selector);
+        consumer.record(12, addr4);
+    }
+
     function test_Record_ZeroAddress() public {
         address addr1 = address(0x1001);
         consumer.record(1, addr1);

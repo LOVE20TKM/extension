@@ -111,9 +111,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidUniswapV2FactoryAddress() public {
-        vm.expectRevert(
-            IExtensionCenter.InvalidUniswapV2FactoryAddress.selector
-        );
+        vm.expectRevert("uniswapV2FactoryAddress is not set");
         new ExtensionCenter(
             address(0),
             mockLaunch,
@@ -128,7 +126,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidLaunchAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidLaunchAddress.selector);
+        vm.expectRevert("launchAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             address(0),
@@ -143,7 +141,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidStakeAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidStakeAddress.selector);
+        vm.expectRevert("stakeAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -158,7 +156,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidSubmitAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidSubmitAddress.selector);
+        vm.expectRevert("submitAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -173,7 +171,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVoteAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidVoteAddress.selector);
+        vm.expectRevert("voteAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -188,7 +186,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidJoinAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidJoinAddress.selector);
+        vm.expectRevert("joinAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -203,7 +201,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVerifyAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidVerifyAddress.selector);
+        vm.expectRevert("verifyAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -218,7 +216,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidMintAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidMintAddress.selector);
+        vm.expectRevert("mintAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -233,7 +231,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidRandomAddress() public {
-        vm.expectRevert(IExtensionCenter.InvalidRandomAddress.selector);
+        vm.expectRevert("randomAddress is not set");
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,

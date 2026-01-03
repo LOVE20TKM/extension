@@ -78,6 +78,28 @@ contract RoundHistoryStringTest is Test {
         assertEq(consumer.value(5), "third");
     }
 
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound() public {
+        consumer.record(10, "first");
+
+        vm.expectRevert(RoundHistoryString.InvalidRound.selector);
+        consumer.record(5, "second");
+    }
+
+    function test_Record_InvalidRound_RevertsWhenRoundIsLessThanLastRound_MultipleRounds() public {
+        consumer.record(5, "first");
+        consumer.record(10, "second");
+        consumer.record(15, "third");
+
+        vm.expectRevert(RoundHistoryString.InvalidRound.selector);
+        consumer.record(1, "zero");
+
+        vm.expectRevert(RoundHistoryString.InvalidRound.selector);
+        consumer.record(7, "between");
+
+        vm.expectRevert(RoundHistoryString.InvalidRound.selector);
+        consumer.record(12, "between2");
+    }
+
     function test_Record_EmptyString() public {
         consumer.record(1, "hello");
         consumer.record(2, "");

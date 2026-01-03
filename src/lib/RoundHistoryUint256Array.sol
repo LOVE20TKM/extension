@@ -6,6 +6,8 @@ import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 library RoundHistoryUint256Array {
     using ArrayUtils for uint256[];
 
+    error InvalidRound();
+
     struct History {
         uint256[] changeRounds;
         mapping(uint256 => uint256[]) valueByRound;
@@ -17,17 +19,17 @@ library RoundHistoryUint256Array {
         uint256 round,
         uint256[] memory newValues
     ) internal {
-        if (
-            self.changeRounds.length == 0 ||
-            self.changeRounds[self.changeRounds.length - 1] != round
-        ) {
+        uint256 len = self.changeRounds.length;
+        if (len == 0 || round > self.changeRounds[len - 1]) {
             self.changeRounds.push(round);
+            self.isRecorded[round] = true;
+        } else if (round < self.changeRounds[len - 1]) {
+            revert InvalidRound();
         }
         delete self.valueByRound[round];
         for (uint256 i = 0; i < newValues.length; i++) {
             self.valueByRound[round].push(newValues[i]);
         }
-        self.isRecorded[round] = true;
     }
 
     function values(
