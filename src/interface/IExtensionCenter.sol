@@ -52,6 +52,7 @@ interface IExtensionCenter {
     error ActionNotVotedInCurrentRound();
     error ExtensionNotFoundInFactory();
     error ActionAlreadyBoundToOtherAction();
+    error InvalidExtensionAddress();
 
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);
@@ -106,6 +107,10 @@ interface IExtensionCenter {
     function extensionDelegate(
         address extensionAddress
     ) external view returns (address);
+
+    function extensionTokenActionPair(
+        address extensionAddress
+    ) external view returns (address tokenAddress, uint256 actionId);
 
     function isAccountJoined(
         address tokenAddress,

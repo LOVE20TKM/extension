@@ -56,11 +56,7 @@ contract ExtensionCenter is IExtensionCenter {
     mapping(address => TokenActionPair) internal _extensionTokenActionPair;
 
     modifier onlyExtensionOrDelegate(address tokenAddress, uint256 actionId) {
-        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
-        if (
-            msg.sender != extensionAddress &&
-            msg.sender != _extensionDelegate[extensionAddress]
-        ) {
+        if (!_isExtensionOrDelegate(tokenAddress, actionId)) {
             revert OnlyExtensionOrDelegate();
         }
         _;
@@ -71,18 +67,23 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) {
-        if (msg.sender != account) {
-            address extensionAddress = _extensionByActionId[tokenAddress][
-                actionId
-            ];
-            if (
-                msg.sender != extensionAddress &&
-                msg.sender != _extensionDelegate[extensionAddress]
-            ) {
-                revert OnlyUserOrExtensionOrDelegate();
-            }
+        if (
+            msg.sender != account &&
+            !_isExtensionOrDelegate(tokenAddress, actionId)
+        ) {
+            revert OnlyUserOrExtensionOrDelegate();
         }
         _;
+    }
+
+    function _isExtensionOrDelegate(
+        address tokenAddress,
+        uint256 actionId
+    ) internal view returns (bool) {
+        address extensionAddress = _extensionByActionId[tokenAddress][actionId];
+        return
+            msg.sender == extensionAddress ||
+            msg.sender == _extensionDelegate[extensionAddress];
     }
 
     constructor(
@@ -172,6 +173,15 @@ contract ExtensionCenter is IExtensionCenter {
         address extensionAddress
     ) external view returns (address) {
         return _extensionDelegate[extensionAddress];
+    }
+
+    function extensionTokenActionPair(
+        address extensionAddress
+    ) external view returns (address tokenAddress, uint256 actionId) {
+        TokenActionPair memory pair = _extensionTokenActionPair[
+            extensionAddress
+        ];
+        return (pair.tokenAddress, pair.actionId);
     }
 
     function addAccount(
@@ -426,7 +436,7 @@ contract ExtensionCenter is IExtensionCenter {
         );
         extensionAddress = actionInfo.body.whiteListAddress;
         if (extensionAddress == address(0)) {
-            return address(0);
+            revert InvalidExtensionAddress();
         }
 
         address factoryAddress = _getValidFactory(extensionAddress);
