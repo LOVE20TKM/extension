@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtensionCore} from "./IExtensionCore.sol";
-
-interface IExtension is IExtensionCore {
+interface IReward {
     event ClaimReward(
         address indexed tokenAddress,
         uint256 round,

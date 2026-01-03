@@ -3,8 +3,8 @@ pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseTokenJoin} from "../src/ExtensionBaseTokenJoin.sol";
-import {IExtensionTokenJoin} from "../src/interface/IExtensionTokenJoin.sol";
-import {IExtension} from "../src/interface/IExtension.sol";
+import {ITokenJoin} from "../src/interface/ITokenJoin.sol";
+import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
@@ -32,7 +32,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return true;
@@ -41,7 +41,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     function joinedValue()
         external
         view
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return totalJoinedAmount();
@@ -49,7 +49,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
 
     function joinedValueByAccount(
         address account
-    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
+    ) external view override(ExtensionCore) returns (uint256) {
         (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
@@ -60,7 +60,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     )
         public
         pure
-        override(IExtension, ExtensionBase)
+        override(ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -138,7 +138,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     function test_Constructor_RevertsOnZeroJoinTokenAddress() public {
-        vm.expectRevert(IExtensionTokenJoin.InvalidJoinTokenAddress.selector);
+        vm.expectRevert(ITokenJoin.InvalidJoinTokenAddress.selector);
         new MockExtensionForTokenJoin(
             address(mockFactory),
             address(token),
@@ -220,7 +220,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -374,7 +374,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -385,7 +385,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         advanceBlocks(WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
     }
 
@@ -422,7 +422,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         // User2 cannot exit yet
         vm.prank(user2);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         advanceBlocks(50);
@@ -592,7 +592,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -798,12 +798,12 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.join(100e18, new string[](0));
 
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         advanceBlocks(WAITING_BLOCKS - 1);
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         advanceBlocks(1);

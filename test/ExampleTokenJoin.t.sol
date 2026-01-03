@@ -6,8 +6,8 @@ import {ExampleTokenJoin} from "../src/examples/ExampleTokenJoin.sol";
 import {
     ExampleFactoryTokenJoin
 } from "../src/examples/ExampleFactoryTokenJoin.sol";
-import {IExtensionTokenJoin} from "../src/interface/IExtensionTokenJoin.sol";
-import {IExtension} from "../src/interface/IExtension.sol";
+import {ITokenJoin} from "../src/interface/ITokenJoin.sol";
+import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 
 // Import mock contracts
@@ -215,7 +215,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -298,7 +298,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
         extension.exit();
     }
 
@@ -310,7 +310,7 @@ contract ExampleTokenJoinTest is Test {
         vm.roll(block.number + WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
     }
 
@@ -352,7 +352,7 @@ contract ExampleTokenJoinTest is Test {
 
         // User2 cannot exit yet (only 50 blocks passed since their join)
         vm.prank(user2);
-        vm.expectRevert(IExtensionTokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
         extension.exit();
 
         // Move forward another 50 blocks

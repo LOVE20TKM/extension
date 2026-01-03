@@ -2,9 +2,9 @@
 pragma solidity =0.8.17;
 
 import {ExtensionBase} from "./ExtensionBase.sol";
-import {IExtensionJoin} from "./interface/IExtensionJoin.sol";
+import {IJoin} from "./interface/IJoin.sol";
 
-abstract contract ExtensionBaseJoin is ExtensionBase, IExtensionJoin {
+abstract contract ExtensionBaseJoin is ExtensionBase, IJoin {
     // account => joinedRound
     mapping(address => uint256) internal _joinedRound;
 
@@ -20,7 +20,9 @@ abstract contract ExtensionBaseJoin is ExtensionBase, IExtensionJoin {
     }
 
     function join(string[] memory verificationInfos) public virtual {
-        _initializeIfNeeded();
+        if (!initialized) {
+            this.initializeIfNeeded();
+        }
 
         if (_joinedRound[msg.sender] != 0) {
             revert AlreadyJoined();

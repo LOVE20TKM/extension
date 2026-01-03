@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
-import {IExtension} from "../src/interface/IExtension.sol";
+import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
@@ -27,7 +27,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return false;
@@ -36,7 +36,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
     function joinedValue()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return 0;
@@ -44,7 +44,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
 
     function joinedValueByAccount(
         address
-    ) external pure override(ExtensionCore, IExtensionCore) returns (uint256) {
+    ) external pure override(ExtensionCore) returns (uint256) {
         return 0;
     }
 
@@ -54,7 +54,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
     )
         public
         pure
-        override(IExtension, ExtensionBase)
+        override(ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -88,7 +88,7 @@ contract MockExtensionForReward is ExtensionBaseJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return true;
@@ -97,7 +97,7 @@ contract MockExtensionForReward is ExtensionBaseJoin {
     function joinedValue()
         external
         view
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return _center.accountsCount(TOKEN_ADDRESS, actionId);
@@ -105,7 +105,7 @@ contract MockExtensionForReward is ExtensionBaseJoin {
 
     function joinedValueByAccount(
         address account
-    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
+    ) external view override(ExtensionCore) returns (uint256) {
         return
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
     }
@@ -466,7 +466,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
         // Second claim reverts
         vm.prank(user1);
-        vm.expectRevert(IExtension.AlreadyClaimed.selector);
+        vm.expectRevert(IReward.AlreadyClaimed.selector);
         rewardExtension.claimReward(targetRound);
     }
 

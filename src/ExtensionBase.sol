@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtension} from "./interface/IExtension.sol";
+import {IReward} from "./interface/IReward.sol";
 import {ExtensionCore} from "./ExtensionCore.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
@@ -11,7 +11,7 @@ import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-abstract contract ExtensionBase is ExtensionCore, IExtension, ReentrancyGuard {
+abstract contract ExtensionBase is ExtensionCore, IReward, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // round => account => claimedReward

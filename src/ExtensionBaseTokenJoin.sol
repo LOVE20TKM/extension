@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {ExtensionBase} from "./ExtensionBase.sol";
-import {IExtensionTokenJoin} from "./interface/IExtensionTokenJoin.sol";
+import {ITokenJoin} from "./interface/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
@@ -15,7 +15,7 @@ import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 using SafeERC20 for IERC20;
 using RoundHistoryUint256 for RoundHistoryUint256.History;
 
-abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
+abstract contract ExtensionBaseTokenJoin is ExtensionBase, ITokenJoin {
     address public immutable joinTokenAddress;
 
     uint256 public immutable WAITING_BLOCKS;
@@ -52,7 +52,9 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, IExtensionTokenJoin {
         uint256 amount,
         string[] memory verificationInfos
     ) public virtual nonReentrant {
-        _initializeIfNeeded();
+        if (!initialized) {
+            this.initializeIfNeeded();
+        }
 
         if (amount == 0) {
             revert JoinAmountZero();

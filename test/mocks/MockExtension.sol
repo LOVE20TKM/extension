@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtension} from "../../src/interface/IExtension.sol";
+import {IReward} from "../../src/interface/IReward.sol";
 import {ExtensionBase} from "../../src/ExtensionBase.sol";
 import {ExtensionCore} from "../../src/ExtensionCore.sol";
 import {IExtensionCore} from "../../src/interface/IExtensionCore.sol";
@@ -25,7 +25,7 @@ contract MockExtension is ExtensionBase {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return true;
@@ -34,7 +34,7 @@ contract MockExtension is ExtensionBase {
     function joinedValue()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return 0;
@@ -42,12 +42,7 @@ contract MockExtension is ExtensionBase {
 
     function joinedValueByAccount(
         address /*account*/
-    )
-        external
-        pure
-        override(ExtensionCore, IExtensionCore)
-        returns (uint256)
-    {
+    ) external pure override(ExtensionCore) returns (uint256) {
         return 0;
     }
 

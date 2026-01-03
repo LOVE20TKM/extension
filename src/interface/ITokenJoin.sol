@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtension} from "./IExtension.sol";
-
-interface IExtensionTokenJoin is IExtension {
+interface ITokenJoin {
     error InvalidJoinTokenAddress();
     error JoinAmountZero();
     error NoJoinedAmount();

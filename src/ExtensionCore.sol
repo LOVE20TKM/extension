@@ -21,17 +21,13 @@ abstract contract ExtensionCore is IExtensionCore {
     using SafeERC20 for IERC20;
 
     address public immutable CENTER_ADDRESS;
-
     address public immutable FACTORY_ADDRESS;
-
-    IExtensionCenter internal immutable _center;
-
     address public immutable TOKEN_ADDRESS;
 
     bool public initialized;
-
     uint256 public actionId;
 
+    IExtensionCenter internal immutable _center;
     ILOVE20Submit internal immutable _submit;
     ILOVE20Vote internal immutable _vote;
     ILOVE20Join internal immutable _join;
@@ -57,10 +53,6 @@ abstract contract ExtensionCore is IExtensionCore {
     }
 
     function initializeIfNeeded() external {
-        _initializeIfNeeded();
-    }
-
-    function _initializeIfNeeded() internal {
         if (initialized) return;
 
         actionId = _findMatchingActionId();

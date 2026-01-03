@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IExtension} from "./IExtension.sol";
-
-interface IExtensionJoin is IExtension {
+interface IJoin {
     error NotJoined();
     error AlreadyJoined();
 

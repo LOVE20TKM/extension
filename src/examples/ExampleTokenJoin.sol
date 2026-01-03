@@ -26,7 +26,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return true;
@@ -35,7 +35,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
     function joinedValue()
         external
         view
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return totalJoinedAmount();
@@ -43,7 +43,7 @@ contract ExampleTokenJoin is ExtensionBaseTokenJoin {
 
     function joinedValueByAccount(
         address account
-    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
+    ) external view override(ExtensionCore) returns (uint256) {
         return _amountHistoryByAccount[account].latestValue();
     }
 

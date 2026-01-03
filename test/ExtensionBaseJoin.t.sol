@@ -3,8 +3,8 @@ pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
-import {IExtensionJoin} from "../src/interface/IExtensionJoin.sol";
-import {IExtension} from "../src/interface/IExtension.sol";
+import {IJoin} from "../src/interface/IJoin.sol";
+import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
@@ -28,7 +28,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (bool)
     {
         return true;
@@ -37,7 +37,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
     function joinedValue()
         external
         view
-        override(ExtensionCore, IExtensionCore)
+        override(ExtensionCore)
         returns (uint256)
     {
         return _center.accountsCount(TOKEN_ADDRESS, actionId);
@@ -45,7 +45,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
 
     function joinedValueByAccount(
         address account
-    ) external view override(ExtensionCore, IExtensionCore) returns (uint256) {
+    ) external view override(ExtensionCore) returns (uint256) {
         return
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
     }
@@ -56,7 +56,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
     )
         public
         pure
-        override(IExtension, ExtensionBase)
+        override(ExtensionBase)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -152,7 +152,7 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
         vm.startPrank(user1);
         extension.join(new string[](0));
 
-        vm.expectRevert(IExtensionJoin.AlreadyJoined.selector);
+        vm.expectRevert(IJoin.AlreadyJoined.selector);
         extension.join(new string[](0));
         vm.stopPrank();
     }
@@ -218,7 +218,7 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(IExtensionJoin.NotJoined.selector);
+        vm.expectRevert(IJoin.NotJoined.selector);
         extension.exit();
     }
 
