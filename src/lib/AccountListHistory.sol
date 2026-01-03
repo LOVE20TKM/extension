@@ -94,6 +94,31 @@ library AccountListHistory {
         self.isAccountAdded[tokenAddress][actionId][account] = false;
     }
 
+    function contains(
+        Storage storage self,
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) internal view returns (bool) {
+        return self.isAccountAdded[tokenAddress][actionId][account];
+    }
+
+    function containsByRound(
+        Storage storage self,
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        uint256 round
+    ) internal view returns (bool) {
+        uint256 index = self
+            .accountsIndexHistory[tokenAddress][actionId][account]
+            .value(round);
+        address accountAtIndex = self
+            .accountsAtIndexHistory[tokenAddress][actionId][index]
+            .value(round);
+        return account == accountAtIndex;
+    }
+
     function accounts(
         Storage storage self,
         address tokenAddress,

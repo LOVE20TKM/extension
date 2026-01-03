@@ -28,10 +28,6 @@ contract ExtensionCenter is IExtensionCenter {
     address public immutable mintAddress;
     address public immutable randomAddress;
 
-    // tokenAddress => actionId => account => isJoined
-    mapping(address => mapping(uint256 => mapping(address => bool)))
-        internal _isAccountJoined;
-
     // tokenAddress => account => actionIds
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
@@ -174,11 +170,9 @@ contract ExtensionCenter is IExtensionCenter {
             revert ActionNotVotedInCurrentRound();
         }
 
-        if (_isAccountJoined[tokenAddress][actionId][account]) {
+        if (_accountListHistory.contains(tokenAddress, actionId, account)) {
             revert AccountAlreadyJoined();
         }
-
-        _isAccountJoined[tokenAddress][actionId][account] = true;
 
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
@@ -216,7 +210,22 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) external view returns (bool) {
-        return _isAccountJoined[tokenAddress][actionId][account];
+        return _accountListHistory.contains(tokenAddress, actionId, account);
+    }
+
+    function isAccountJoinedByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        uint256 round
+    ) external view returns (bool) {
+        return
+            _accountListHistory.containsByRound(
+                tokenAddress,
+                actionId,
+                account,
+                round
+            );
     }
 
     function actionIdsByAccount(
@@ -444,13 +453,11 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) internal {
-        if (!_isAccountJoined[tokenAddress][actionId][account]) {
+        if (!_accountListHistory.contains(tokenAddress, actionId, account)) {
             return;
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
-
-        _isAccountJoined[tokenAddress][actionId][account] = false;
 
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 

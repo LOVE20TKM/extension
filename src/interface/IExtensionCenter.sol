@@ -109,6 +109,13 @@ interface IExtensionCenter {
         address account
     ) external view returns (bool);
 
+    function isAccountJoinedByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        uint256 round
+    ) external view returns (bool);
+
     function actionIdsByAccount(
         address tokenAddress,
         address account,

@@ -83,6 +83,23 @@ contract MockAccountListHistoryConsumer {
                 round
             );
     }
+
+    function contains(
+        address tokenAddress,
+        uint256 actionId,
+        address account
+    ) external view returns (bool) {
+        return _storage.contains(tokenAddress, actionId, account);
+    }
+
+    function containsByRound(
+        address tokenAddress,
+        uint256 actionId,
+        address account,
+        uint256 round
+    ) external view returns (bool) {
+        return _storage.containsByRound(tokenAddress, actionId, account, round);
+    }
 }
 
 /**
@@ -491,5 +508,338 @@ contract AccountListHistoryTest is Test {
 
         // Last account should be swapped to removeIndex
         assertEq(accounts[removeIndex], testAccounts[count - 1]);
+    }
+
+    // ============================================
+    // Contains Tests
+    // ============================================
+
+    function test_Contains_EmptyList() public view {
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+    }
+
+    function test_Contains_AfterAdd() public {
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+    }
+
+    function test_Contains_AfterRemove() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+    }
+
+    function test_Contains_MultipleAccounts() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 1);
+        consumer.addAccount(tokenAddress, actionId, account3, 1);
+
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        assertTrue(consumer.contains(tokenAddress, actionId, account2));
+        assertTrue(consumer.contains(tokenAddress, actionId, account3));
+        assertFalse(consumer.contains(tokenAddress, actionId, account4));
+    }
+
+    function test_Contains_AfterMultipleRemovals() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 1);
+        consumer.addAccount(tokenAddress, actionId, account3, 1);
+
+        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        assertFalse(consumer.contains(tokenAddress, actionId, account2));
+        assertTrue(consumer.contains(tokenAddress, actionId, account3));
+
+        consumer.removeAccount(tokenAddress, actionId, account1, 3);
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+        assertTrue(consumer.contains(tokenAddress, actionId, account3));
+    }
+
+    function test_Contains_AddRemoveAdd() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+
+        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+
+        consumer.addAccount(tokenAddress, actionId, account1, 3);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+    }
+
+    function test_Contains_MultipleTokenAddresses() public {
+        address tokenAddress2 = address(0x2002);
+
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress2, actionId, account1, 1);
+
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        assertTrue(consumer.contains(tokenAddress2, actionId, account1));
+        assertFalse(consumer.contains(tokenAddress, actionId, account2));
+    }
+
+    function test_Contains_MultipleActionIds() public {
+        uint256 actionId2 = 2;
+
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId2, account1, 1);
+
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        assertTrue(consumer.contains(tokenAddress, actionId2, account1));
+        assertFalse(consumer.contains(tokenAddress, actionId, account2));
+    }
+
+    // ============================================
+    // ContainsByRound Tests
+    // ============================================
+
+    function test_ContainsByRound_EmptyList() public view {
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+    }
+
+    function test_ContainsByRound_AfterAdd() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+    }
+
+    function test_ContainsByRound_AfterRemove() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+    }
+
+    function test_ContainsByRound_MultipleRounds() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 2);
+        consumer.addAccount(tokenAddress, actionId, account3, 3);
+
+        // Round 1
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 1)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account3, 1)
+        );
+
+        // Round 2
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account2, 2)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account3, 2)
+        );
+
+        // Round 3
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 3)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account2, 3)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 3)
+        );
+    }
+
+    function test_ContainsByRound_HistoryPreserved() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 1);
+        consumer.addAccount(tokenAddress, actionId, account3, 1);
+
+        // Remove account2 in round 2
+        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+
+        // Round 1 should still contain account2
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account2, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 1)
+        );
+
+        // Round 2 should not contain account2
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 2)
+        );
+    }
+
+    function test_ContainsByRound_BetweenRounds() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 5);
+        consumer.addAccount(tokenAddress, actionId, account3, 10);
+
+        // Query round 3 (between 1 and 5) should return round 1 state
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 3)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 3)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account3, 3)
+        );
+
+        // Query round 7 (between 5 and 10) should return round 5 state
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 7)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account2, 7)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account3, 7)
+        );
+    }
+
+    function test_ContainsByRound_AfterMultipleRemovals() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId, account2, 1);
+        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.addAccount(tokenAddress, actionId, account4, 1);
+
+        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        consumer.removeAccount(tokenAddress, actionId, account4, 3);
+
+        // Round 1: all accounts present
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account2, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account4, 1)
+        );
+
+        // Round 2: account2 removed
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account4, 2)
+        );
+
+        // Round 3: account2 and account4 removed
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 3)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 3)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account3, 3)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account4, 3)
+        );
+    }
+
+    function test_ContainsByRound_AddRemoveAdd() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+
+        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+
+        consumer.addAccount(tokenAddress, actionId, account1, 3);
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 3)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account1, 2)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+    }
+
+    function test_ContainsByRound_MultipleTokenAddresses() public {
+        address tokenAddress2 = address(0x2002);
+
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress2, actionId, account1, 1);
+
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress2, actionId, account1, 1)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 1)
+        );
+    }
+
+    function test_ContainsByRound_MultipleActionIds() public {
+        uint256 actionId2 = 2;
+
+        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.addAccount(tokenAddress, actionId2, account1, 1);
+
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId2, account1, 1)
+        );
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account2, 1)
+        );
+    }
+
+    function test_ContainsByRound_NonExistentRound() public {
+        consumer.addAccount(tokenAddress, actionId, account1, 5);
+        // Query round 1 (before account was added) should return false
+        assertFalse(
+            consumer.containsByRound(tokenAddress, actionId, account1, 1)
+        );
+        // Query round 5 (when account was added) should return true
+        assertTrue(
+            consumer.containsByRound(tokenAddress, actionId, account1, 5)
+        );
     }
 }

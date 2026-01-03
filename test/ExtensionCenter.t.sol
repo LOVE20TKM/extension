@@ -2001,4 +2001,803 @@ contract ExtensionCenterTest is Test {
             assertEq(accountAtIndex, accounts[i]);
         }
     }
+
+    // ============================================
+    // isAccountJoined Tests
+    // ============================================
+
+    function testIsAccountJoined_NotJoined() public view {
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testIsAccountJoined_AfterAdd() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testIsAccountJoined_AfterRemove() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+        vm.stopPrank();
+
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testIsAccountJoined_MultipleAccounts() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+        vm.stopPrank();
+
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
+        );
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, govHolder)
+        );
+    }
+
+    function testIsAccountJoined_MultipleActions() public {
+        MockExtension mockExtension1 = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension1)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        MockExtension mockExtension2 = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId2,
+            address(mockExtension2)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId2
+        );
+
+        _registerAction(tokenAddress, actionId1);
+        _registerAction(tokenAddress, actionId2);
+
+        vm.prank(address(mockExtension1));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        vm.prank(address(mockExtension2));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId2,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId2, user1)
+        );
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user2)
+        );
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId2, user2)
+        );
+    }
+
+    function testIsAccountJoined_AfterForceRemove() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+
+        vm.prank(user1);
+        extensionCenter.forceRemove(tokenAddress, actionId1);
+
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    // ============================================
+    // isAccountJoinedByRound Tests
+    // ============================================
+
+    function testIsAccountJoinedByRound_NotJoined() public view {
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                1
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_AfterAdd() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_MultipleRounds() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add user1 at round 1
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Add user2 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Verify round 1: user1 joined, user2 not joined
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user2,
+                round1
+            )
+        );
+
+        // Verify round 2: both users joined
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round2
+            )
+        );
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user2,
+                round2
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_AfterRemove() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Remove user1 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // Verify round 1: user1 still joined (historical state)
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+
+        // Verify round 2: user1 not joined
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round2
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_RejoinAfterRemove() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add user1 at round 1
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Remove user1 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // Rejoin user1 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Verify round 1: user1 joined
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+
+        // Verify round 2: user1 joined (after rejoin)
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round2
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_FutureRound() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Query future round (should return false as account not joined in future)
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1 + 100
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_PastRound() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Query past round before account joined (should return false)
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1 - 1
+            )
+        );
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Query round 0 (should return false if round1 > 0)
+        if (round1 > 0) {
+            assertFalse(
+                extensionCenter.isAccountJoinedByRound(
+                    tokenAddress,
+                    actionId1,
+                    user1,
+                    0
+                )
+            );
+        }
+    }
+
+    function testIsAccountJoinedByRound_MultipleAccountsMultipleRounds()
+        public
+    {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 round1 = mockJoin.currentRound();
+
+        // Add user1 at round 1
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Advance to round 2
+        mockJoin.setCurrentRound(round1 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round2 = mockJoin.currentRound();
+
+        // Add user2 at round 2
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user2,
+            new string[](0)
+        );
+
+        // Advance to round 3
+        mockJoin.setCurrentRound(round2 + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 round3 = mockJoin.currentRound();
+
+        // Remove user1 at round 3
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // Verify all rounds for both users
+        // Round 1
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round1
+            )
+        );
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user2,
+                round1
+            )
+        );
+
+        // Round 2
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round2
+            )
+        );
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user2,
+                round2
+            )
+        );
+
+        // Round 3
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                round3
+            )
+        );
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user2,
+                round3
+            )
+        );
+    }
+
+    function testIsAccountJoinedByRound_ConsistencyWithIsAccountJoined()
+        public
+    {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        uint256 currentRound = mockJoin.currentRound();
+
+        vm.prank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // isAccountJoined should match isAccountJoinedByRound for current round
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                currentRound
+            )
+        );
+
+        // Advance to next round
+        mockJoin.setCurrentRound(currentRound + 1);
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        uint256 newRound = mockJoin.currentRound();
+
+        // Remove user1
+        vm.prank(address(mockExtension));
+        extensionCenter.removeAccount(tokenAddress, actionId1, user1);
+
+        // isAccountJoined should be false
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+
+        // But historical round should still show joined
+        assertTrue(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                currentRound
+            )
+        );
+
+        // Current round should show not joined
+        assertFalse(
+            extensionCenter.isAccountJoinedByRound(
+                tokenAddress,
+                actionId1,
+                user1,
+                newRound
+            )
+        );
+    }
 }
