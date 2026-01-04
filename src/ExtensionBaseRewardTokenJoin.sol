@@ -55,9 +55,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         uint256 amount,
         string[] memory verificationInfos
     ) public virtual nonReentrant {
-        if (!initialized) {
-            this.initializeIfNeeded();
-        }
+        initializeIfNeeded();
 
         if (amount == 0) {
             revert JoinAmountZero();
@@ -67,11 +65,15 @@ abstract contract ExtensionBaseRewardTokenJoin is
         bool isFirstJoin = _joinedBlockByAccount[msg.sender] == 0;
 
         uint256 prevAmount = _amountHistoryByAccount[msg.sender].latestValue();
-        uint256 newAmount = prevAmount + amount;
-        _amountHistoryByAccount[msg.sender].record(currentRound, newAmount);
+        _amountHistoryByAccount[msg.sender].record(
+            currentRound,
+            prevAmount + amount
+        );
 
-        uint256 prevTotal = _totalJoinedAmountHistory.latestValue();
-        _totalJoinedAmountHistory.record(currentRound, prevTotal + amount);
+        _totalJoinedAmountHistory.record(
+            currentRound,
+            _totalJoinedAmountHistory.latestValue() + amount
+        );
 
         _joinedBlockByAccount[msg.sender] = block.number;
 
@@ -94,7 +96,13 @@ abstract contract ExtensionBaseRewardTokenJoin is
 
         _joinToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        emit Join(TOKEN_ADDRESS, currentRound, actionId, msg.sender, amount);
+        emit Join({
+            tokenAddress: TOKEN_ADDRESS,
+            round: currentRound,
+            actionId: actionId,
+            account: msg.sender,
+            amount: amount
+        });
     }
 
     function exit() public virtual nonReentrant {
@@ -121,7 +129,13 @@ abstract contract ExtensionBaseRewardTokenJoin is
 
         _joinToken.safeTransfer(msg.sender, amount);
 
-        emit Exit(TOKEN_ADDRESS, currentRound, actionId, msg.sender, amount);
+        emit Exit({
+            tokenAddress: TOKEN_ADDRESS,
+            round: currentRound,
+            actionId: actionId,
+            account: msg.sender,
+            amount: amount
+        });
     }
 
     function joinInfo(
@@ -154,6 +168,10 @@ abstract contract ExtensionBaseRewardTokenJoin is
         uint256 round
     ) public view returns (uint256) {
         return _totalJoinedAmountHistory.value(round);
+    }
+
+    function amountByAccount(address account) public view returns (uint256) {
+        return _amountHistoryByAccount[account].latestValue();
     }
 
     function amountByAccountByRound(

@@ -33,6 +33,8 @@ interface ITokenJoin {
         uint256 round
     ) external view returns (uint256);
 
+    function amountByAccount(address account) external view returns (uint256);
+
     function amountByAccountByRound(
         address account,
         uint256 round

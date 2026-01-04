@@ -869,4 +869,278 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertTrue(gas2 < (avgGas * 11) / 10, "gas2 too high");
         assertTrue(gas3 < (avgGas * 11) / 10, "gas3 too high");
     }
+
+    // ============================================
+    // amountByAccount Tests
+    // ============================================
+
+    function test_amountByAccount_NotJoined() public view {
+        assertEq(extension.amountByAccount(user1), 0);
+    }
+
+    function test_amountByAccount_AfterJoin() public {
+        uint256 amount = 100e18;
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        assertEq(extension.amountByAccount(user1), amount);
+    }
+
+    function test_amountByAccount_MultipleJoins() public {
+        vm.startPrank(user1);
+        extension.join(100e18, new string[](0));
+        assertEq(extension.amountByAccount(user1), 100e18);
+
+        extension.join(50e18, new string[](0));
+        assertEq(extension.amountByAccount(user1), 150e18);
+
+        extension.join(25e18, new string[](0));
+        assertEq(extension.amountByAccount(user1), 175e18);
+        vm.stopPrank();
+    }
+
+    function test_amountByAccount_AfterExit() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        advanceBlocks(WAITING_BLOCKS);
+
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(extension.amountByAccount(user1), 0);
+    }
+
+    function test_amountByAccount_MultipleUsers() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        vm.prank(user3);
+        extension.join(300e18, new string[](0));
+
+        assertEq(extension.amountByAccount(user1), 100e18);
+        assertEq(extension.amountByAccount(user2), 200e18);
+        assertEq(extension.amountByAccount(user3), 300e18);
+    }
+
+    function test_amountByAccount_IndependentAfterExit() public {
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        advanceBlocks(WAITING_BLOCKS);
+
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(extension.amountByAccount(user1), 0);
+        assertEq(extension.amountByAccount(user2), 200e18);
+    }
+
+    // ============================================
+    // amountByAccountByRound Tests
+    // ============================================
+
+    function test_amountByAccountByRound_NotJoined() public view {
+        assertEq(extension.amountByAccountByRound(user1, 1), 0);
+        assertEq(extension.amountByAccountByRound(user1, 2), 0);
+    }
+
+    function test_amountByAccountByRound_JoinRound() public {
+        uint256 joinRound = join.currentRound();
+        uint256 amount = 100e18;
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        assertEq(extension.amountByAccountByRound(user1, joinRound), amount);
+    }
+
+    function test_amountByAccountByRound_SubsequentRounds() public {
+        uint256 round1 = join.currentRound();
+        uint256 amount = 100e18;
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        // Advance to next round
+        join.setCurrentRound(round1 + 1);
+        assertEq(extension.amountByAccountByRound(user1, round1), amount);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 1), amount);
+
+        // Advance to another round
+        join.setCurrentRound(round1 + 2);
+        assertEq(extension.amountByAccountByRound(user1, round1), amount);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 1), amount);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 2), amount);
+    }
+
+    function test_amountByAccountByRound_AddMoreInNewRound() public {
+        uint256 round1 = join.currentRound();
+        uint256 amount1 = 100e18;
+
+        vm.prank(user1);
+        extension.join(amount1, new string[](0));
+
+        // Advance to next round and add more
+        join.setCurrentRound(round1 + 1);
+        vote.setVotedActionIds(address(token), round1 + 1, ACTION_ID);
+        uint256 amount2 = 50e18;
+
+        vm.prank(user1);
+        extension.join(amount2, new string[](0));
+
+        assertEq(extension.amountByAccountByRound(user1, round1), amount1);
+        assertEq(
+            extension.amountByAccountByRound(user1, round1 + 1),
+            amount1 + amount2
+        );
+    }
+
+    function test_amountByAccountByRound_ExitRound() public {
+        uint256 joinRound = join.currentRound();
+        uint256 amount = 100e18;
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        // Advance to next round before exit
+        join.setCurrentRound(joinRound + 1);
+        vote.setVotedActionIds(address(token), joinRound + 1, ACTION_ID);
+        advanceBlocks(WAITING_BLOCKS);
+
+        uint256 exitRound = join.currentRound();
+        vm.prank(user1);
+        extension.exit();
+
+        assertEq(extension.amountByAccountByRound(user1, joinRound), amount);
+        assertEq(extension.amountByAccountByRound(user1, exitRound), 0);
+    }
+
+    function test_amountByAccountByRound_AfterExitSubsequentRounds() public {
+        uint256 amount = 100e18;
+        uint256 joinRound = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(amount, new string[](0));
+
+        // Advance to next round before exit
+        join.setCurrentRound(joinRound + 1);
+        vote.setVotedActionIds(address(token), joinRound + 1, ACTION_ID);
+        advanceBlocks(WAITING_BLOCKS);
+
+        uint256 exitRound = join.currentRound();
+        vm.prank(user1);
+        extension.exit();
+
+        // Advance to future rounds
+        join.setCurrentRound(exitRound + 1);
+        assertEq(extension.amountByAccountByRound(user1, exitRound), 0);
+        assertEq(extension.amountByAccountByRound(user1, exitRound + 1), 0);
+
+        join.setCurrentRound(exitRound + 5);
+        assertEq(extension.amountByAccountByRound(user1, exitRound + 5), 0);
+    }
+
+    function test_amountByAccountByRound_MultipleUsersDifferentRounds() public {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        join.setCurrentRound(round1 + 1);
+        vote.setVotedActionIds(address(token), round1 + 1, ACTION_ID);
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        join.setCurrentRound(round1 + 2);
+        vote.setVotedActionIds(address(token), round1 + 2, ACTION_ID);
+
+        vm.prank(user3);
+        extension.join(300e18, new string[](0));
+
+        // Check round1: only user1
+        assertEq(extension.amountByAccountByRound(user1, round1), 100e18);
+        assertEq(extension.amountByAccountByRound(user2, round1), 0);
+        assertEq(extension.amountByAccountByRound(user3, round1), 0);
+
+        // Check round1 + 1: user1 and user2
+        assertEq(extension.amountByAccountByRound(user1, round1 + 1), 100e18);
+        assertEq(extension.amountByAccountByRound(user2, round1 + 1), 200e18);
+        assertEq(extension.amountByAccountByRound(user3, round1 + 1), 0);
+
+        // Check round1 + 2: all users
+        assertEq(extension.amountByAccountByRound(user1, round1 + 2), 100e18);
+        assertEq(extension.amountByAccountByRound(user2, round1 + 2), 200e18);
+        assertEq(extension.amountByAccountByRound(user3, round1 + 2), 300e18);
+    }
+
+    function test_amountByAccountByRound_ComplexScenario() public {
+        uint256 round1 = join.currentRound();
+
+        // User1 joins in round1
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        // Round 2: User1 adds more, User2 joins
+        join.setCurrentRound(round1 + 1);
+        vote.setVotedActionIds(address(token), round1 + 1, ACTION_ID);
+        vm.prank(user1);
+        extension.join(50e18, new string[](0));
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        // Round 3: User3 joins
+        join.setCurrentRound(round1 + 2);
+        vote.setVotedActionIds(address(token), round1 + 2, ACTION_ID);
+        vm.prank(user3);
+        extension.join(300e18, new string[](0));
+
+        // Round 4: User1 exits
+        advanceBlocks(WAITING_BLOCKS);
+        join.setCurrentRound(round1 + 3);
+        vote.setVotedActionIds(address(token), round1 + 3, ACTION_ID);
+        vm.prank(user1);
+        extension.exit();
+
+        // Verify historical data
+        assertEq(extension.amountByAccountByRound(user1, round1), 100e18);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 1), 150e18);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 2), 150e18);
+        assertEq(extension.amountByAccountByRound(user1, round1 + 3), 0);
+
+        assertEq(extension.amountByAccountByRound(user2, round1 + 1), 200e18);
+        assertEq(extension.amountByAccountByRound(user2, round1 + 3), 200e18);
+
+        assertEq(extension.amountByAccountByRound(user3, round1 + 2), 300e18);
+        assertEq(extension.amountByAccountByRound(user3, round1 + 3), 300e18);
+    }
+
+    function test_amountByAccountByRound_ConsistencyWithAmountByAccount()
+        public
+    {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        uint256 currentRound = join.currentRound();
+        assertEq(
+            extension.amountByAccount(user1),
+            extension.amountByAccountByRound(user1, currentRound)
+        );
+
+        join.setCurrentRound(round1 + 5);
+        assertEq(
+            extension.amountByAccount(user1),
+            extension.amountByAccountByRound(user1, join.currentRound())
+        );
+    }
 }
