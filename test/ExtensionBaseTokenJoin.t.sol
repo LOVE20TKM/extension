@@ -2,10 +2,12 @@
 pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
-import {ExtensionBaseTokenJoin} from "../src/ExtensionBaseTokenJoin.sol";
+import {
+    ExtensionBaseRewardTokenJoin
+} from "../src/ExtensionBaseRewardTokenJoin.sol";
 import {ITokenJoin} from "../src/interface/ITokenJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
-import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
@@ -14,14 +16,14 @@ import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
  * @title MockExtensionForTokenJoin
  * @notice Mock extension for testing TokenJoin
  */
-contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
+contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
     constructor(
         address factory_,
         address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        ExtensionBaseTokenJoin(
+        ExtensionBaseRewardTokenJoin(
             factory_,
             tokenAddress_,
             joinTokenAddress_,
@@ -60,7 +62,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(ExtensionBaseReward)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -75,8 +77,8 @@ contract MockExtensionForTokenJoin is ExtensionBaseTokenJoin {
 }
 
 /**
- * @title ExtensionBaseTokenJoinTest
- * @notice Test suite for ExtensionBaseTokenJoin
+ * @title ExtensionBaseRewardTokenJoinTest
+ * @notice Test suite for ExtensionBaseRewardTokenJoin
  * @dev Tests join with tokens, waiting period, exit, and reentrancy
  */
 contract ExtensionBaseTokenJoinTest is BaseExtensionTest {

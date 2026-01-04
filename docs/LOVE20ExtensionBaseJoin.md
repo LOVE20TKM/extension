@@ -1,8 +1,8 @@
-# LOVE20 行动扩展协议之免代币参与基类合约（LOVE20ExtensionBaseJoin）
+# LOVE20 行动扩展协议之免代币参与基类合约（LOVE20ExtensionBaseRewardJoin）
 
-## 0. 关于 LOVE20ExtensionBaseJoin
+## 0. 关于 LOVE20ExtensionBaseRewardJoin
 
-`LOVE20ExtensionBaseJoin` 组合 `ExtensionReward` 与 `Join` 能力，为扩展协议提供**免代币（token-free）的参与/退出机制**：
+`LOVE20ExtensionBaseRewardJoin` 组合 `ExtensionReward` 与 `Join` 能力，为扩展协议提供**免代币（token-free）的参与/退出机制**：
 
 - 用户 `join()` 即加入行动参与列表
 - 用户 `exit()` 可随时退出
@@ -59,7 +59,7 @@
 
 ## 4. 继承者实现指南
 
-`LOVE20ExtensionBaseJoin` 已提供 join/exit 的完整实现；继承者通常还需要：
+`LOVE20ExtensionBaseRewardJoin` 已提供 join/exit 的完整实现；继承者通常还需要：
 
 - 实现 `IExtensionJoinedValue` 三个函数，用于定义“参与价值”的统计口径
 - 实现奖励分配逻辑（直接实现 `_calculateReward`，或再组合更高层的奖励模板）

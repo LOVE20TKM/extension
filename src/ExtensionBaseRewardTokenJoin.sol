@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionBase} from "./ExtensionBase.sol";
+import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 import {ITokenJoin} from "./interface/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
@@ -15,7 +15,10 @@ import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 using SafeERC20 for IERC20;
 using RoundHistoryUint256 for RoundHistoryUint256.History;
 
-abstract contract ExtensionBaseTokenJoin is ExtensionBase, ITokenJoin {
+abstract contract ExtensionBaseRewardTokenJoin is
+    ExtensionBaseReward,
+    ITokenJoin
+{
     address public immutable joinTokenAddress;
 
     uint256 public immutable WAITING_BLOCKS;
@@ -39,7 +42,7 @@ abstract contract ExtensionBaseTokenJoin is ExtensionBase, ITokenJoin {
         address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
-    ) ExtensionBase(factory_, tokenAddress_) {
+    ) ExtensionBaseReward(factory_, tokenAddress_) {
         if (joinTokenAddress_ == address(0)) {
             revert InvalidJoinTokenAddress();
         }

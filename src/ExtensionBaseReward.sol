@@ -11,7 +11,11 @@ import {
     ReentrancyGuard
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-abstract contract ExtensionBase is ExtensionCore, IReward, ReentrancyGuard {
+abstract contract ExtensionBaseReward is
+    ExtensionCore,
+    IReward,
+    ReentrancyGuard
+{
     using SafeERC20 for IERC20;
 
     // round => account => claimedReward

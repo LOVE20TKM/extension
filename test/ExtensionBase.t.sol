@@ -2,9 +2,9 @@
 pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
-import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
+import {ExtensionBaseRewardJoin} from "../src/ExtensionBaseRewardJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
-import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
@@ -14,15 +14,15 @@ import {
 
 /**
  * @title MockExtensionForCore
- * @notice Mock extension for testing ExtensionBase
+ * @notice Mock extension for testing ExtensionBaseReward
  */
-contract MockExtensionForCore is ExtensionBaseJoin {
+contract MockExtensionForCore is ExtensionBaseRewardJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionBaseJoin(factory_, tokenAddress_) {}
+    ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueConverted()
         external
@@ -54,7 +54,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(ExtensionBaseReward)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -72,7 +72,7 @@ contract MockExtensionForCore is ExtensionBaseJoin {
  * @title MockExtensionForReward
  * @notice Mock extension for testing ExtensionReward
  */
-contract MockExtensionForReward is ExtensionBaseJoin {
+contract MockExtensionForReward is ExtensionBaseRewardJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // Configurable reward calculation
@@ -83,7 +83,7 @@ contract MockExtensionForReward is ExtensionBaseJoin {
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionBaseJoin(factory_, tokenAddress_) {}
+    ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueConverted()
         external
@@ -155,8 +155,8 @@ contract MockExtensionForReward is ExtensionBaseJoin {
 }
 
 /**
- * @title ExtensionBaseTest
- * @notice Test suite for ExtensionBase
+ * @title ExtensionBaseRewardTest
+ * @notice Test suite for ExtensionBaseReward
  * @dev Tests constructor, initialization, view functions, and reward claiming
  */
 contract ExtensionBaseTest is BaseExtensionTest {

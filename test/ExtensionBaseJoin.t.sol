@@ -2,10 +2,10 @@
 pragma solidity =0.8.17;
 
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
-import {ExtensionBaseJoin} from "../src/ExtensionBaseJoin.sol";
+import {ExtensionBaseRewardJoin} from "../src/ExtensionBaseRewardJoin.sol";
 import {IJoin} from "../src/interface/IJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
-import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionCore} from "../src/ExtensionCore.sol";
 import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
@@ -17,13 +17,13 @@ import {
  * @title MockExtensionForJoin
  * @notice Mock extension for testing Join
  */
-contract MockExtensionForJoin is ExtensionBaseJoin {
+contract MockExtensionForJoin is ExtensionBaseRewardJoin {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionBaseJoin(factory_, tokenAddress_) {}
+    ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
     function isJoinedValueConverted()
         external
@@ -56,7 +56,7 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
     )
         public
         pure
-        override(ExtensionBase)
+        override(ExtensionBaseReward)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);
@@ -71,8 +71,8 @@ contract MockExtensionForJoin is ExtensionBaseJoin {
 }
 
 /**
- * @title ExtensionBaseJoinTest
- * @notice Test suite for ExtensionBaseJoin
+ * @title ExtensionBaseRewardJoinTest
+ * @notice Test suite for ExtensionBaseRewardJoin
  * @dev Tests join, exit, and verification info integration
  */
 contract ExtensionBaseJoinTest is BaseExtensionTest {

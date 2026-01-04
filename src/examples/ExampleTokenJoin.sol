@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionBaseTokenJoin} from "../ExtensionBaseTokenJoin.sol";
+import {
+    ExtensionBaseRewardTokenJoin
+} from "../ExtensionBaseRewardTokenJoin.sol";
 import {ExtensionCore} from "../ExtensionCore.sol";
 import {IExtensionCore} from "../interface/IExtensionCore.sol";
 import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
 
 using RoundHistoryUint256 for RoundHistoryUint256.History;
 
-contract ExampleTokenJoin is ExtensionBaseTokenJoin {
+contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
     constructor(
         address factory_,
         address tokenAddress_,
         address joinTokenAddress_,
         uint256 waitingBlocks_
     )
-        ExtensionBaseTokenJoin(
+        ExtensionBaseRewardTokenJoin(
             factory_,
             tokenAddress_,
             joinTokenAddress_,

@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {IReward} from "../../src/interface/IReward.sol";
-import {ExtensionBase} from "../../src/ExtensionBase.sol";
+import {ExtensionBaseReward} from "../../src/ExtensionBaseReward.sol";
 import {ExtensionCore} from "../../src/ExtensionCore.sol";
 import {IExtensionCore} from "../../src/interface/IExtensionCore.sol";
 
@@ -10,11 +10,11 @@ import {IExtensionCore} from "../../src/interface/IExtensionCore.sol";
  * @title MockExtension
  * @dev Mock Extension contract for unit testing
  */
-contract MockExtension is ExtensionBase {
+contract MockExtension is ExtensionBaseReward {
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionBase(factory_, tokenAddress_) {}
+    ) ExtensionBaseReward(factory_, tokenAddress_) {}
 
     /// @dev Test helper to simulate initialization without going through _doInitialize
     function mockInitialize(uint256 actionId_) external {
@@ -52,7 +52,7 @@ contract MockExtension is ExtensionBase {
     )
         public
         pure
-        override(ExtensionBase)
+        override(ExtensionBaseReward)
         returns (uint256 reward, bool isMinted)
     {
         return (0, false);

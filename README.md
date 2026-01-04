@@ -12,7 +12,7 @@ LOVE20 默认的行动激励方式不能满足行动的要求时，可以开发�
 
 在本仓库约定下，具体扩展协议合约应当至少具备一种“加入/退出”机制（面向用户的参与入口），因此：
 
-- 推荐：继承 `LOVE20ExtensionBaseJoin`（免代币参与）或 `LOVE20ExtensionBaseTokenJoin`（ERC20 参与），以及其更高层组合（例如 AutoScore 版本）
+- 推荐：继承 `LOVE20ExtensionBaseRewardJoin`（免代币参与）或 `LOVE20ExtensionBaseRewardTokenJoin`（ERC20 参与），以及其更高层组合（例如 AutoScore 版本）
 - 不建议：自行从更底层基类“拼装继承链”，导致参与入口、参与者集合与后续验证/分配流程不一致
 
 ## 2. 部署工厂合约

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionBase} from "./ExtensionBase.sol";
+import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 import {IJoin} from "./interface/IJoin.sol";
 
-abstract contract ExtensionBaseJoin is ExtensionBase, IJoin {
+abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     // account => joinedRound
     mapping(address => uint256) internal _joinedRound;
 
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionBase(factory_, tokenAddress_) {}
+    ) ExtensionBaseReward(factory_, tokenAddress_) {}
 
     function joinInfo(
         address account
