@@ -18,6 +18,9 @@ abstract contract ExtensionBaseReward is
 {
     using SafeERC20 for IERC20;
 
+    // round => reward
+    mapping(uint256 => uint256) internal _reward;
+
     // round => account => claimedReward
     mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
 
@@ -63,10 +66,17 @@ abstract contract ExtensionBaseReward is
         return expectedReward;
     }
 
-    function _calculateReward(
-        uint256 round,
-        address account
-    ) internal view virtual returns (uint256);
+    function _prepareRewardIfNeeded(uint256 round) internal virtual {
+        if (_reward[round] > 0) {
+            return;
+        }
+        uint256 totalActionReward = _mint.mintActionReward(
+            TOKEN_ADDRESS,
+            round,
+            actionId
+        );
+        _reward[round] = totalActionReward;
+    }
 
     function _claimReward(
         uint256 round
@@ -76,12 +86,25 @@ abstract contract ExtensionBaseReward is
         if (isMinted) {
             revert AlreadyClaimed();
         }
-        _claimedReward[round][msg.sender] = amount;
 
-        if (amount > 0) {
-            IERC20(TOKEN_ADDRESS).safeTransfer(msg.sender, amount);
+        if (amount == 0) {
+            return 0;
         }
 
-        emit ClaimReward(TOKEN_ADDRESS, round, actionId, msg.sender, amount);
+        _claimedReward[round][msg.sender] = amount;
+        IERC20(TOKEN_ADDRESS).safeTransfer({to: msg.sender, value: amount});
+        emit ClaimReward({
+            tokenAddress: TOKEN_ADDRESS,
+            round: round,
+            actionId: actionId,
+            account: msg.sender,
+            amount: amount
+        });
+        return amount;
     }
+
+    function _calculateReward(
+        uint256 round,
+        address account
+    ) internal view virtual returns (uint256);
 }

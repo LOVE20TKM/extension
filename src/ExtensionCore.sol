@@ -33,10 +33,6 @@ abstract contract ExtensionCore is IExtensionCore {
     ILOVE20Join internal immutable _join;
     ILOVE20Verify internal immutable _verify;
     ILOVE20Mint internal immutable _mint;
-
-    // round => reward
-    mapping(uint256 => uint256) internal _reward;
-
     constructor(address factory_, address tokenAddress_) {
         if (tokenAddress_ == address(0)) {
             revert InvalidTokenAddress();
@@ -94,18 +90,6 @@ abstract contract ExtensionCore is IExtensionCore {
         }
         if (!found) revert ActionIdNotFound();
         return foundActionId;
-    }
-
-    function _prepareRewardIfNeeded(uint256 round) internal virtual {
-        if (_reward[round] > 0) {
-            return;
-        }
-        uint256 totalActionReward = _mint.mintActionReward(
-            TOKEN_ADDRESS,
-            round,
-            actionId
-        );
-        _reward[round] = totalActionReward;
     }
 
     function isJoinedValueConverted() external view virtual returns (bool);
