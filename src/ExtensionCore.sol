@@ -48,7 +48,7 @@ abstract contract ExtensionCore is IExtensionCore {
         _mint = ILOVE20Mint(_center.mintAddress());
     }
 
-    function initializeIfNeeded() external {
+    function initializeIfNeeded() public virtual {
         if (initialized) return;
 
         actionId = _findMatchingActionId();

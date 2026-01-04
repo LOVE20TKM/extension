@@ -19,7 +19,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
     ExtensionBaseReward,
     ITokenJoin
 {
-    address public immutable joinTokenAddress;
+    address public immutable JOIN_TOKEN_ADDRESS;
 
     uint256 public immutable WAITING_BLOCKS;
 
@@ -46,7 +46,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         if (joinTokenAddress_ == address(0)) {
             revert InvalidJoinTokenAddress();
         }
-        joinTokenAddress = joinTokenAddress_;
+        JOIN_TOKEN_ADDRESS = joinTokenAddress_;
         WAITING_BLOCKS = waitingBlocks_;
         _joinToken = IERC20(joinTokenAddress_);
     }
@@ -100,7 +100,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
     function exit() public virtual nonReentrant {
         uint256 joinedBlock = _joinedBlockByAccount[msg.sender];
         if (joinedBlock == 0) {
-            revert NoJoinedAmount();
+            revert NotJoined();
         }
         if (block.number < joinedBlock + WAITING_BLOCKS) {
             revert NotEnoughWaitingBlocks();

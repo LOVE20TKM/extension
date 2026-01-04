@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 interface ITokenJoin {
     error InvalidJoinTokenAddress();
     error JoinAmountZero();
-    error NoJoinedAmount();
+    error NotJoined();
     error NotEnoughWaitingBlocks();
 
     event Join(
@@ -23,7 +23,7 @@ interface ITokenJoin {
         uint256 amount
     );
 
-    function joinTokenAddress() external view returns (address);
+    function JOIN_TOKEN_ADDRESS() external view returns (address);
 
     function WAITING_BLOCKS() external view returns (uint256);
 

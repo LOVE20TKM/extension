@@ -139,7 +139,7 @@ contract ExampleTokenJoinTest is Test {
     // ============================================
 
     function test_ImmutableVariables() public view {
-        assertEq(extension.joinTokenAddress(), address(joinToken));
+        assertEq(extension.JOIN_TOKEN_ADDRESS(), address(joinToken));
         assertEq(extension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertTrue(extension.FACTORY_ADDRESS() != address(0));
     }
@@ -298,7 +298,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NoJoinedAmount.selector);
+        vm.expectRevert(ITokenJoin.NotJoined.selector);
         extension.exit();
     }
 

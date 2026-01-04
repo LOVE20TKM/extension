@@ -96,7 +96,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
 
         ExampleTokenJoin exampleExtension = ExampleTokenJoin(extension);
         assertEq(exampleExtension.TOKEN_ADDRESS(), address(token));
-        assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
+        assertEq(exampleExtension.JOIN_TOKEN_ADDRESS(), address(joinToken));
         assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertEq(exampleExtension.FACTORY_ADDRESS(), address(factory));
     }
@@ -217,7 +217,7 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
 
         // Verify extension is properly initialized
         assertEq(exampleExtension.TOKEN_ADDRESS(), address(token));
-        assertEq(exampleExtension.joinTokenAddress(), address(joinToken));
+        assertEq(exampleExtension.JOIN_TOKEN_ADDRESS(), address(joinToken));
         assertEq(exampleExtension.WAITING_BLOCKS(), WAITING_BLOCKS);
         assertEq(exampleExtension.FACTORY_ADDRESS(), address(factory));
 

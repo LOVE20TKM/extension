@@ -20,9 +20,7 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     }
 
     function join(string[] memory verificationInfos) public virtual {
-        if (!initialized) {
-            this.initializeIfNeeded();
-        }
+        initializeIfNeeded();
 
         if (_joinedRound[msg.sender] != 0) {
             revert AlreadyJoined();
@@ -37,7 +35,12 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
             verificationInfos
         );
 
-        emit Join(TOKEN_ADDRESS, _join.currentRound(), actionId, msg.sender);
+        emit Join({
+            tokenAddress: TOKEN_ADDRESS,
+            round: _join.currentRound(),
+            actionId: actionId,
+            account: msg.sender
+        });
     }
 
     function exit() public virtual {
@@ -49,6 +52,11 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
 
         _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 
-        emit Exit(TOKEN_ADDRESS, _join.currentRound(), actionId, msg.sender);
+        emit Exit({
+            tokenAddress: TOKEN_ADDRESS,
+            round: _join.currentRound(),
+            actionId: actionId,
+            account: msg.sender
+        });
     }
 }
