@@ -53,5 +53,6 @@ abstract contract ExtensionFactoryBase is IExtensionFactory {
             extension,
             DEFAULT_JOIN_AMOUNT
         );
+        emit ExtensionCreate(extension, tokenAddress);
     }
 }
