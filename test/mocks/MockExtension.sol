@@ -3,8 +3,8 @@ pragma solidity =0.8.17;
 
 import {IReward} from "../../src/interface/IReward.sol";
 import {ExtensionBaseReward} from "../../src/ExtensionBaseReward.sol";
-import {ExtensionCore} from "../../src/ExtensionCore.sol";
-import {IExtensionCore} from "../../src/interface/IExtensionCore.sol";
+import {ExtensionBase} from "../../src/ExtensionBase.sol";
+import {IExtension} from "../../src/interface/IExtension.sol";
 
 /**
  * @title MockExtension
@@ -25,7 +25,7 @@ contract MockExtension is ExtensionBaseReward {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore)
+        override(ExtensionBase)
         returns (bool)
     {
         return true;
@@ -34,7 +34,7 @@ contract MockExtension is ExtensionBaseReward {
     function joinedValue()
         external
         pure
-        override(ExtensionCore)
+        override(ExtensionBase)
         returns (uint256)
     {
         return 0;
@@ -42,7 +42,7 @@ contract MockExtension is ExtensionBaseReward {
 
     function joinedValueByAccount(
         address /*account*/
-    ) external pure override(ExtensionCore) returns (uint256) {
+    ) external pure override(ExtensionBase) returns (uint256) {
         return 0;
     }
 

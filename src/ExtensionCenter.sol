@@ -12,7 +12,7 @@ import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
 import {AccountListHistory} from "./lib/AccountListHistory.sol";
 import {IExtensionFactory} from "./interface/IExtensionFactory.sol";
-import {IExtensionCore} from "./interface/IExtensionCore.sol";
+import {IExtension} from "./interface/IExtension.sol";
 
 contract ExtensionCenter is IExtensionCenter {
     using RoundHistoryString for RoundHistoryString.History;
@@ -393,7 +393,7 @@ contract ExtensionCenter is IExtensionCenter {
     function _getValidFactory(
         address extensionAddress
     ) internal view returns (address factoryAddress) {
-        try IExtensionCore(extensionAddress).FACTORY_ADDRESS() returns (
+        try IExtension(extensionAddress).FACTORY_ADDRESS() returns (
             address factory_
         ) {
             if (factory_ == address(0)) {

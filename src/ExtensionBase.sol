@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {IExtensionCenter} from "./interface/IExtensionCenter.sol";
-import {IExtensionCore} from "./interface/IExtensionCore.sol";
+import {IExtension} from "./interface/IExtension.sol";
 import {
     IExtensionFactory,
     DEFAULT_JOIN_AMOUNT
@@ -17,7 +17,7 @@ import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 
-abstract contract ExtensionCore is IExtensionCore {
+abstract contract ExtensionBase is IExtension {
     using SafeERC20 for IERC20;
 
     address public immutable CENTER_ADDRESS;

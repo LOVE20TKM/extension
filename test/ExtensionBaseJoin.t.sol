@@ -6,8 +6,8 @@ import {ExtensionBaseRewardJoin} from "../src/ExtensionBaseRewardJoin.sol";
 import {IJoin} from "../src/interface/IJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
-import {ExtensionCore} from "../src/ExtensionCore.sol";
-import {IExtensionCore} from "../src/interface/IExtensionCore.sol";
+import {ExtensionBase} from "../src/ExtensionBase.sol";
+import {IExtension} from "../src/interface/IExtension.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
@@ -28,7 +28,7 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
     function isJoinedValueConverted()
         external
         pure
-        override(ExtensionCore)
+        override(ExtensionBase)
         returns (bool)
     {
         return true;
@@ -37,7 +37,7 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
     function joinedValue()
         external
         view
-        override(ExtensionCore)
+        override(ExtensionBase)
         returns (uint256)
     {
         return _center.accountsCount(TOKEN_ADDRESS, actionId);
@@ -45,7 +45,7 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
 
     function joinedValueByAccount(
         address account
-    ) external view override(ExtensionCore) returns (uint256) {
+    ) external view override(ExtensionBase) returns (uint256) {
         return
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
     }

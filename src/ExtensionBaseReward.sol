@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {IReward} from "./interface/IReward.sol";
-import {ExtensionCore} from "./ExtensionCore.sol";
+import {ExtensionBase} from "./ExtensionBase.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
@@ -12,7 +12,7 @@ import {
 } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 abstract contract ExtensionBaseReward is
-    ExtensionCore,
+    ExtensionBase,
     IReward,
     ReentrancyGuard
 {
@@ -27,7 +27,7 @@ abstract contract ExtensionBaseReward is
     constructor(
         address factory_,
         address tokenAddress_
-    ) ExtensionCore(factory_, tokenAddress_) {}
+    ) ExtensionBase(factory_, tokenAddress_) {}
 
     function claimReward(
         uint256 round

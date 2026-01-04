@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-interface IExtensionCore {
+interface IExtension {
     error AlreadyInitialized();
     error InvalidTokenAddress();
     error ActionIdNotFound();
