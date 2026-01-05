@@ -32,6 +32,14 @@ contract MockRoundHistoryUint256Consumer {
     function changeRoundAt(uint256 index) external view returns (uint256) {
         return _history.changeRounds[index];
     }
+
+    function increase(uint256 round, uint256 increaseValue) external {
+        _history.increase(round, increaseValue);
+    }
+
+    function decrease(uint256 round, uint256 decreaseValue) external {
+        _history.decrease(round, decreaseValue);
+    }
 }
 
 /**
@@ -268,5 +276,212 @@ contract RoundHistoryUint256Test is Test {
         assertTrue(gas1 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas2 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
+    }
+
+    // ============================================
+    // Increase Tests
+    // ============================================
+
+    function test_Increase_FromEmptyHistory() public {
+        consumer.increase(1, 100);
+
+        assertEq(consumer.changeRoundsLength(), 1);
+        assertEq(consumer.changeRoundAt(0), 1);
+        assertEq(consumer.value(1), 100);
+    }
+
+    function test_Increase_OnExistingValue() public {
+        consumer.record(1, 100);
+        consumer.increase(2, 50);
+
+        assertEq(consumer.changeRoundsLength(), 2);
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 150);
+    }
+
+    function test_Increase_SameRoundMultipleTimes() public {
+        consumer.increase(5, 100);
+        consumer.increase(5, 50);
+        consumer.increase(5, 25);
+
+        assertEq(consumer.changeRoundsLength(), 1);
+        assertEq(consumer.changeRoundAt(0), 5);
+        assertEq(consumer.value(5), 175);
+    }
+
+    function test_Increase_MultipleRounds() public {
+        consumer.record(1, 100);
+        consumer.increase(5, 50);
+        consumer.increase(10, 30);
+
+        assertEq(consumer.changeRoundsLength(), 3);
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(5), 150);
+        assertEq(consumer.value(10), 180);
+    }
+
+    function test_Increase_ZeroValue() public {
+        consumer.record(1, 100);
+        consumer.increase(2, 0);
+
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 100);
+        assertEq(consumer.changeRoundsLength(), 2);
+    }
+
+    function test_Increase_LargeValue() public {
+        consumer.record(1, 1000);
+        consumer.increase(2, type(uint256).max - 1000);
+
+        assertEq(consumer.value(2), type(uint256).max);
+    }
+
+    function test_Increase_OnPreviousRoundValue() public {
+        consumer.record(5, 100);
+        consumer.record(10, 200);
+
+        // Increase at round 15, should use value from round 10 (200)
+        consumer.increase(15, 50);
+
+        assertEq(consumer.value(15), 250);
+        assertEq(consumer.changeRoundsLength(), 3);
+    }
+
+    function test_Increase_InvalidRound_Reverts() public {
+        consumer.record(10, 100);
+
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.increase(5, 50);
+    }
+
+    // ============================================
+    // Decrease Tests
+    // ============================================
+
+    function test_Decrease_OnExistingValue() public {
+        consumer.record(1, 100);
+        consumer.decrease(2, 30);
+
+        assertEq(consumer.changeRoundsLength(), 2);
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 70);
+    }
+
+    function test_Decrease_SameRoundMultipleTimes() public {
+        consumer.record(5, 200);
+        consumer.decrease(5, 50);
+        consumer.decrease(5, 30);
+        consumer.decrease(5, 20);
+
+        assertEq(consumer.changeRoundsLength(), 1);
+        assertEq(consumer.changeRoundAt(0), 5);
+        assertEq(consumer.value(5), 100);
+    }
+
+    function test_Decrease_ToZero() public {
+        consumer.record(1, 100);
+        consumer.decrease(2, 100);
+
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 0);
+        assertEq(consumer.changeRoundsLength(), 2);
+    }
+
+    function test_Decrease_ZeroValue() public {
+        consumer.record(1, 100);
+        consumer.decrease(2, 0);
+
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 100);
+        assertEq(consumer.changeRoundsLength(), 2);
+    }
+
+    function test_Decrease_MultipleRounds() public {
+        consumer.record(1, 200);
+        consumer.decrease(5, 50);
+        consumer.decrease(10, 30);
+
+        assertEq(consumer.changeRoundsLength(), 3);
+        assertEq(consumer.value(1), 200);
+        assertEq(consumer.value(5), 150);
+        assertEq(consumer.value(10), 120);
+    }
+
+    function test_Decrease_OnPreviousRoundValue() public {
+        consumer.record(5, 200);
+        consumer.record(10, 300);
+
+        // Decrease at round 15, should use value from round 10 (300)
+        consumer.decrease(15, 50);
+
+        assertEq(consumer.value(15), 250);
+        assertEq(consumer.changeRoundsLength(), 3);
+    }
+
+    function test_Decrease_FromEmptyHistory_Reverts() public {
+        // Decreasing from empty history (value = 0) will cause underflow
+        vm.expectRevert();
+        consumer.decrease(1, 100);
+    }
+
+    function test_Decrease_ExceedsCurrentValue_Reverts() public {
+        consumer.record(1, 100);
+
+        // Try to decrease more than current value
+        vm.expectRevert();
+        consumer.decrease(2, 150);
+    }
+
+    function test_Decrease_InvalidRound_Reverts() public {
+        consumer.record(5, 100);
+        consumer.record(10, 200);
+
+        // Round 7 is between recorded rounds, value(7) returns 100
+        // But round 7 < last round 10, so record will revert InvalidRound
+        vm.expectRevert(RoundHistoryUint256.InvalidRound.selector);
+        consumer.decrease(7, 50);
+    }
+
+    function test_Decrease_BeforeFirstRound_Reverts() public {
+        consumer.record(10, 100);
+
+        // Round 5 is before first round, value(5) returns 0
+        // 0 - 50 causes underflow revert before InvalidRound check
+        vm.expectRevert();
+        consumer.decrease(5, 50);
+    }
+
+    // ============================================
+    // Increase and Decrease Combined Tests
+    // ============================================
+
+    function test_IncreaseThenDecrease() public {
+        consumer.record(1, 100);
+        consumer.increase(2, 50);
+        consumer.decrease(3, 30);
+
+        assertEq(consumer.value(1), 100);
+        assertEq(consumer.value(2), 150);
+        assertEq(consumer.value(3), 120);
+    }
+
+    function test_DecreaseThenIncrease() public {
+        consumer.record(1, 200);
+        consumer.decrease(2, 50);
+        consumer.increase(3, 30);
+
+        assertEq(consumer.value(1), 200);
+        assertEq(consumer.value(2), 150);
+        assertEq(consumer.value(3), 180);
+    }
+
+    function test_IncreaseAndDecrease_SameRound() public {
+        consumer.record(1, 100);
+        consumer.increase(5, 50);
+        consumer.decrease(5, 20);
+        consumer.increase(5, 10);
+
+        assertEq(consumer.value(5), 140);
+        assertEq(consumer.changeRoundsLength(), 2);
     }
 }

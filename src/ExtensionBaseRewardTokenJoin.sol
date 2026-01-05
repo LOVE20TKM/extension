@@ -69,10 +69,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
             _amountHistoryByAccount[msg.sender].latestValue() + amount
         );
 
-        _totalJoinedAmountHistory.record(
-            currentRound,
-            _totalJoinedAmountHistory.latestValue() + amount
-        );
+        _totalJoinedAmountHistory.increase(currentRound, amount);
 
         _joinedBlockByAccount[msg.sender] = block.number;
 
@@ -117,10 +114,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         uint256 currentRound = _join.currentRound();
 
         _amountHistoryByAccount[msg.sender].record(currentRound, 0);
-        _totalJoinedAmountHistory.record(
-            currentRound,
-            _totalJoinedAmountHistory.latestValue() - amount
-        );
+        _totalJoinedAmountHistory.decrease(currentRound, amount);
         delete _joinedRoundByAccount[msg.sender];
         delete _joinedBlockByAccount[msg.sender];
 

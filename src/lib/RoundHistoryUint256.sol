@@ -53,4 +53,20 @@ library RoundHistoryUint256 {
         uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
         return self.valueByRound[latestRound];
     }
+
+    function increase(
+        History storage self,
+        uint256 round,
+        uint256 increaseValue
+    ) internal {
+        record(self, round, value(self, round) + increaseValue);
+    }
+
+    function decrease(
+        History storage self,
+        uint256 round,
+        uint256 decreaseValue
+    ) internal {
+        record(self, round, value(self, round) - decreaseValue);
+    }
 }
