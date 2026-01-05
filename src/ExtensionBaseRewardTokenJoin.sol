@@ -64,10 +64,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         uint256 currentRound = _join.currentRound();
         bool isFirstJoin = _joinedBlockByAccount[msg.sender] == 0;
 
-        _amountHistoryByAccount[msg.sender].record(
-            currentRound,
-            _amountHistoryByAccount[msg.sender].latestValue() + amount
-        );
+        _amountHistoryByAccount[msg.sender].increase(currentRound, amount);
 
         _totalJoinedAmountHistory.increase(currentRound, amount);
 
