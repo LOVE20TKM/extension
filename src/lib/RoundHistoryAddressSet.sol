@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 import {RoundHistoryUint256} from "./RoundHistoryUint256.sol";
 import {RoundHistoryAddress} from "./RoundHistoryAddress.sol";
 
-library AccountListHistory {
+library RoundHistoryAddressSet {
     using RoundHistoryUint256 for RoundHistoryUint256.History;
     using RoundHistoryAddress for RoundHistoryAddress.History;
 

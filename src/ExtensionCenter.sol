@@ -10,13 +10,13 @@ import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ArrayUtils} from "@core/lib/ArrayUtils.sol";
 import {RoundHistoryString} from "./lib/RoundHistoryString.sol";
-import {AccountListHistory} from "./lib/AccountListHistory.sol";
+import {RoundHistoryAddressSet} from "./lib/RoundHistoryAddressSet.sol";
 import {IExtensionFactory} from "./interface/IExtensionFactory.sol";
 import {IExtension} from "./interface/IExtension.sol";
 
 contract ExtensionCenter is IExtensionCenter {
     using RoundHistoryString for RoundHistoryString.History;
-    using AccountListHistory for AccountListHistory.Storage;
+    using RoundHistoryAddressSet for RoundHistoryAddressSet.Storage;
 
     address public immutable uniswapV2FactoryAddress;
     address public immutable launchAddress;
@@ -32,8 +32,8 @@ contract ExtensionCenter is IExtensionCenter {
     mapping(address => mapping(address => uint256[]))
         internal _actionIdsByAccount;
 
-    // tokenAddress => actionId => AccountListHistory.Storage
-    mapping(address => mapping(uint256 => AccountListHistory.Storage))
+    // tokenAddress => actionId => RoundHistoryAddressSet.Storage
+    mapping(address => mapping(uint256 => RoundHistoryAddressSet.Storage))
         internal _accountListHistory;
 
     // tokenAddress => actionId => account => verificationKey => verificationInfo

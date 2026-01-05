@@ -2,16 +2,16 @@
 pragma solidity =0.8.17;
 
 import "forge-std/Test.sol";
-import {AccountListHistory} from "../../src/lib/AccountListHistory.sol";
+import {RoundHistoryAddressSet} from "../../src/lib/RoundHistoryAddressSet.sol";
 
-using AccountListHistory for AccountListHistory.Storage;
+using RoundHistoryAddressSet for RoundHistoryAddressSet.Storage;
 
 /**
  * @title MockAccountListHistoryConsumer
- * @notice Mock contract to test AccountListHistory library
+ * @notice Mock contract to test RoundHistoryAddressSet library
  */
 contract MockAccountListHistoryConsumer {
-    mapping(address => mapping(uint256 => AccountListHistory.Storage))
+    mapping(address => mapping(uint256 => RoundHistoryAddressSet.Storage))
         internal _storage;
 
     function addAccount(
@@ -103,7 +103,7 @@ contract MockAccountListHistoryConsumer {
 
 /**
  * @title AccountListHistoryTest
- * @notice Test suite for AccountListHistory library
+ * @notice Test suite for RoundHistoryAddressSet library
  */
 contract AccountListHistoryTest is Test {
     MockAccountListHistoryConsumer public consumer;
