@@ -7,10 +7,10 @@ import {RoundHistoryAddressSet} from "../../src/lib/RoundHistoryAddressSet.sol";
 using RoundHistoryAddressSet for RoundHistoryAddressSet.Storage;
 
 /**
- * @title MockAccountListHistoryConsumer
+ * @title MockRoundHistoryAddressSetConsumer
  * @notice Mock contract to test RoundHistoryAddressSet library
  */
-contract MockAccountListHistoryConsumer {
+contract MockRoundHistoryAddressSetConsumer {
     mapping(address => mapping(uint256 => RoundHistoryAddressSet.Storage))
         internal _storage;
 
@@ -102,11 +102,11 @@ contract MockAccountListHistoryConsumer {
 }
 
 /**
- * @title AccountListHistoryTest
+ * @title RoundHistoryAddressSetTest
  * @notice Test suite for RoundHistoryAddressSet library
  */
-contract AccountListHistoryTest is Test {
-    MockAccountListHistoryConsumer public consumer;
+contract RoundHistoryAddressSetTest is Test {
+    MockRoundHistoryAddressSetConsumer public consumer;
 
     address public tokenAddress = address(0x2001);
     uint256 public actionId = 1;
@@ -118,7 +118,7 @@ contract AccountListHistoryTest is Test {
     address public account5 = address(0x1005);
 
     function setUp() public {
-        consumer = new MockAccountListHistoryConsumer();
+        consumer = new MockRoundHistoryAddressSetConsumer();
     }
 
     // ============================================
