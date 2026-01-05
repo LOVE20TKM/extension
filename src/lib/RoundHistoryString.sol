@@ -35,6 +35,17 @@ library RoundHistoryString {
         History storage self,
         uint256 round
     ) internal view returns (string memory) {
+        uint256 len = self.changeRounds.length;
+        if (len == 0) {
+            return "";
+        }
+
+        // Fast path: round >= latest round
+        uint256 latestRound = self.changeRounds[len - 1];
+        if (round >= latestRound) {
+            return self.valueByRound[latestRound];
+        }
+
         // Fast path: exact round match
         if (self.isRecorded[round]) {
             return self.valueByRound[round];
