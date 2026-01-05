@@ -11,7 +11,8 @@ using AccountListHistory for AccountListHistory.Storage;
  * @notice Mock contract to test AccountListHistory library
  */
 contract MockAccountListHistoryConsumer {
-    AccountListHistory.Storage internal _storage;
+    mapping(address => mapping(uint256 => AccountListHistory.Storage))
+        internal _storage;
 
     function addAccount(
         address tokenAddress,
@@ -19,7 +20,7 @@ contract MockAccountListHistoryConsumer {
         address account,
         uint256 currentRound
     ) external {
-        _storage.addAccount(tokenAddress, actionId, account, currentRound);
+        _storage[tokenAddress][actionId].addAccount(account, currentRound);
     }
 
     function removeAccount(
@@ -28,21 +29,21 @@ contract MockAccountListHistoryConsumer {
         address account,
         uint256 currentRound
     ) external {
-        _storage.removeAccount(tokenAddress, actionId, account, currentRound);
+        _storage[tokenAddress][actionId].removeAccount(account, currentRound);
     }
 
     function accounts(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address[] memory) {
-        return _storage.accounts(tokenAddress, actionId);
+        return _storage[tokenAddress][actionId].accounts();
     }
 
     function accountsCount(
         address tokenAddress,
         uint256 actionId
     ) external view returns (uint256) {
-        return _storage.accountsCount(tokenAddress, actionId);
+        return _storage[tokenAddress][actionId].accountsCount();
     }
 
     function accountsAtIndex(
@@ -50,7 +51,7 @@ contract MockAccountListHistoryConsumer {
         uint256 actionId,
         uint256 index
     ) external view returns (address) {
-        return _storage.accountsAtIndex(tokenAddress, actionId, index);
+        return _storage[tokenAddress][actionId].accountsAtIndex(index);
     }
 
     function accountsByRound(
@@ -58,7 +59,7 @@ contract MockAccountListHistoryConsumer {
         uint256 actionId,
         uint256 round
     ) external view returns (address[] memory) {
-        return _storage.accountsByRound(tokenAddress, actionId, round);
+        return _storage[tokenAddress][actionId].accountsByRound(round);
     }
 
     function accountsCountByRound(
@@ -66,7 +67,7 @@ contract MockAccountListHistoryConsumer {
         uint256 actionId,
         uint256 round
     ) external view returns (uint256) {
-        return _storage.accountsCountByRound(tokenAddress, actionId, round);
+        return _storage[tokenAddress][actionId].accountsCountByRound(round);
     }
 
     function accountsByRoundAtIndex(
@@ -76,9 +77,7 @@ contract MockAccountListHistoryConsumer {
         uint256 round
     ) external view returns (address) {
         return
-            _storage.accountsByRoundAtIndex(
-                tokenAddress,
-                actionId,
+            _storage[tokenAddress][actionId].accountsByRoundAtIndex(
                 index,
                 round
             );
@@ -89,7 +88,7 @@ contract MockAccountListHistoryConsumer {
         uint256 actionId,
         address account
     ) external view returns (bool) {
-        return _storage.contains(tokenAddress, actionId, account);
+        return _storage[tokenAddress][actionId].contains(account);
     }
 
     function containsByRound(
@@ -98,7 +97,7 @@ contract MockAccountListHistoryConsumer {
         address account,
         uint256 round
     ) external view returns (bool) {
-        return _storage.containsByRound(tokenAddress, actionId, account, round);
+        return _storage[tokenAddress][actionId].containsByRound(account, round);
     }
 }
 

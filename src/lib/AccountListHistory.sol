@@ -9,190 +9,128 @@ library AccountListHistory {
     using RoundHistoryAddress for RoundHistoryAddress.History;
 
     struct Storage {
-        // tokenAddress => actionId => accountCount
-        mapping(address => mapping(uint256 => RoundHistoryUint256.History)) accountsCountHistory;
-        // tokenAddress => actionId => accountIndex => account
-        mapping(address => mapping(uint256 => mapping(uint256 => RoundHistoryAddress.History))) accountsAtIndexHistory;
-        // tokenAddress => actionId => account => accountIndex
-        mapping(address => mapping(uint256 => mapping(address => RoundHistoryUint256.History))) accountsIndexHistory;
-        // tokenAddress => actionId => account => isJoined
-        mapping(address => mapping(uint256 => mapping(address => bool))) isAccountAdded;
+        RoundHistoryUint256.History accountsCountHistory;
+        mapping(uint256 => RoundHistoryAddress.History) accountsAtIndexHistory;
+        mapping(address => RoundHistoryUint256.History) accountsIndexHistory;
+        mapping(address => bool) isAccountAdded;
     }
 
     function addAccount(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         address account,
         uint256 currentRound
     ) internal {
-        if (self.isAccountAdded[tokenAddress][actionId][account]) {
+        if (self.isAccountAdded[account]) {
             return;
         }
 
-        uint256 accountCount = self
-            .accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
-        self
-            .accountsAtIndexHistory[tokenAddress][actionId][accountCount]
-            .record(currentRound, account);
-        self.accountsIndexHistory[tokenAddress][actionId][account].record(
-            currentRound,
-            accountCount
-        );
-        self.accountsCountHistory[tokenAddress][actionId].record(
-            currentRound,
-            accountCount + 1
-        );
-        self.isAccountAdded[tokenAddress][actionId][account] = true;
+        uint256 accountCount = self.accountsCountHistory.latestValue();
+        self.accountsAtIndexHistory[accountCount].record(currentRound, account);
+        self.accountsIndexHistory[account].record(currentRound, accountCount);
+        self.accountsCountHistory.record(currentRound, accountCount + 1);
+        self.isAccountAdded[account] = true;
     }
 
     function removeAccount(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         address account,
         uint256 currentRound
     ) internal {
-        uint256 count = self
-            .accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
+        uint256 count = self.accountsCountHistory.latestValue();
         if (count == 0) {
             return;
         }
 
-        if (!self.isAccountAdded[tokenAddress][actionId][account]) {
+        if (!self.isAccountAdded[account]) {
             return;
         }
 
-        uint256 index = self
-            .accountsIndexHistory[tokenAddress][actionId][account]
-            .latestValue();
+        uint256 index = self.accountsIndexHistory[account].latestValue();
         uint256 lastIndex = count - 1;
 
         if (index != lastIndex) {
             address lastAccount = self
-                .accountsAtIndexHistory[tokenAddress][actionId][lastIndex]
+                .accountsAtIndexHistory[lastIndex]
                 .latestValue();
-            self.accountsAtIndexHistory[tokenAddress][actionId][index].record(
+            self.accountsAtIndexHistory[index].record(
                 currentRound,
                 lastAccount
             );
-            self
-                .accountsIndexHistory[tokenAddress][actionId][lastAccount]
-                .record(currentRound, index);
+            self.accountsIndexHistory[lastAccount].record(currentRound, index);
         }
 
-        self.accountsAtIndexHistory[tokenAddress][actionId][lastIndex].record(
-            currentRound,
-            address(0)
-        );
-        self.accountsCountHistory[tokenAddress][actionId].record(
-            currentRound,
-            lastIndex
-        );
-        self.isAccountAdded[tokenAddress][actionId][account] = false;
+        self.accountsAtIndexHistory[lastIndex].record(currentRound, address(0));
+        self.accountsCountHistory.record(currentRound, lastIndex);
+        self.isAccountAdded[account] = false;
     }
 
     function contains(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         address account
     ) internal view returns (bool) {
-        return self.isAccountAdded[tokenAddress][actionId][account];
+        return self.isAccountAdded[account];
     }
 
     function containsByRound(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         address account,
         uint256 round
     ) internal view returns (bool) {
-        uint256 index = self
-            .accountsIndexHistory[tokenAddress][actionId][account]
-            .value(round);
-        address accountAtIndex = self
-            .accountsAtIndexHistory[tokenAddress][actionId][index]
-            .value(round);
+        uint256 index = self.accountsIndexHistory[account].value(round);
+        address accountAtIndex = self.accountsAtIndexHistory[index].value(
+            round
+        );
         return account == accountAtIndex;
     }
 
     function accounts(
-        Storage storage self,
-        address tokenAddress,
-        uint256 actionId
+        Storage storage self
     ) internal view returns (address[] memory) {
-        uint256 count = self
-            .accountsCountHistory[tokenAddress][actionId]
-            .latestValue();
+        uint256 count = self.accountsCountHistory.latestValue();
         address[] memory result = new address[](count);
         for (uint256 i = 0; i < count; i++) {
-            result[i] = self
-                .accountsAtIndexHistory[tokenAddress][actionId][i]
-                .latestValue();
+            result[i] = self.accountsAtIndexHistory[i].latestValue();
         }
         return result;
     }
 
     function accountsCount(
-        Storage storage self,
-        address tokenAddress,
-        uint256 actionId
+        Storage storage self
     ) internal view returns (uint256) {
-        return self.accountsCountHistory[tokenAddress][actionId].latestValue();
+        return self.accountsCountHistory.latestValue();
     }
 
     function accountsAtIndex(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         uint256 index
     ) internal view returns (address) {
-        return
-            self
-                .accountsAtIndexHistory[tokenAddress][actionId][index]
-                .latestValue();
+        return self.accountsAtIndexHistory[index].latestValue();
     }
 
     function accountsByRound(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         uint256 round
     ) internal view returns (address[] memory) {
-        uint256 count = self.accountsCountHistory[tokenAddress][actionId].value(
-            round
-        );
+        uint256 count = self.accountsCountHistory.value(round);
         address[] memory result = new address[](count);
         for (uint256 i = 0; i < count; i++) {
-            result[i] = self
-                .accountsAtIndexHistory[tokenAddress][actionId][i]
-                .value(round);
+            result[i] = self.accountsAtIndexHistory[i].value(round);
         }
         return result;
     }
 
     function accountsCountByRound(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         uint256 round
     ) internal view returns (uint256) {
-        return self.accountsCountHistory[tokenAddress][actionId].value(round);
+        return self.accountsCountHistory.value(round);
     }
 
     function accountsByRoundAtIndex(
         Storage storage self,
-        address tokenAddress,
-        uint256 actionId,
         uint256 index,
         uint256 round
     ) internal view returns (address) {
-        return
-            self.accountsAtIndexHistory[tokenAddress][actionId][index].value(
-                round
-            );
+        return self.accountsAtIndexHistory[index].value(round);
     }
 }
