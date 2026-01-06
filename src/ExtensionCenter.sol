@@ -186,7 +186,7 @@ contract ExtensionCenter is IExtensionCenter {
 
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
-        _accountsHistory[tokenAddress][actionId].add(account, currentRound);
+        _accountsHistory[tokenAddress][actionId].add(currentRound, account);
         _updateVerificationInfo(
             tokenAddress,
             actionId,
@@ -455,7 +455,7 @@ contract ExtensionCenter is IExtensionCenter {
 
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 
-        _accountsHistory[tokenAddress][actionId].remove(account, currentRound);
+        _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
         emit RemoveAccount(tokenAddress, actionId, account);
     }

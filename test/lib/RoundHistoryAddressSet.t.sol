@@ -20,7 +20,7 @@ contract MockRoundHistoryAddressSetConsumer {
         address account,
         uint256 currentRound
     ) external {
-        _storage[tokenAddress][actionId].add(account, currentRound);
+        _storage[tokenAddress][actionId].add(currentRound, account);
     }
 
     function remove(
@@ -29,7 +29,7 @@ contract MockRoundHistoryAddressSetConsumer {
         address account,
         uint256 currentRound
     ) external {
-        _storage[tokenAddress][actionId].remove(account, currentRound);
+        _storage[tokenAddress][actionId].remove(currentRound, account);
     }
 
     function values(

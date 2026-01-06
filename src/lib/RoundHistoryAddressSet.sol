@@ -17,24 +17,24 @@ library RoundHistoryAddressSet {
 
     function add(
         Storage storage self,
-        address account,
-        uint256 currentRound
+        uint256 round,
+        address account
     ) internal {
         if (self.isAccountAdded[account]) {
             return;
         }
 
         uint256 accountCount = self.accountsCountHistory.latestValue();
-        self.accountsAtIndexHistory[accountCount].record(currentRound, account);
-        self.accountsIndexHistory[account].record(currentRound, accountCount);
-        self.accountsCountHistory.record(currentRound, accountCount + 1);
+        self.accountsAtIndexHistory[accountCount].record(round, account);
+        self.accountsIndexHistory[account].record(round, accountCount);
+        self.accountsCountHistory.record(round, accountCount + 1);
         self.isAccountAdded[account] = true;
     }
 
     function remove(
         Storage storage self,
-        address account,
-        uint256 currentRound
+        uint256 round,
+        address account
     ) internal {
         uint256 totalCount = self.accountsCountHistory.latestValue();
         if (totalCount == 0) {
@@ -52,15 +52,12 @@ library RoundHistoryAddressSet {
             address lastAccount = self
                 .accountsAtIndexHistory[lastIndex]
                 .latestValue();
-            self.accountsAtIndexHistory[index].record(
-                currentRound,
-                lastAccount
-            );
-            self.accountsIndexHistory[lastAccount].record(currentRound, index);
+            self.accountsAtIndexHistory[index].record(round, lastAccount);
+            self.accountsIndexHistory[lastAccount].record(round, index);
         }
 
-        self.accountsAtIndexHistory[lastIndex].record(currentRound, address(0));
-        self.accountsCountHistory.record(currentRound, lastIndex);
+        self.accountsAtIndexHistory[lastIndex].record(round, address(0));
+        self.accountsCountHistory.record(round, lastIndex);
         self.isAccountAdded[account] = false;
     }
 
