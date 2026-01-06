@@ -14,73 +14,69 @@ contract MockRoundHistoryAddressSetConsumer {
     mapping(address => mapping(uint256 => RoundHistoryAddressSet.Storage))
         internal _storage;
 
-    function addAccount(
+    function add(
         address tokenAddress,
         uint256 actionId,
         address account,
         uint256 currentRound
     ) external {
-        _storage[tokenAddress][actionId].addAccount(account, currentRound);
+        _storage[tokenAddress][actionId].add(account, currentRound);
     }
 
-    function removeAccount(
+    function remove(
         address tokenAddress,
         uint256 actionId,
         address account,
         uint256 currentRound
     ) external {
-        _storage[tokenAddress][actionId].removeAccount(account, currentRound);
+        _storage[tokenAddress][actionId].remove(account, currentRound);
     }
 
-    function accounts(
+    function values(
         address tokenAddress,
         uint256 actionId
     ) external view returns (address[] memory) {
-        return _storage[tokenAddress][actionId].accounts();
+        return _storage[tokenAddress][actionId].values();
     }
 
-    function accountsCount(
+    function count(
         address tokenAddress,
         uint256 actionId
     ) external view returns (uint256) {
-        return _storage[tokenAddress][actionId].accountsCount();
+        return _storage[tokenAddress][actionId].count();
     }
 
-    function accountsAtIndex(
+    function atIndex(
         address tokenAddress,
         uint256 actionId,
         uint256 index
     ) external view returns (address) {
-        return _storage[tokenAddress][actionId].accountsAtIndex(index);
+        return _storage[tokenAddress][actionId].atIndex(index);
     }
 
-    function accountsByRound(
+    function valuesByRound(
         address tokenAddress,
         uint256 actionId,
         uint256 round
     ) external view returns (address[] memory) {
-        return _storage[tokenAddress][actionId].accountsByRound(round);
+        return _storage[tokenAddress][actionId].valuesByRound(round);
     }
 
-    function accountsCountByRound(
+    function countByRound(
         address tokenAddress,
         uint256 actionId,
         uint256 round
     ) external view returns (uint256) {
-        return _storage[tokenAddress][actionId].accountsCountByRound(round);
+        return _storage[tokenAddress][actionId].countByRound(round);
     }
 
-    function accountsByRoundAtIndex(
+    function atIndexByRound(
         address tokenAddress,
         uint256 actionId,
         uint256 index,
         uint256 round
     ) external view returns (address) {
-        return
-            _storage[tokenAddress][actionId].accountsByRoundAtIndex(
-                index,
-                round
-            );
+        return _storage[tokenAddress][actionId].atIndexByRound(index, round);
     }
 
     function contains(
@@ -126,22 +122,22 @@ contract RoundHistoryAddressSetTest is Test {
     // ============================================
 
     function test_AddAccount_SingleAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 1);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 1);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 1);
         assertEq(accounts[0], account1);
-        assertEq(consumer.accountsAtIndex(tokenAddress, actionId, 0), account1);
+        assertEq(consumer.atIndex(tokenAddress, actionId, 0), account1);
     }
 
     function test_AddAccount_MultipleAccounts() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 3);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 3);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 3);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account2);
@@ -149,15 +145,15 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_AddAccount_DifferentRounds() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 2);
-        consumer.addAccount(tokenAddress, actionId, account3, 3);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 2);
+        consumer.add(tokenAddress, actionId, account3, 3);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 3);
+        assertEq(consumer.count(tokenAddress, actionId), 3);
 
         // Check round 1
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 1), 1);
-        address[] memory round1Accounts = consumer.accountsByRound(
+        assertEq(consumer.countByRound(tokenAddress, actionId, 1), 1);
+        address[] memory round1Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             1
@@ -166,8 +162,8 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round1Accounts[0], account1);
 
         // Check round 2
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 2), 2);
-        address[] memory round2Accounts = consumer.accountsByRound(
+        assertEq(consumer.countByRound(tokenAddress, actionId, 2), 2);
+        address[] memory round2Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             2
@@ -177,12 +173,12 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round2Accounts[1], account2);
 
         // Check round 3
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 3), 3);
+        assertEq(consumer.countByRound(tokenAddress, actionId, 3), 3);
     }
 
     function test_AddAccount_EmptyList() public view {
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 0);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 0);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 0);
     }
 
@@ -191,68 +187,68 @@ contract RoundHistoryAddressSetTest is Test {
     // ============================================
 
     function test_RemoveAccount_SingleAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.remove(tokenAddress, actionId, account1, 2);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 0);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 0);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 0);
     }
 
     function test_RemoveAccount_LastAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account3, 2);
+        consumer.remove(tokenAddress, actionId, account3, 2);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 2);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 2);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account2);
     }
 
     function test_RemoveAccount_MiddleAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account2, 2);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 2);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 2);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account3);
     }
 
     function test_RemoveAccount_FirstAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account1, 2);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 2);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 2);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 2);
         assertEq(accounts[0], account3); // account3 swapped to index 0
         assertEq(accounts[1], account2);
     }
 
     function test_RemoveAccount_MultipleRemovals() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
-        consumer.addAccount(tokenAddress, actionId, account4, 1);
-        consumer.addAccount(tokenAddress, actionId, account5, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account4, 1);
+        consumer.add(tokenAddress, actionId, account5, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
-        consumer.removeAccount(tokenAddress, actionId, account4, 3);
+        consumer.remove(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account4, 3);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 3);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 3);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 3);
         assertEq(accounts[0], account1);
         assertEq(accounts[1], account5); // swapped from index 4
@@ -260,16 +256,16 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_RemoveAccount_HistoryPreserved() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
         // Remove in round 2
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account2, 2);
 
         // Round 1 should still have 3 accounts
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 1), 3);
-        address[] memory round1Accounts = consumer.accountsByRound(
+        assertEq(consumer.countByRound(tokenAddress, actionId, 1), 3);
+        address[] memory round1Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             1
@@ -280,8 +276,8 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round1Accounts[2], account3);
 
         // Round 2 should have 2 accounts
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 2), 2);
-        address[] memory round2Accounts = consumer.accountsByRound(
+        assertEq(consumer.countByRound(tokenAddress, actionId, 2), 2);
+        address[] memory round2Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             2
@@ -296,40 +292,37 @@ contract RoundHistoryAddressSetTest is Test {
     // ============================================
 
     function test_AccountsCount_Empty() public view {
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 0);
+        assertEq(consumer.count(tokenAddress, actionId), 0);
     }
 
     function test_Accounts_Empty() public view {
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 0);
     }
 
     function test_AccountsAtIndex_OutOfBounds() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
 
         // Should return address(0) for out of bounds
-        assertEq(
-            consumer.accountsAtIndex(tokenAddress, actionId, 1),
-            address(0)
-        );
+        assertEq(consumer.atIndex(tokenAddress, actionId, 1), address(0));
     }
 
     function test_AccountsByRound_Empty() public view {
-        address[] memory accounts = consumer.accountsByRound(
+        address[] memory accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             1
         );
         assertEq(accounts.length, 0);
-        assertEq(consumer.accountsCountByRound(tokenAddress, actionId, 1), 0);
+        assertEq(consumer.countByRound(tokenAddress, actionId, 1), 0);
     }
 
     function test_AccountsByRound_ExactRound() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 2);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 2);
 
-        address[] memory round1Accounts = consumer.accountsByRound(
+        address[] memory round1Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             1
@@ -338,7 +331,7 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round1Accounts[0], account1);
         assertEq(round1Accounts[1], account2);
 
-        address[] memory round2Accounts = consumer.accountsByRound(
+        address[] memory round2Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             2
@@ -350,12 +343,12 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_AccountsByRound_BetweenRounds() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 5);
-        consumer.addAccount(tokenAddress, actionId, account3, 10);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 5);
+        consumer.add(tokenAddress, actionId, account3, 10);
 
         // Query round 3 (between 1 and 5) should return round 1 state
-        address[] memory round3Accounts = consumer.accountsByRound(
+        address[] memory round3Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             3
@@ -364,7 +357,7 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round3Accounts[0], account1);
 
         // Query round 7 (between 5 and 10) should return round 5 state
-        address[] memory round7Accounts = consumer.accountsByRound(
+        address[] memory round7Accounts = consumer.valuesByRound(
             tokenAddress,
             actionId,
             7
@@ -375,24 +368,24 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_AccountsByRoundAtIndex() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 2);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 2);
 
         assertEq(
-            consumer.accountsByRoundAtIndex(tokenAddress, actionId, 0, 1),
+            consumer.atIndexByRound(tokenAddress, actionId, 0, 1),
             account1
         );
         assertEq(
-            consumer.accountsByRoundAtIndex(tokenAddress, actionId, 1, 1),
+            consumer.atIndexByRound(tokenAddress, actionId, 1, 1),
             account2
         );
         assertEq(
-            consumer.accountsByRoundAtIndex(tokenAddress, actionId, 0, 2),
+            consumer.atIndexByRound(tokenAddress, actionId, 0, 2),
             account1
         );
         assertEq(
-            consumer.accountsByRoundAtIndex(tokenAddress, actionId, 2, 2),
+            consumer.atIndexByRound(tokenAddress, actionId, 2, 2),
             account3
         );
     }
@@ -404,14 +397,14 @@ contract RoundHistoryAddressSetTest is Test {
     function test_MultipleTokenAddresses() public {
         address tokenAddress2 = address(0x2002);
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress2, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress2, actionId, account2, 1);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 1);
-        assertEq(consumer.accountsCount(tokenAddress2, actionId), 1);
+        assertEq(consumer.count(tokenAddress, actionId), 1);
+        assertEq(consumer.count(tokenAddress2, actionId), 1);
 
-        address[] memory accounts1 = consumer.accounts(tokenAddress, actionId);
-        address[] memory accounts2 = consumer.accounts(tokenAddress2, actionId);
+        address[] memory accounts1 = consumer.values(tokenAddress, actionId);
+        address[] memory accounts2 = consumer.values(tokenAddress2, actionId);
 
         assertEq(accounts1.length, 1);
         assertEq(accounts1[0], account1);
@@ -422,14 +415,14 @@ contract RoundHistoryAddressSetTest is Test {
     function test_MultipleActionIds() public {
         uint256 actionId2 = 2;
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId2, account2, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId2, account2, 1);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 1);
-        assertEq(consumer.accountsCount(tokenAddress, actionId2), 1);
+        assertEq(consumer.count(tokenAddress, actionId), 1);
+        assertEq(consumer.count(tokenAddress, actionId2), 1);
 
-        address[] memory accounts1 = consumer.accounts(tokenAddress, actionId);
-        address[] memory accounts2 = consumer.accounts(tokenAddress, actionId2);
+        address[] memory accounts1 = consumer.values(tokenAddress, actionId);
+        address[] memory accounts2 = consumer.values(tokenAddress, actionId2);
 
         assertEq(accounts1.length, 1);
         assertEq(accounts1[0], account1);
@@ -442,27 +435,27 @@ contract RoundHistoryAddressSetTest is Test {
     // ============================================
 
     function test_AddRemoveAdd_SameAccount() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
-        consumer.addAccount(tokenAddress, actionId, account1, 3);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.remove(tokenAddress, actionId, account1, 2);
+        consumer.add(tokenAddress, actionId, account1, 3);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 1);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 1);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 1);
         assertEq(accounts[0], account1);
     }
 
     function test_RemoveAllAccounts() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
-        consumer.removeAccount(tokenAddress, actionId, account3, 3);
-        consumer.removeAccount(tokenAddress, actionId, account2, 4);
+        consumer.remove(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account3, 3);
+        consumer.remove(tokenAddress, actionId, account2, 4);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), 0);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), 0);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, 0);
     }
 
@@ -472,11 +465,11 @@ contract RoundHistoryAddressSetTest is Test {
 
         for (uint256 i = 0; i < count; i++) {
             testAccounts[i] = address(uint160(0x3000 + i));
-            consumer.addAccount(tokenAddress, actionId, testAccounts[i], 1);
+            consumer.add(tokenAddress, actionId, testAccounts[i], 1);
         }
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), count);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), count);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
         assertEq(accounts.length, count);
 
         for (uint256 i = 0; i < count; i++) {
@@ -490,20 +483,15 @@ contract RoundHistoryAddressSetTest is Test {
 
         for (uint256 i = 0; i < count; i++) {
             testAccounts[i] = address(uint160(0x3000 + i));
-            consumer.addAccount(tokenAddress, actionId, testAccounts[i], 1);
+            consumer.add(tokenAddress, actionId, testAccounts[i], 1);
         }
 
         // Remove middle account
         uint256 removeIndex = 10;
-        consumer.removeAccount(
-            tokenAddress,
-            actionId,
-            testAccounts[removeIndex],
-            2
-        );
+        consumer.remove(tokenAddress, actionId, testAccounts[removeIndex], 2);
 
-        assertEq(consumer.accountsCount(tokenAddress, actionId), count - 1);
-        address[] memory accounts = consumer.accounts(tokenAddress, actionId);
+        assertEq(consumer.count(tokenAddress, actionId), count - 1);
+        address[] memory accounts = consumer.values(tokenAddress, actionId);
 
         // Last account should be swapped to removeIndex
         assertEq(accounts[removeIndex], testAccounts[count - 1]);
@@ -519,21 +507,21 @@ contract RoundHistoryAddressSetTest is Test {
 
     function test_Contains_AfterAdd() public {
         assertFalse(consumer.contains(tokenAddress, actionId, account1));
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
     }
 
     function test_Contains_AfterRemove() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account1, 2);
         assertFalse(consumer.contains(tokenAddress, actionId, account1));
     }
 
     function test_Contains_MultipleAccounts() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
         assertTrue(consumer.contains(tokenAddress, actionId, account2));
@@ -542,36 +530,36 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_Contains_AfterMultipleRemovals() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account2, 2);
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
         assertFalse(consumer.contains(tokenAddress, actionId, account2));
         assertTrue(consumer.contains(tokenAddress, actionId, account3));
 
-        consumer.removeAccount(tokenAddress, actionId, account1, 3);
+        consumer.remove(tokenAddress, actionId, account1, 3);
         assertFalse(consumer.contains(tokenAddress, actionId, account1));
         assertTrue(consumer.contains(tokenAddress, actionId, account3));
     }
 
     function test_Contains_AddRemoveAdd() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
 
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account1, 2);
         assertFalse(consumer.contains(tokenAddress, actionId, account1));
 
-        consumer.addAccount(tokenAddress, actionId, account1, 3);
+        consumer.add(tokenAddress, actionId, account1, 3);
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
     }
 
     function test_Contains_MultipleTokenAddresses() public {
         address tokenAddress2 = address(0x2002);
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress2, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress2, actionId, account1, 1);
 
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
         assertTrue(consumer.contains(tokenAddress2, actionId, account1));
@@ -581,8 +569,8 @@ contract RoundHistoryAddressSetTest is Test {
     function test_Contains_MultipleActionIds() public {
         uint256 actionId2 = 2;
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId2, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId2, account1, 1);
 
         assertTrue(consumer.contains(tokenAddress, actionId, account1));
         assertTrue(consumer.contains(tokenAddress, actionId2, account1));
@@ -600,18 +588,18 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_AfterAdd() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
         );
     }
 
     function test_ContainsByRound_AfterRemove() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
         );
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account1, 2);
         assertFalse(
             consumer.containsByRound(tokenAddress, actionId, account1, 2)
         );
@@ -621,9 +609,9 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_MultipleRounds() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 2);
-        consumer.addAccount(tokenAddress, actionId, account3, 3);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 2);
+        consumer.add(tokenAddress, actionId, account3, 3);
 
         // Round 1
         assertTrue(
@@ -660,12 +648,12 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_HistoryPreserved() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
 
         // Remove account2 in round 2
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account2, 2);
 
         // Round 1 should still contain account2
         assertTrue(
@@ -691,9 +679,9 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_BetweenRounds() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 5);
-        consumer.addAccount(tokenAddress, actionId, account3, 10);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 5);
+        consumer.add(tokenAddress, actionId, account3, 10);
 
         // Query round 3 (between 1 and 5) should return round 1 state
         assertTrue(
@@ -719,13 +707,13 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_AfterMultipleRemovals() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId, account2, 1);
-        consumer.addAccount(tokenAddress, actionId, account3, 1);
-        consumer.addAccount(tokenAddress, actionId, account4, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, 1);
+        consumer.add(tokenAddress, actionId, account3, 1);
+        consumer.add(tokenAddress, actionId, account4, 1);
 
-        consumer.removeAccount(tokenAddress, actionId, account2, 2);
-        consumer.removeAccount(tokenAddress, actionId, account4, 3);
+        consumer.remove(tokenAddress, actionId, account2, 2);
+        consumer.remove(tokenAddress, actionId, account4, 3);
 
         // Round 1: all accounts present
         assertTrue(
@@ -771,12 +759,12 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_AddRemoveAdd() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
         );
 
-        consumer.removeAccount(tokenAddress, actionId, account1, 2);
+        consumer.remove(tokenAddress, actionId, account1, 2);
         assertFalse(
             consumer.containsByRound(tokenAddress, actionId, account1, 2)
         );
@@ -784,7 +772,7 @@ contract RoundHistoryAddressSetTest is Test {
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
         );
 
-        consumer.addAccount(tokenAddress, actionId, account1, 3);
+        consumer.add(tokenAddress, actionId, account1, 3);
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 3)
         );
@@ -799,8 +787,8 @@ contract RoundHistoryAddressSetTest is Test {
     function test_ContainsByRound_MultipleTokenAddresses() public {
         address tokenAddress2 = address(0x2002);
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress2, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress2, actionId, account1, 1);
 
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
@@ -816,8 +804,8 @@ contract RoundHistoryAddressSetTest is Test {
     function test_ContainsByRound_MultipleActionIds() public {
         uint256 actionId2 = 2;
 
-        consumer.addAccount(tokenAddress, actionId, account1, 1);
-        consumer.addAccount(tokenAddress, actionId2, account1, 1);
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId2, account1, 1);
 
         assertTrue(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)
@@ -831,7 +819,7 @@ contract RoundHistoryAddressSetTest is Test {
     }
 
     function test_ContainsByRound_NonExistentRound() public {
-        consumer.addAccount(tokenAddress, actionId, account1, 5);
+        consumer.add(tokenAddress, actionId, account1, 5);
         // Query round 1 (before account was added) should return false
         assertFalse(
             consumer.containsByRound(tokenAddress, actionId, account1, 1)

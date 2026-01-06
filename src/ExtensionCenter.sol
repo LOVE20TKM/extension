@@ -34,7 +34,7 @@ contract ExtensionCenter is IExtensionCenter {
 
     // tokenAddress => actionId => RoundHistoryAddressSet.Storage
     mapping(address => mapping(uint256 => RoundHistoryAddressSet.Storage))
-        internal _accountListHistory;
+        internal _accountsHistory;
 
     // tokenAddress => actionId => account => verificationKey => verificationInfo
     mapping(address => mapping(uint256 => mapping(address => mapping(string => RoundHistoryString.History))))
@@ -180,16 +180,13 @@ contract ExtensionCenter is IExtensionCenter {
             revert ActionNotVotedInCurrentRound();
         }
 
-        if (_accountListHistory[tokenAddress][actionId].contains(account)) {
+        if (_accountsHistory[tokenAddress][actionId].contains(account)) {
             revert AccountAlreadyJoined();
         }
 
         _actionIdsByAccount[tokenAddress][account].push(actionId);
 
-        _accountListHistory[tokenAddress][actionId].addAccount(
-            account,
-            currentRound
-        );
+        _accountsHistory[tokenAddress][actionId].add(account, currentRound);
         _updateVerificationInfo(
             tokenAddress,
             actionId,
@@ -218,7 +215,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) external view returns (bool) {
-        return _accountListHistory[tokenAddress][actionId].contains(account);
+        return _accountsHistory[tokenAddress][actionId].contains(account);
     }
 
     function isAccountJoinedByRound(
@@ -228,7 +225,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 round
     ) external view validRound(round) returns (bool) {
         return
-            _accountListHistory[tokenAddress][actionId].containsByRound(
+            _accountsHistory[tokenAddress][actionId].containsByRound(
                 account,
                 round
             );
@@ -291,14 +288,14 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId
     ) external view returns (address[] memory) {
-        return _accountListHistory[tokenAddress][actionId].accounts();
+        return _accountsHistory[tokenAddress][actionId].values();
     }
 
     function accountsCount(
         address tokenAddress,
         uint256 actionId
     ) external view returns (uint256) {
-        return _accountListHistory[tokenAddress][actionId].accountsCount();
+        return _accountsHistory[tokenAddress][actionId].count();
     }
 
     function accountsAtIndex(
@@ -306,8 +303,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 index
     ) external view returns (address) {
-        return
-            _accountListHistory[tokenAddress][actionId].accountsAtIndex(index);
+        return _accountsHistory[tokenAddress][actionId].atIndex(index);
     }
 
     function accountsByRound(
@@ -315,8 +311,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 round
     ) external view validRound(round) returns (address[] memory) {
-        return
-            _accountListHistory[tokenAddress][actionId].accountsByRound(round);
+        return _accountsHistory[tokenAddress][actionId].valuesByRound(round);
     }
 
     function accountsByRoundCount(
@@ -324,10 +319,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         uint256 round
     ) external view validRound(round) returns (uint256) {
-        return
-            _accountListHistory[tokenAddress][actionId].accountsCountByRound(
-                round
-            );
+        return _accountsHistory[tokenAddress][actionId].countByRound(round);
     }
 
     function accountsByRoundAtIndex(
@@ -337,7 +329,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 round
     ) external view validRound(round) returns (address) {
         return
-            _accountListHistory[tokenAddress][actionId].accountsByRoundAtIndex(
+            _accountsHistory[tokenAddress][actionId].atIndexByRound(
                 index,
                 round
             );
@@ -455,7 +447,7 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) internal {
-        if (!_accountListHistory[tokenAddress][actionId].contains(account)) {
+        if (!_accountsHistory[tokenAddress][actionId].contains(account)) {
             return;
         }
 
@@ -463,10 +455,7 @@ contract ExtensionCenter is IExtensionCenter {
 
         ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
 
-        _accountListHistory[tokenAddress][actionId].removeAccount(
-            account,
-            currentRound
-        );
+        _accountsHistory[tokenAddress][actionId].remove(account, currentRound);
 
         emit RemoveAccount(tokenAddress, actionId, account);
     }

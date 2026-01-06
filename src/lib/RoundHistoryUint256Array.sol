@@ -43,12 +43,6 @@ library RoundHistoryUint256Array {
             return new uint256[](0);
         }
 
-        // Fast path: round >= latest round
-        uint256 latestRound = self.changeRounds[len - 1];
-        if (round >= latestRound) {
-            return self.valueByRound[latestRound];
-        }
-
         // Fast path: exact round match
         if (self.isRecorded[round]) {
             return self.valueByRound[round];

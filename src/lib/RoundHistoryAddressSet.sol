@@ -15,7 +15,7 @@ library RoundHistoryAddressSet {
         mapping(address => bool) isAccountAdded;
     }
 
-    function addAccount(
+    function add(
         Storage storage self,
         address account,
         uint256 currentRound
@@ -31,13 +31,13 @@ library RoundHistoryAddressSet {
         self.isAccountAdded[account] = true;
     }
 
-    function removeAccount(
+    function remove(
         Storage storage self,
         address account,
         uint256 currentRound
     ) internal {
-        uint256 count = self.accountsCountHistory.latestValue();
-        if (count == 0) {
+        uint256 totalCount = self.accountsCountHistory.latestValue();
+        if (totalCount == 0) {
             return;
         }
 
@@ -46,7 +46,7 @@ library RoundHistoryAddressSet {
         }
 
         uint256 index = self.accountsIndexHistory[account].latestValue();
-        uint256 lastIndex = count - 1;
+        uint256 lastIndex = totalCount - 1;
 
         if (index != lastIndex) {
             address lastAccount = self
@@ -83,50 +83,48 @@ library RoundHistoryAddressSet {
         return account == accountAtIndex;
     }
 
-    function accounts(
+    function values(
         Storage storage self
     ) internal view returns (address[] memory) {
-        uint256 count = self.accountsCountHistory.latestValue();
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
+        uint256 totalCount = self.accountsCountHistory.latestValue();
+        address[] memory result = new address[](totalCount);
+        for (uint256 i = 0; i < totalCount; i++) {
             result[i] = self.accountsAtIndexHistory[i].latestValue();
         }
         return result;
     }
 
-    function accountsCount(
-        Storage storage self
-    ) internal view returns (uint256) {
+    function count(Storage storage self) internal view returns (uint256) {
         return self.accountsCountHistory.latestValue();
     }
 
-    function accountsAtIndex(
+    function atIndex(
         Storage storage self,
         uint256 index
     ) internal view returns (address) {
         return self.accountsAtIndexHistory[index].latestValue();
     }
 
-    function accountsByRound(
+    function valuesByRound(
         Storage storage self,
         uint256 round
     ) internal view returns (address[] memory) {
-        uint256 count = self.accountsCountHistory.value(round);
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
+        uint256 totalCount = self.accountsCountHistory.value(round);
+        address[] memory result = new address[](totalCount);
+        for (uint256 i = 0; i < totalCount; i++) {
             result[i] = self.accountsAtIndexHistory[i].value(round);
         }
         return result;
     }
 
-    function accountsCountByRound(
+    function countByRound(
         Storage storage self,
         uint256 round
     ) internal view returns (uint256) {
         return self.accountsCountHistory.value(round);
     }
 
-    function accountsByRoundAtIndex(
+    function atIndexByRound(
         Storage storage self,
         uint256 index,
         uint256 round
