@@ -38,11 +38,6 @@ library RoundHistoryAddressArray {
         History storage self,
         uint256 round
     ) internal view returns (address[] memory) {
-        uint256 len = self.changeRounds.length;
-        if (len == 0) {
-            return new address[](0);
-        }
-
         // Fast path: exact round match
         if (self.isRecorded[round]) {
             return self.valueByRound[round];

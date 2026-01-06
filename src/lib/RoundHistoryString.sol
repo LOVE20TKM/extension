@@ -35,11 +35,6 @@ library RoundHistoryString {
         History storage self,
         uint256 round
     ) internal view returns (string memory) {
-        uint256 len = self.changeRounds.length;
-        if (len == 0) {
-            return "";
-        }
-
         // Fast path: exact round match
         if (self.isRecorded[round]) {
             return self.valueByRound[round];
