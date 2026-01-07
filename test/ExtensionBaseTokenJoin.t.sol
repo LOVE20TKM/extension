@@ -37,7 +37,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
     function joinedAmount()
         external
         view
-        override(ExtensionBase)
+        override(ExtensionBaseRewardTokenJoin)
         returns (uint256)
     {
         return _totalJoinedAmountHistory.latestValue();
@@ -45,7 +45,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
 
     function joinedAmountByAccount(
         address account
-    ) external view override(ExtensionBase) returns (uint256) {
+    ) external view override(ExtensionBaseRewardTokenJoin) returns (uint256) {
         (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
     }
@@ -53,7 +53,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
     function joinedAmountTokenAddress()
         external
         view
-        override(ExtensionBase)
+        override(ExtensionBaseRewardTokenJoin)
         returns (address)
     {
         return JOIN_TOKEN_ADDRESS;

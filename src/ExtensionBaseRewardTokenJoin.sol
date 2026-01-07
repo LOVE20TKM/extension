@@ -2,6 +2,7 @@
 pragma solidity =0.8.17;
 
 import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
+import {ExtensionBase} from "./ExtensionBase.sol";
 import {ITokenJoin} from "./interface/ITokenJoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
@@ -148,6 +149,32 @@ abstract contract ExtensionBaseRewardTokenJoin is
             joinedBlock,
             joinedBlock == 0 ? 0 : joinedBlock + WAITING_BLOCKS
         );
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        virtual
+        override(ExtensionBase)
+        returns (address)
+    {
+        return JOIN_TOKEN_ADDRESS;
+    }
+
+    function joinedAmount()
+        external
+        view
+        virtual
+        override(ExtensionBase)
+        returns (uint256)
+    {
+        return _totalJoinedAmountHistory.latestValue();
+    }
+
+    function joinedAmountByAccount(
+        address account
+    ) external view virtual override(ExtensionBase) returns (uint256) {
+        return _amountHistoryByAccount[account].latestValue();
     }
 
     function joinedAmountByRound(uint256 round) public view returns (uint256) {
