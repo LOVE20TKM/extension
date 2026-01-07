@@ -27,15 +27,9 @@ interface ITokenJoin {
 
     function WAITING_BLOCKS() external view returns (uint256);
 
-    function totalJoinedAmount() external view returns (uint256);
+    function joinedAmountByRound(uint256 round) external view returns (uint256);
 
-    function totalJoinedAmountByRound(
-        uint256 round
-    ) external view returns (uint256);
-
-    function amountByAccount(address account) external view returns (uint256);
-
-    function amountByAccountByRound(
+    function joinedAmountByAccountByRound(
         address account,
         uint256 round
     ) external view returns (uint256);

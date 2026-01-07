@@ -25,16 +25,7 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
         address tokenAddress_
     ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted()
-        external
-        pure
-        override(ExtensionBase)
-        returns (bool)
-    {
-        return true;
-    }
-
-    function joinedValue()
+    function joinedAmount()
         external
         view
         override(ExtensionBase)
@@ -43,11 +34,20 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
         return _center.accountsCount(TOKEN_ADDRESS, actionId);
     }
 
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address account
     ) external view override(ExtensionBase) returns (uint256) {
         return
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        override(ExtensionBase)
+        returns (address)
+    {
+        return TOKEN_ADDRESS;
     }
 
     function rewardByAccount(
@@ -244,21 +244,21 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // JoinedValue Tests
+    // JoinedAmount Tests
     // ============================================
 
-    function test_JoinedValue_EmptyAtStart() public view {
-        assertEq(extension.joinedValue(), 0);
+    function test_JoinedAmount_EmptyAtStart() public view {
+        assertEq(extension.joinedAmount(), 0);
     }
 
-    function test_JoinedValue_AfterJoin() public {
+    function test_JoinedAmount_AfterJoin() public {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.joinedValue(), 1);
+        assertEq(extension.joinedAmount(), 1);
     }
 
-    function test_JoinedValue_MultipleUsers() public {
+    function test_JoinedAmount_MultipleUsers() public {
         vm.prank(user1);
         extension.join(new string[](0));
         vm.prank(user2);
@@ -266,23 +266,19 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(new string[](0));
 
-        assertEq(extension.joinedValue(), 3);
+        assertEq(extension.joinedAmount(), 3);
     }
 
-    function test_JoinedValueByAccount_NotJoined() public view {
-        assertEq(extension.joinedValueByAccount(user1), 0);
+    function test_JoinedAmountByAccount_NotJoined() public view {
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
-    function test_JoinedValueByAccount_Joined() public {
+    function test_JoinedAmountByAccount_Joined() public {
         vm.prank(user1);
         extension.join(new string[](0));
 
-        assertEq(extension.joinedValueByAccount(user1), 1);
-        assertEq(extension.joinedValueByAccount(user2), 0);
-    }
-
-    function test_isJoinedValueConverted() public view {
-        assertTrue(extension.isJoinedValueConverted());
+        assertEq(extension.joinedAmountByAccount(user1), 1);
+        assertEq(extension.joinedAmountByAccount(user2), 0);
     }
 
     // ============================================
@@ -377,6 +373,6 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
         }
 
         assertEq(center.accountsCount(address(token), ACTION_ID), numUsers);
-        assertEq(extension.joinedValue(), numUsers);
+        assertEq(extension.joinedAmount(), numUsers);
     }
 }

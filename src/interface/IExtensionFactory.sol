@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 uint256 constant DEFAULT_JOIN_AMOUNT = 1e18;
 
 interface IExtensionFactory {
-    event ExtensionCreate(
+    event CreateExtension(
         address indexed extension,
         address indexed tokenAddress
     );

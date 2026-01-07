@@ -150,21 +150,11 @@ abstract contract ExtensionBaseRewardTokenJoin is
         );
     }
 
-    function totalJoinedAmount() public view returns (uint256) {
-        return _totalJoinedAmountHistory.latestValue();
-    }
-
-    function totalJoinedAmountByRound(
-        uint256 round
-    ) public view returns (uint256) {
+    function joinedAmountByRound(uint256 round) public view returns (uint256) {
         return _totalJoinedAmountHistory.value(round);
     }
 
-    function amountByAccount(address account) public view returns (uint256) {
-        return _amountHistoryByAccount[account].latestValue();
-    }
-
-    function amountByAccountByRound(
+    function joinedAmountByAccountByRound(
         address account,
         uint256 round
     ) public view returns (uint256) {

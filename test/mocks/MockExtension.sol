@@ -22,16 +22,7 @@ contract MockExtension is ExtensionBaseReward {
         actionId = actionId_;
     }
 
-    function isJoinedValueConverted()
-        external
-        pure
-        override(ExtensionBase)
-        returns (bool)
-    {
-        return true;
-    }
-
-    function joinedValue()
+    function joinedAmount()
         external
         pure
         override(ExtensionBase)
@@ -40,10 +31,19 @@ contract MockExtension is ExtensionBaseReward {
         return 0;
     }
 
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address /*account*/
     ) external pure override(ExtensionBase) returns (uint256) {
         return 0;
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        override(ExtensionBase)
+        returns (address)
+    {
+        return TOKEN_ADDRESS;
     }
 
     function rewardByAccount(

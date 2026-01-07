@@ -11,6 +11,9 @@ import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
 import {IExtension} from "../src/interface/IExtension.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
+import {RoundHistoryUint256} from "../src/lib/RoundHistoryUint256.sol";
+
+using RoundHistoryUint256 for RoundHistoryUint256.History;
 
 /**
  * @title MockExtensionForTokenJoin
@@ -31,29 +34,29 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
         )
     {}
 
-    function isJoinedValueConverted()
-        external
-        pure
-        override(ExtensionBase)
-        returns (bool)
-    {
-        return true;
-    }
-
-    function joinedValue()
+    function joinedAmount()
         external
         view
         override(ExtensionBase)
         returns (uint256)
     {
-        return totalJoinedAmount();
+        return _totalJoinedAmountHistory.latestValue();
     }
 
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address account
     ) external view override(ExtensionBase) returns (uint256) {
         (, uint256 amount, , ) = this.joinInfo(account);
         return amount;
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        override(ExtensionBase)
+        returns (address)
+    {
+        return JOIN_TOKEN_ADDRESS;
     }
 
     function rewardByAccount(
@@ -135,7 +138,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     function test_Constructor_InitialState() public view {
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
@@ -169,7 +172,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         assertEq(joinedAmount, amount);
         assertEq(joinedBlock, blockBefore);
         assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
-        assertEq(extension.totalJoinedAmount(), amount);
+        assertEq(extension.joinedAmount(), amount);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
@@ -216,7 +219,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 3);
     }
 
@@ -234,7 +237,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
-        assertEq(extension.totalJoinedAmount(), 150e18);
+        assertEq(extension.joinedAmount(), 150e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
@@ -288,7 +291,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 200e18);
-        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.joinedAmount(), 200e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
@@ -318,7 +321,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, verificationInfos);
 
-        assertEq(extension.totalJoinedAmount(), 100e18);
+        assertEq(extension.joinedAmount(), 100e18);
     }
 
     // ============================================
@@ -339,7 +342,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         (
@@ -419,7 +422,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 200e18);
+        assertEq(extension.joinedAmount(), 200e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         // User2 cannot exit yet
@@ -433,7 +436,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
@@ -472,21 +475,21 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     // ============================================
-    // JoinedValue Tests
+    // JoinedAmount Tests
     // ============================================
 
-    function test_JoinedValue_EmptyAtStart() public view {
-        assertEq(extension.joinedValue(), 0);
+    function test_JoinedAmount_EmptyAtStart() public view {
+        assertEq(extension.joinedAmount(), 0);
     }
 
-    function test_JoinedValue_SingleUser() public {
+    function test_JoinedAmount_SingleUser() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 100e18);
+        assertEq(extension.joinedAmount(), 100e18);
     }
 
-    function test_JoinedValue_MultipleUsers() public {
+    function test_JoinedAmount_MultipleUsers() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -496,10 +499,10 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
     }
 
-    function test_JoinedValue_AfterExit() public {
+    function test_JoinedAmount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -511,21 +514,21 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.joinedValue(), 200e18);
+        assertEq(extension.joinedAmount(), 200e18);
     }
 
-    function test_JoinedValueByAccount_NotJoined() public view {
-        assertEq(extension.joinedValueByAccount(user1), 0);
+    function test_JoinedAmountByAccount_NotJoined() public view {
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
-    function test_JoinedValueByAccount_Joined() public {
+    function test_JoinedAmountByAccount_Joined() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValueByAccount(user1), 100e18);
+        assertEq(extension.joinedAmountByAccount(user1), 100e18);
     }
 
-    function test_JoinedValueByAccount_AfterExit() public {
+    function test_JoinedAmountByAccount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -534,11 +537,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.joinedValueByAccount(user1), 0);
-    }
-
-    function test_isJoinedValueConverted() public view {
-        assertTrue(extension.isJoinedValueConverted());
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
     // ============================================
@@ -577,7 +576,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extensionNoWait.exit();
 
-        assertEq(extensionNoWait.totalJoinedAmount(), 0);
+        assertEq(extensionNoWait.joinedAmount(), 0);
     }
 
     // ============================================
@@ -612,7 +611,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(largeAmount, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), largeAmount);
+        assertEq(extension.joinedAmount(), largeAmount);
     }
 
     function test_EdgeCase_MinAmount() public {
@@ -621,7 +620,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(minAmount, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), minAmount);
+        assertEq(extension.joinedAmount(), minAmount);
     }
 
     // ============================================
@@ -642,7 +641,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         advanceBlocks(70);
@@ -650,7 +649,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 500e18);
+        assertEq(extension.joinedAmount(), 500e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         advanceBlocks(20);
@@ -658,7 +657,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 300e18);
+        assertEq(extension.joinedAmount(), 300e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         advanceBlocks(10);
@@ -666,7 +665,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
@@ -682,7 +681,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         (, uint256 joinedAmount, , ) = extension.joinInfo(user1);
         assertEq(joinedAmount, amount);
-        assertEq(extension.totalJoinedAmount(), amount);
+        assertEq(extension.joinedAmount(), amount);
     }
 
     function testFuzz_Exit(uint256 amount, uint256 extraBlocks) public {
@@ -875,7 +874,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     // ============================================
 
     function test_amountByAccount_NotJoined() public view {
-        assertEq(extension.amountByAccount(user1), 0);
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
     function test_amountByAccount_AfterJoin() public {
@@ -884,19 +883,19 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        assertEq(extension.amountByAccount(user1), amount);
+        assertEq(extension.joinedAmountByAccount(user1), amount);
     }
 
     function test_amountByAccount_MultipleJoins() public {
         vm.startPrank(user1);
         extension.join(100e18, new string[](0));
-        assertEq(extension.amountByAccount(user1), 100e18);
+        assertEq(extension.joinedAmountByAccount(user1), 100e18);
 
         extension.join(50e18, new string[](0));
-        assertEq(extension.amountByAccount(user1), 150e18);
+        assertEq(extension.joinedAmountByAccount(user1), 150e18);
 
         extension.join(25e18, new string[](0));
-        assertEq(extension.amountByAccount(user1), 175e18);
+        assertEq(extension.joinedAmountByAccount(user1), 175e18);
         vm.stopPrank();
     }
 
@@ -909,7 +908,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.amountByAccount(user1), 0);
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
     function test_amountByAccount_MultipleUsers() public {
@@ -922,9 +921,9 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.amountByAccount(user1), 100e18);
-        assertEq(extension.amountByAccount(user2), 200e18);
-        assertEq(extension.amountByAccount(user3), 300e18);
+        assertEq(extension.joinedAmountByAccount(user1), 100e18);
+        assertEq(extension.joinedAmountByAccount(user2), 200e18);
+        assertEq(extension.joinedAmountByAccount(user3), 300e18);
     }
 
     function test_amountByAccount_IndependentAfterExit() public {
@@ -939,8 +938,8 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.amountByAccount(user1), 0);
-        assertEq(extension.amountByAccount(user2), 200e18);
+        assertEq(extension.joinedAmountByAccount(user1), 0);
+        assertEq(extension.joinedAmountByAccount(user2), 200e18);
     }
 
     // ============================================
@@ -948,8 +947,8 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     // ============================================
 
     function test_amountByAccountByRound_NotJoined() public view {
-        assertEq(extension.amountByAccountByRound(user1, 1), 0);
-        assertEq(extension.amountByAccountByRound(user1, 2), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user1, 1), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user1, 2), 0);
     }
 
     function test_amountByAccountByRound_JoinRound() public {
@@ -959,7 +958,10 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount, new string[](0));
 
-        assertEq(extension.amountByAccountByRound(user1, joinRound), amount);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, joinRound),
+            amount
+        );
     }
 
     function test_amountByAccountByRound_SubsequentRounds() public {
@@ -971,14 +973,23 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         // Advance to next round
         join.setCurrentRound(round1 + 1);
-        assertEq(extension.amountByAccountByRound(user1, round1), amount);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 1), amount);
+        assertEq(extension.joinedAmountByAccountByRound(user1, round1), amount);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 1),
+            amount
+        );
 
         // Advance to another round
         join.setCurrentRound(round1 + 2);
-        assertEq(extension.amountByAccountByRound(user1, round1), amount);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 1), amount);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 2), amount);
+        assertEq(extension.joinedAmountByAccountByRound(user1, round1), amount);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 1),
+            amount
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 2),
+            amount
+        );
     }
 
     function test_amountByAccountByRound_AddMoreInNewRound() public {
@@ -996,9 +1007,12 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(amount2, new string[](0));
 
-        assertEq(extension.amountByAccountByRound(user1, round1), amount1);
         assertEq(
-            extension.amountByAccountByRound(user1, round1 + 1),
+            extension.joinedAmountByAccountByRound(user1, round1),
+            amount1
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 1),
             amount1 + amount2
         );
     }
@@ -1019,8 +1033,11 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.amountByAccountByRound(user1, joinRound), amount);
-        assertEq(extension.amountByAccountByRound(user1, exitRound), 0);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, joinRound),
+            amount
+        );
+        assertEq(extension.joinedAmountByAccountByRound(user1, exitRound), 0);
     }
 
     function test_amountByAccountByRound_AfterExitSubsequentRounds() public {
@@ -1041,11 +1058,17 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         // Advance to future rounds
         join.setCurrentRound(exitRound + 1);
-        assertEq(extension.amountByAccountByRound(user1, exitRound), 0);
-        assertEq(extension.amountByAccountByRound(user1, exitRound + 1), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user1, exitRound), 0);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, exitRound + 1),
+            0
+        );
 
         join.setCurrentRound(exitRound + 5);
-        assertEq(extension.amountByAccountByRound(user1, exitRound + 5), 0);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, exitRound + 5),
+            0
+        );
     }
 
     function test_amountByAccountByRound_MultipleUsersDifferentRounds() public {
@@ -1067,19 +1090,34 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.join(300e18, new string[](0));
 
         // Check round1: only user1
-        assertEq(extension.amountByAccountByRound(user1, round1), 100e18);
-        assertEq(extension.amountByAccountByRound(user2, round1), 0);
-        assertEq(extension.amountByAccountByRound(user3, round1), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user1, round1), 100e18);
+        assertEq(extension.joinedAmountByAccountByRound(user2, round1), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user3, round1), 0);
 
         // Check round1 + 1: user1 and user2
-        assertEq(extension.amountByAccountByRound(user1, round1 + 1), 100e18);
-        assertEq(extension.amountByAccountByRound(user2, round1 + 1), 200e18);
-        assertEq(extension.amountByAccountByRound(user3, round1 + 1), 0);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 1),
+            100e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user2, round1 + 1),
+            200e18
+        );
+        assertEq(extension.joinedAmountByAccountByRound(user3, round1 + 1), 0);
 
         // Check round1 + 2: all users
-        assertEq(extension.amountByAccountByRound(user1, round1 + 2), 100e18);
-        assertEq(extension.amountByAccountByRound(user2, round1 + 2), 200e18);
-        assertEq(extension.amountByAccountByRound(user3, round1 + 2), 300e18);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 2),
+            100e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user2, round1 + 2),
+            200e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user3, round1 + 2),
+            300e18
+        );
     }
 
     function test_amountByAccountByRound_ComplexScenario() public {
@@ -1111,16 +1149,34 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         // Verify historical data
-        assertEq(extension.amountByAccountByRound(user1, round1), 100e18);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 1), 150e18);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 2), 150e18);
-        assertEq(extension.amountByAccountByRound(user1, round1 + 3), 0);
+        assertEq(extension.joinedAmountByAccountByRound(user1, round1), 100e18);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 1),
+            150e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user1, round1 + 2),
+            150e18
+        );
+        assertEq(extension.joinedAmountByAccountByRound(user1, round1 + 3), 0);
 
-        assertEq(extension.amountByAccountByRound(user2, round1 + 1), 200e18);
-        assertEq(extension.amountByAccountByRound(user2, round1 + 3), 200e18);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user2, round1 + 1),
+            200e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user2, round1 + 3),
+            200e18
+        );
 
-        assertEq(extension.amountByAccountByRound(user3, round1 + 2), 300e18);
-        assertEq(extension.amountByAccountByRound(user3, round1 + 3), 300e18);
+        assertEq(
+            extension.joinedAmountByAccountByRound(user3, round1 + 2),
+            300e18
+        );
+        assertEq(
+            extension.joinedAmountByAccountByRound(user3, round1 + 3),
+            300e18
+        );
     }
 
     function test_amountByAccountByRound_ConsistencyWithAmountByAccount()
@@ -1133,14 +1189,14 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         uint256 currentRound = join.currentRound();
         assertEq(
-            extension.amountByAccount(user1),
-            extension.amountByAccountByRound(user1, currentRound)
+            extension.joinedAmountByAccount(user1),
+            extension.joinedAmountByAccountByRound(user1, currentRound)
         );
 
         join.setCurrentRound(round1 + 5);
         assertEq(
-            extension.amountByAccount(user1),
-            extension.amountByAccountByRound(user1, join.currentRound())
+            extension.joinedAmountByAccount(user1),
+            extension.joinedAmountByAccountByRound(user1, join.currentRound())
         );
     }
 }

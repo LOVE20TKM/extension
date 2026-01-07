@@ -24,16 +24,7 @@ contract MockExtensionForCore is ExtensionBaseRewardJoin {
         address tokenAddress_
     ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted()
-        external
-        pure
-        override(ExtensionBase)
-        returns (bool)
-    {
-        return false;
-    }
-
-    function joinedValue()
+    function joinedAmount()
         external
         pure
         override(ExtensionBase)
@@ -42,10 +33,19 @@ contract MockExtensionForCore is ExtensionBaseRewardJoin {
         return 0;
     }
 
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address
     ) external pure override(ExtensionBase) returns (uint256) {
         return 0;
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        override(ExtensionBase)
+        returns (address)
+    {
+        return TOKEN_ADDRESS;
     }
 
     function rewardByAccount(
@@ -85,16 +85,7 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
         address tokenAddress_
     ) ExtensionBaseRewardJoin(factory_, tokenAddress_) {}
 
-    function isJoinedValueConverted()
-        external
-        pure
-        override(ExtensionBase)
-        returns (bool)
-    {
-        return true;
-    }
-
-    function joinedValue()
+    function joinedAmount()
         external
         view
         override(ExtensionBase)
@@ -103,11 +94,20 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
         return _center.accountsCount(TOKEN_ADDRESS, actionId);
     }
 
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address account
     ) external view override(ExtensionBase) returns (uint256) {
         return
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) ? 1 : 0;
+    }
+
+    function joinedAmountTokenAddress()
+        external
+        view
+        override(ExtensionBase)
+        returns (address)
+    {
+        return TOKEN_ADDRESS;
     }
 
     // Configure reward calculation
@@ -199,7 +199,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
     function test_Constructor_RetrievesCenter() public view {
         assertEq(
-            extension.CENTER_ADDRESS(),
+            mockFactory.CENTER_ADDRESS(),
             address(center),
             "Center should be retrieved from factory"
         );
@@ -255,7 +255,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
     // ============================================
 
     function test_Center_ReturnsCorrectAddress() public view {
-        assertEq(extension.CENTER_ADDRESS(), address(center));
+        assertEq(mockFactory.CENTER_ADDRESS(), address(center));
     }
 
     function test_Factory_ReturnsCorrectAddress() public view {

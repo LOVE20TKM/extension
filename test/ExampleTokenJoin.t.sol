@@ -144,10 +144,6 @@ contract ExampleTokenJoinTest is Test {
         assertTrue(extension.FACTORY_ADDRESS() != address(0));
     }
 
-    function test_Center() public view {
-        assertEq(extension.CENTER_ADDRESS(), address(center));
-    }
-
     function test_TokenAddress() public view {
         assertEq(extension.TOKEN_ADDRESS(), address(token));
     }
@@ -179,7 +175,7 @@ contract ExampleTokenJoinTest is Test {
         assertEq(joinedAmount, amount);
         assertEq(joinedBlock, blockBefore);
         assertEq(exitableBlock, blockBefore + WAITING_BLOCKS);
-        assertEq(extension.totalJoinedAmount(), amount);
+        assertEq(extension.joinedAmount(), amount);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
@@ -209,7 +205,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 3);
     }
 
@@ -227,7 +223,7 @@ contract ExampleTokenJoinTest is Test {
 
         (, uint256 amount, , ) = extension.joinInfo(user1);
         assertEq(amount, 150e18);
-        assertEq(extension.totalJoinedAmount(), 150e18);
+        assertEq(extension.joinedAmount(), 150e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
     }
 
@@ -239,7 +235,7 @@ contract ExampleTokenJoinTest is Test {
 
         // Verification info functionality requires action setup with verification keys
         // which is beyond the scope of this basic test
-        assertEq(extension.totalJoinedAmount(), 100e18);
+        assertEq(extension.joinedAmount(), 100e18);
     }
 
     // ============================================
@@ -261,7 +257,7 @@ contract ExampleTokenJoinTest is Test {
         extension.exit();
 
         assertEq(joinToken.balanceOf(user1), balanceBefore + amount);
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
 
         (
@@ -347,7 +343,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 200e18); // Only user2's amount
+        assertEq(extension.joinedAmount(), 200e18); // Only user2's amount
         assertEq(center.accountsCount(address(token), ACTION_ID), 1); // Only user2
 
         // User2 cannot exit yet (only 50 blocks passed since their join)
@@ -362,7 +358,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 
@@ -386,25 +382,21 @@ contract ExampleTokenJoinTest is Test {
     }
 
     // ============================================
-    // JOINED VALUE CALCULATION TESTS
+    // JOINED AMOUNT CALCULATION TESTS
     // ============================================
 
-    function test_isJoinedValueConverted() public view {
-        assertTrue(extension.isJoinedValueConverted());
+    function test_JoinedAmount_Empty() public view {
+        assertEq(extension.joinedAmount(), 0);
     }
 
-    function test_JoinedValue_Empty() public view {
-        assertEq(extension.joinedValue(), 0);
-    }
-
-    function test_JoinedValue_SingleUser() public {
+    function test_JoinedAmount_SingleUser() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 100e18);
+        assertEq(extension.joinedAmount(), 100e18);
     }
 
-    function test_JoinedValue_MultipleUsers() public {
+    function test_JoinedAmount_MultipleUsers() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -414,10 +406,10 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user3);
         extension.join(300e18, new string[](0));
 
-        assertEq(extension.joinedValue(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
     }
 
-    function test_JoinedValue_AfterExit() public {
+    function test_JoinedAmount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -429,21 +421,21 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.joinedValue(), 200e18);
+        assertEq(extension.joinedAmount(), 200e18);
     }
 
-    function test_JoinedValueByAccount_NotJoined() public view {
-        assertEq(extension.joinedValueByAccount(user1), 0);
+    function test_JoinedAmountByAccount_NotJoined() public view {
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
-    function test_JoinedValueByAccount_Joined() public {
+    function test_JoinedAmountByAccount_Joined() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
-        assertEq(extension.joinedValueByAccount(user1), 100e18);
+        assertEq(extension.joinedAmountByAccount(user1), 100e18);
     }
 
-    function test_JoinedValueByAccount_AfterExit() public {
+    function test_JoinedAmountByAccount_AfterExit() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
@@ -452,7 +444,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.joinedValueByAccount(user1), 0);
+        assertEq(extension.joinedAmountByAccount(user1), 0);
     }
 
     // ============================================
@@ -573,7 +565,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.join(largeAmount, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), largeAmount);
+        assertEq(extension.joinedAmount(), largeAmount);
     }
 
     function test_Join_MinAmount() public {
@@ -582,7 +574,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.join(minAmount, new string[](0));
 
-        assertEq(extension.totalJoinedAmount(), minAmount);
+        assertEq(extension.joinedAmount(), minAmount);
     }
 
     function test_Exit_ImmediatelyAtThreshold() public {
@@ -596,7 +588,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
     }
 
     // ============================================
@@ -619,7 +611,7 @@ contract ExampleTokenJoinTest is Test {
         extension.join(300e18, new string[](0));
 
         // Check total
-        assertEq(extension.totalJoinedAmount(), 600e18);
+        assertEq(extension.joinedAmount(), 600e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 3);
 
         // Move forward enough for user1 to withdraw
@@ -628,7 +620,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 500e18);
+        assertEq(extension.joinedAmount(), 500e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 2);
 
         // Move forward for user2
@@ -637,7 +629,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user2);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 300e18);
+        assertEq(extension.joinedAmount(), 300e18);
         assertEq(center.accountsCount(address(token), ACTION_ID), 1);
 
         // Move forward for user3
@@ -646,7 +638,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user3);
         extension.exit();
 
-        assertEq(extension.totalJoinedAmount(), 0);
+        assertEq(extension.joinedAmount(), 0);
         assertEq(center.accountsCount(address(token), ACTION_ID), 0);
     }
 }

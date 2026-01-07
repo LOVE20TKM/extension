@@ -8,7 +8,6 @@ interface IExtension {
     error MultipleActionIdsFound();
     error RoundNotFinished();
 
-    function CENTER_ADDRESS() external view returns (address);
     function FACTORY_ADDRESS() external view returns (address);
     function TOKEN_ADDRESS() external view returns (address);
 
@@ -17,9 +16,9 @@ interface IExtension {
 
     function actionId() external view returns (uint256);
 
-    function isJoinedValueConverted() external view returns (bool);
-    function joinedValue() external view returns (uint256);
-    function joinedValueByAccount(
+    function joinedAmount() external view returns (uint256);
+    function joinedAmountByAccount(
         address account
     ) external view returns (uint256);
+    function joinedAmountTokenAddress() external view returns (address);
 }

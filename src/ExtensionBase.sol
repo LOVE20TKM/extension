@@ -20,7 +20,6 @@ import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
 abstract contract ExtensionBase is IExtension {
     using SafeERC20 for IERC20;
 
-    address public immutable CENTER_ADDRESS;
     address public immutable FACTORY_ADDRESS;
     address public immutable TOKEN_ADDRESS;
 
@@ -39,8 +38,8 @@ abstract contract ExtensionBase is IExtension {
         }
         FACTORY_ADDRESS = factory_;
         TOKEN_ADDRESS = tokenAddress_;
-        CENTER_ADDRESS = IExtensionFactory(factory_).CENTER_ADDRESS();
-        _center = IExtensionCenter(CENTER_ADDRESS);
+        address centerAddress = IExtensionFactory(factory_).CENTER_ADDRESS();
+        _center = IExtensionCenter(centerAddress);
         _submit = ILOVE20Submit(_center.submitAddress());
         _vote = ILOVE20Vote(_center.voteAddress());
         _join = ILOVE20Join(_center.joinAddress());
@@ -92,11 +91,11 @@ abstract contract ExtensionBase is IExtension {
         return foundActionId;
     }
 
-    function isJoinedValueConverted() external view virtual returns (bool);
+    function joinedAmount() external view virtual returns (uint256);
 
-    function joinedValue() external view virtual returns (uint256);
-
-    function joinedValueByAccount(
+    function joinedAmountByAccount(
         address account
     ) external view virtual returns (uint256);
+
+    function joinedAmountTokenAddress() external view virtual returns (address);
 }
