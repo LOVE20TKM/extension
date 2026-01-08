@@ -31,13 +31,13 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
         override(ExtensionBaseRewardTokenJoin)
         returns (uint256)
     {
-        return _totalJoinedAmountHistory.latestValue();
+        return _joinedAmountHistory.latestValue();
     }
 
     function joinedAmountByAccount(
         address account
     ) external view override(ExtensionBaseRewardTokenJoin) returns (uint256) {
-        return _amountHistoryByAccount[account].latestValue();
+        return _joinedAmountByAccountHistory[account].latestValue();
     }
 
     function joinedAmountTokenAddress()
@@ -62,8 +62,8 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
 
         reward =
             (totalActionReward *
-                _amountHistoryByAccount[account].latestValue()) /
-            _totalJoinedAmountHistory.latestValue();
+                _joinedAmountByAccountHistory[account].latestValue()) /
+            _joinedAmountHistory.latestValue();
         return reward;
     }
 }

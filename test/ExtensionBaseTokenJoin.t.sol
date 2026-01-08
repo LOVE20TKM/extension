@@ -40,7 +40,7 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
         override(ExtensionBaseRewardTokenJoin)
         returns (uint256)
     {
-        return _totalJoinedAmountHistory.latestValue();
+        return _joinedAmountHistory.latestValue();
     }
 
     function joinedAmountByAccount(
