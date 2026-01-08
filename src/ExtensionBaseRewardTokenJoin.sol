@@ -32,9 +32,9 @@ abstract contract ExtensionBaseRewardTokenJoin is
 
     // account => amount
     mapping(address => RoundHistoryUint256.History)
-        internal _amountHistoryByAccount;
+        internal _joinedAmountByAccountHistory;
 
-    RoundHistoryUint256.History internal _totalJoinedAmountHistory;
+    RoundHistoryUint256.History internal _joinedAmountHistory;
 
     IERC20 internal _joinToken;
 
@@ -65,9 +65,12 @@ abstract contract ExtensionBaseRewardTokenJoin is
         uint256 currentRound = _join.currentRound();
         bool isFirstJoin = _joinedBlockByAccount[msg.sender] == 0;
 
-        _amountHistoryByAccount[msg.sender].increase(currentRound, amount);
+        _joinedAmountByAccountHistory[msg.sender].increase(
+            currentRound,
+            amount
+        );
 
-        _totalJoinedAmountHistory.increase(currentRound, amount);
+        _joinedAmountHistory.increase(currentRound, amount);
 
         _joinedBlockByAccount[msg.sender] = block.number;
 
@@ -108,11 +111,12 @@ abstract contract ExtensionBaseRewardTokenJoin is
             revert NotEnoughWaitingBlocks();
         }
 
-        uint256 amount = _amountHistoryByAccount[msg.sender].latestValue();
+        uint256 amount = _joinedAmountByAccountHistory[msg.sender]
+            .latestValue();
         uint256 currentRound = _join.currentRound();
 
-        _amountHistoryByAccount[msg.sender].record(currentRound, 0);
-        _totalJoinedAmountHistory.decrease(currentRound, amount);
+        _joinedAmountByAccountHistory[msg.sender].record(currentRound, 0);
+        _joinedAmountHistory.decrease(currentRound, amount);
         delete _joinedRoundByAccount[msg.sender];
         delete _joinedBlockByAccount[msg.sender];
 
@@ -145,7 +149,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         joinedBlock = _joinedBlockByAccount[account];
         return (
             _joinedRoundByAccount[account],
-            _amountHistoryByAccount[account].latestValue(),
+            _joinedAmountByAccountHistory[account].latestValue(),
             joinedBlock,
             joinedBlock == 0 ? 0 : joinedBlock + WAITING_BLOCKS
         );
@@ -168,23 +172,23 @@ abstract contract ExtensionBaseRewardTokenJoin is
         override(ExtensionBase)
         returns (uint256)
     {
-        return _totalJoinedAmountHistory.latestValue();
+        return _joinedAmountHistory.latestValue();
     }
 
     function joinedAmountByAccount(
         address account
     ) external view virtual override(ExtensionBase) returns (uint256) {
-        return _amountHistoryByAccount[account].latestValue();
+        return _joinedAmountByAccountHistory[account].latestValue();
     }
 
     function joinedAmountByRound(uint256 round) public view returns (uint256) {
-        return _totalJoinedAmountHistory.value(round);
+        return _joinedAmountHistory.value(round);
     }
 
     function joinedAmountByAccountByRound(
         address account,
         uint256 round
     ) public view returns (uint256) {
-        return _amountHistoryByAccount[account].value(round);
+        return _joinedAmountByAccountHistory[account].value(round);
     }
 }
