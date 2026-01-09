@@ -335,4 +335,226 @@ contract RoundHistoryAddressArrayTest is Test {
         assertEq(result.length, 1);
         assertEq(result[0], ADDR3);
     }
+
+    // ============================================
+    // LatestValues Tests
+    // ============================================
+
+    function test_LatestValues_EmptyHistory() public view {
+        address[] memory result = consumer.latestValues();
+        assertEq(result.length, 0);
+    }
+
+    function test_LatestValues_SingleRecord() public {
+        consumer.add(1, ADDR1);
+        consumer.add(1, ADDR2);
+
+        address[] memory result = consumer.latestValues();
+        assertEq(result.length, 2);
+        assertEq(result[0], ADDR1);
+        assertEq(result[1], ADDR2);
+    }
+
+    function test_LatestValues_MultipleRecords() public {
+        consumer.add(1, ADDR1);
+        consumer.add(1, ADDR2);
+        consumer.add(5, ADDR3);
+        address addr4 = address(0x4444);
+        consumer.add(10, addr4);
+
+        address[] memory result = consumer.latestValues();
+        assertEq(result.length, 4);
+        assertEq(result[0], ADDR1);
+        assertEq(result[1], ADDR2);
+        assertEq(result[2], ADDR3);
+        assertEq(result[3], addr4);
+    }
+
+    function test_LatestValues_AfterSameRoundUpdate() public {
+        consumer.add(5, ADDR1);
+        consumer.add(5, ADDR2);
+        consumer.add(5, ADDR3);
+
+        address[] memory result = consumer.latestValues();
+        assertEq(result.length, 3);
+        assertEq(result[0], ADDR1);
+        assertEq(result[1], ADDR2);
+        assertEq(result[2], ADDR3);
+    }
+
+    function test_LatestValues_AfterRecord() public {
+        address[] memory values1 = new address[](2);
+        values1[0] = ADDR1;
+        values1[1] = ADDR2;
+        consumer.record(1, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR3;
+        consumer.record(5, values2);
+
+        address[] memory result = consumer.latestValues();
+        assertEq(result.length, 1);
+        assertEq(result[0], ADDR3);
+    }
+
+    // ============================================
+    // Binary Search Edge Cases
+    // ============================================
+
+    function test_Value_LargeGapBetweenRounds() public {
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        consumer.record(1, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR2;
+        consumer.record(1000000, values2);
+
+        address[] memory result1 = consumer.values(1);
+        assertEq(result1.length, 1);
+        assertEq(result1[0], ADDR1);
+
+        address[] memory result500k = consumer.values(500000);
+        assertEq(result500k.length, 1);
+        assertEq(result500k[0], ADDR1);
+
+        address[] memory result999k = consumer.values(999999);
+        assertEq(result999k.length, 1);
+        assertEq(result999k[0], ADDR1);
+
+        address[] memory result1m = consumer.values(1000000);
+        assertEq(result1m.length, 1);
+        assertEq(result1m[0], ADDR2);
+    }
+
+    function test_Value_ManyRounds() public {
+        // Record values at rounds 10, 20, 30, ..., 100
+        for (uint256 i = 1; i <= 10; i++) {
+            address[] memory vals = new address[](1);
+            vals[0] = address(uint160(i * 100));
+            consumer.record(i * 10, vals);
+        }
+
+        assertEq(consumer.changeRoundsLength(), 10);
+
+        // Test various queries
+        address[] memory beforeFirst = consumer.values(5);
+        assertEq(beforeFirst.length, 0); // before first
+
+        address[] memory at10 = consumer.values(10);
+        assertEq(at10.length, 1);
+        assertEq(at10[0], address(uint160(100)));
+
+        address[] memory at15 = consumer.values(15);
+        assertEq(at15.length, 1);
+        assertEq(at15[0], address(uint160(100)));
+
+        address[] memory at50 = consumer.values(50);
+        assertEq(at50.length, 1);
+        assertEq(at50[0], address(uint160(500)));
+
+        address[] memory at55 = consumer.values(55);
+        assertEq(at55.length, 1);
+        assertEq(at55[0], address(uint160(500)));
+
+        address[] memory at100 = consumer.values(100);
+        assertEq(at100.length, 1);
+        assertEq(at100[0], address(uint160(1000)));
+
+        address[] memory afterLast = consumer.values(150);
+        assertEq(afterLast.length, 1);
+        assertEq(afterLast[0], address(uint160(1000)));
+    }
+
+    function test_Value_BeforeFirstRound() public {
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        consumer.record(5, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR2;
+        consumer.record(10, values2);
+
+        address[] memory result1 = consumer.values(1);
+        assertEq(result1.length, 0);
+
+        address[] memory result4 = consumer.values(4);
+        assertEq(result4.length, 0);
+    }
+
+    function test_Value_AfterLatestRound() public {
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        consumer.record(5, values1);
+
+        address[] memory values2 = new address[](1);
+        values2[0] = ADDR2;
+        consumer.record(10, values2);
+
+        address[] memory result15 = consumer.values(15);
+        assertEq(result15.length, 1);
+        assertEq(result15[0], ADDR2);
+
+        address[] memory result100 = consumer.values(100);
+        assertEq(result100.length, 1);
+        assertEq(result100[0], ADDR2);
+    }
+
+    // ============================================
+    // Gas Tests
+    // ============================================
+
+    function test_Gas_RecordIsEfficient() public {
+        uint256 gas1;
+        uint256 gas2;
+
+        address[] memory values1 = new address[](1);
+        values1[0] = ADDR1;
+        gas1 = gasleft();
+        consumer.record(1, values1);
+        gas1 = gas1 - gasleft();
+
+        // Add many rounds
+        for (uint256 i = 2; i <= 100; i++) {
+            address[] memory vals = new address[](1);
+            vals[0] = address(uint160(i));
+            consumer.record(i, vals);
+        }
+
+        address[] memory values2 = new address[](1);
+        values2[0] = address(0x101);
+        gas2 = gasleft();
+        consumer.record(101, values2);
+        gas2 = gas2 - gasleft();
+
+        // Gas should be similar regardless of history size
+        assertTrue(gas2 < gas1 * 2, "Record gas should be O(1)");
+    }
+
+    function test_Gas_ValueQueryIsLogarithmic() public {
+        // Add 100 rounds
+        for (uint256 i = 1; i <= 100; i++) {
+            address[] memory vals = new address[](1);
+            vals[0] = address(uint160(i * 100));
+            consumer.record(i * 10, vals);
+        }
+
+        uint256 gas1 = gasleft();
+        consumer.values(50);
+        gas1 = gas1 - gasleft();
+
+        uint256 gas2 = gasleft();
+        consumer.values(500);
+        gas2 = gas2 - gasleft();
+
+        uint256 gas3 = gasleft();
+        consumer.values(950);
+        gas3 = gas3 - gasleft();
+
+        // All queries should have similar gas (O(log n))
+        uint256 avgGas = (gas1 + gas2 + gas3) / 3;
+        assertTrue(gas1 < avgGas * 2, "Query gas should be O(log n)");
+        assertTrue(gas2 < avgGas * 2, "Query gas should be O(log n)");
+        assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
+    }
 }
