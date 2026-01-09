@@ -829,4 +829,53 @@ contract RoundHistoryAddressSetTest is Test {
             consumer.containsByRound(tokenAddress, actionId, account1, 5)
         );
     }
+
+    // ============================================
+    // Extreme Round Value Tests
+    // ============================================
+
+    function test_Add_ExtremeRoundValue() public {
+        consumer.add(tokenAddress, actionId, account1, type(uint256).max);
+
+        assertEq(consumer.count(tokenAddress, actionId), 1);
+        assertTrue(consumer.contains(tokenAddress, actionId, account1));
+        assertTrue(
+            consumer.containsByRound(
+                tokenAddress,
+                actionId,
+                account1,
+                type(uint256).max
+            )
+        );
+    }
+
+    function test_Remove_ExtremeRoundValue() public {
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.remove(tokenAddress, actionId, account1, type(uint256).max);
+
+        assertEq(consumer.count(tokenAddress, actionId), 0);
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+    }
+
+    function test_ValuesByRound_ExtremeRoundValue() public {
+        consumer.add(tokenAddress, actionId, account1, 1);
+        consumer.add(tokenAddress, actionId, account2, type(uint256).max);
+
+        address[] memory round1 = consumer.valuesByRound(
+            tokenAddress,
+            actionId,
+            1
+        );
+        assertEq(round1.length, 1);
+        assertEq(round1[0], account1);
+
+        address[] memory roundMax = consumer.valuesByRound(
+            tokenAddress,
+            actionId,
+            type(uint256).max
+        );
+        assertEq(roundMax.length, 2);
+        assertEq(roundMax[0], account1);
+        assertEq(roundMax[1], account2);
+    }
 }

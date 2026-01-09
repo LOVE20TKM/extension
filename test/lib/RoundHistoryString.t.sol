@@ -323,4 +323,24 @@ contract RoundHistoryStringTest is Test {
         assertTrue(gas2 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
     }
+
+    // ============================================
+    // Extreme Round Value Tests
+    // ============================================
+
+    function test_Record_ExtremeRoundValue() public {
+        consumer.record(type(uint256).max, "extreme");
+
+        assertEq(consumer.value(type(uint256).max), "extreme");
+        assertEq(consumer.latestValue(), "extreme");
+    }
+
+    function test_Value_ExtremeRoundValue() public {
+        consumer.record(1, "first");
+        consumer.record(type(uint256).max, "extreme");
+
+        assertEq(consumer.value(1), "first");
+        assertEq(consumer.value(type(uint256).max), "extreme");
+        assertEq(consumer.value(type(uint256).max - 1), "first");
+    }
 }

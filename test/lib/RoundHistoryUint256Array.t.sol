@@ -325,6 +325,41 @@ contract RoundHistoryUint256ArrayTest is Test {
         assertEq(result[0], 300);
     }
 
+    function test_Record_EmptyArray() public {
+        uint256[] memory empty = new uint256[](0);
+        consumer.record(1, empty);
+
+        uint256[] memory result = consumer.values(1);
+        assertEq(result.length, 0);
+
+        uint256[] memory latest = consumer.latestValues();
+        assertEq(latest.length, 0);
+    }
+
+    function test_Record_EmptyArray_ThenAdd() public {
+        uint256[] memory empty = new uint256[](0);
+        consumer.record(1, empty);
+
+        consumer.add(1, 100);
+        uint256[] memory result = consumer.values(1);
+        assertEq(result.length, 1);
+        assertEq(result[0], 100);
+    }
+
+    function test_Record_EmptyArray_AfterNonEmpty() public {
+        consumer.add(1, 100);
+        consumer.add(1, 200);
+
+        uint256[] memory empty = new uint256[](0);
+        consumer.record(5, empty);
+
+        uint256[] memory round1 = consumer.values(1);
+        assertEq(round1.length, 2);
+
+        uint256[] memory round5 = consumer.values(5);
+        assertEq(round5.length, 0);
+    }
+
     // ============================================
     // LatestValues Tests
     // ============================================
@@ -544,6 +579,42 @@ contract RoundHistoryUint256ArrayTest is Test {
         assertTrue(gas1 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas2 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
+    }
+
+    // ============================================
+    // Extreme Round Value Tests
+    // ============================================
+
+    function test_Record_ExtremeRoundValue() public {
+        uint256[] memory values1 = new uint256[](1);
+        values1[0] = 100;
+        consumer.record(type(uint256).max, values1);
+
+        uint256[] memory result = consumer.values(type(uint256).max);
+        assertEq(result.length, 1);
+        assertEq(result[0], 100);
+
+        uint256[] memory latest = consumer.latestValues();
+        assertEq(latest.length, 1);
+        assertEq(latest[0], 100);
+    }
+
+    function test_Value_ExtremeRoundValue() public {
+        uint256[] memory values1 = new uint256[](1);
+        values1[0] = 100;
+        consumer.record(1, values1);
+
+        uint256[] memory values2 = new uint256[](1);
+        values2[0] = 200;
+        consumer.record(type(uint256).max, values2);
+
+        uint256[] memory result1 = consumer.values(1);
+        assertEq(result1.length, 1);
+        assertEq(result1[0], 100);
+
+        uint256[] memory resultMax = consumer.values(type(uint256).max);
+        assertEq(resultMax.length, 1);
+        assertEq(resultMax[0], 200);
     }
 }
 

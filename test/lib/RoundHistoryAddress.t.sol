@@ -311,5 +311,29 @@ contract RoundHistoryAddressTest is Test {
         assertTrue(gas2 < avgGas * 2, "Query gas should be O(log n)");
         assertTrue(gas3 < avgGas * 2, "Query gas should be O(log n)");
     }
+
+    // ============================================
+    // Extreme Round Value Tests
+    // ============================================
+
+    function test_Record_ExtremeRoundValue() public {
+        address addr = address(0x1001);
+        consumer.record(type(uint256).max, addr);
+
+        assertEq(consumer.value(type(uint256).max), addr);
+        assertEq(consumer.latestValue(), addr);
+    }
+
+    function test_Value_ExtremeRoundValue() public {
+        address addr1 = address(0x1001);
+        address addr2 = address(0x1002);
+
+        consumer.record(1, addr1);
+        consumer.record(type(uint256).max, addr2);
+
+        assertEq(consumer.value(1), addr1);
+        assertEq(consumer.value(type(uint256).max), addr2);
+        assertEq(consumer.value(type(uint256).max - 1), addr1);
+    }
 }
 
