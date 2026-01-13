@@ -39,5 +39,5 @@ verify_contract(){
 }
 echo "verify_contract() loaded"
 
-# Verify LOVE20ExtensionCenter
-verify_contract $centerAddress "LOVE20ExtensionCenter" "src/LOVE20ExtensionCenter.sol"
+# Verify ExtensionCenter
+verify_contract $centerAddress "ExtensionCenter" "src/ExtensionCenter.sol"

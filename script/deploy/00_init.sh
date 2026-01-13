@@ -14,8 +14,6 @@ network_dir="../network/$network"
 
 source $network_dir/.account && \
 source $network_dir/network.params && \
-source $network_dir/LOVE20.params && \
-source $network_dir/WETH.params && \
 source $network_dir/address.params
 
 # ------ Request keystore password ------
@@ -81,7 +79,7 @@ forge_script() {
 echo "forge_script() loaded"
 
 forge_script_deploy_extension_center() {
-  forge_script ../DeployLOVE20ExtensionCenter.s.sol:DeployLOVE20ExtensionCenter --sig "run()"
+  forge_script ../DeployExtensionCenter.s.sol:DeployExtensionCenter --sig "run()"
 }
 
 echo "forge_script_deploy_extension_center() loaded"

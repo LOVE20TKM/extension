@@ -25,7 +25,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # ------ Step 2: Deploy Extension Center ------
-echo -e "\n[Step 2/4] Deploying LOVE20ExtensionCenter..."
+echo -e "\n[Step 2/4] Deploying ExtensionCenter..."
 forge_script_deploy_extension_center
 if [ $? -ne 0 ]; then
     echo -e "\033[31mError:\033[0m Deployment failed"
