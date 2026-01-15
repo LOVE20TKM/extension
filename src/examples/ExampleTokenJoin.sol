@@ -4,8 +4,6 @@ pragma solidity =0.8.17;
 import {
     ExtensionBaseRewardTokenJoin
 } from "../ExtensionBaseRewardTokenJoin.sol";
-import {ExtensionBase} from "../ExtensionBase.sol";
-import {IExtension} from "../interface/IExtension.sol";
 import {RoundHistoryUint256} from "../lib/RoundHistoryUint256.sol";
 
 using RoundHistoryUint256 for RoundHistoryUint256.History;
@@ -25,30 +23,6 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
         )
     {}
 
-    function joinedAmount()
-        external
-        view
-        override(ExtensionBaseRewardTokenJoin)
-        returns (uint256)
-    {
-        return _joinedAmountHistory.latestValue();
-    }
-
-    function joinedAmountByAccount(
-        address account
-    ) external view override(ExtensionBaseRewardTokenJoin) returns (uint256) {
-        return _joinedAmountByAccountHistory[account].latestValue();
-    }
-
-    function joinedAmountTokenAddress()
-        external
-        view
-        override(ExtensionBaseRewardTokenJoin)
-        returns (address)
-    {
-        return JOIN_TOKEN_ADDRESS;
-    }
-
     function _calculateReward(
         uint256 round,
         address account
@@ -60,10 +34,14 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
             address(this)
         );
 
+        uint256 totalJoinedAmount = _joinedAmountHistory.latestValue();
+        if (totalJoinedAmount == 0) {
+            return 0;
+        }
         reward =
             (totalActionReward *
                 _joinedAmountByAccountHistory[account].latestValue()) /
-            _joinedAmountHistory.latestValue();
+            totalJoinedAmount;
         return reward;
     }
 }
