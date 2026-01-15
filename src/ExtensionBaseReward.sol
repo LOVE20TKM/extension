@@ -24,6 +24,9 @@ abstract contract ExtensionBaseReward is
     // round => account => claimedReward
     mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
 
+    // round => account => isClaimed
+    mapping(uint256 => mapping(address => bool)) internal _claimed;
+
     constructor(
         address factory_,
         address tokenAddress_
@@ -45,9 +48,8 @@ abstract contract ExtensionBaseReward is
         uint256 round,
         address account
     ) public view virtual returns (uint256 amount, bool isMinted) {
-        uint256 claimedReward = _claimedReward[round][account];
-        if (claimedReward > 0) {
-            return (claimedReward, true);
+        if (_claimed[round][account]) {
+            return (_claimedReward[round][account], true);
         }
 
         return (_calculateReward(round, account), false);
@@ -87,11 +89,13 @@ abstract contract ExtensionBaseReward is
             revert AlreadyClaimed();
         }
 
+        _claimed[round][msg.sender] = true;
+        _claimedReward[round][msg.sender] = amount;
+
         if (amount == 0) {
             return 0;
         }
 
-        _claimedReward[round][msg.sender] = amount;
         IERC20(TOKEN_ADDRESS).safeTransfer({to: msg.sender, value: amount});
         emit ClaimReward({
             tokenAddress: TOKEN_ADDRESS,
