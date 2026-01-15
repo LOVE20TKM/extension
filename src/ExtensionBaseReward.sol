@@ -47,7 +47,7 @@ abstract contract ExtensionBaseReward is
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 amount, bool isMinted) {
+    ) public view virtual returns (uint256 amount, bool claimed) {
         if (_claimed[round][account]) {
             return (_claimedReward[round][account], true);
         }
@@ -83,9 +83,9 @@ abstract contract ExtensionBaseReward is
     function _claimReward(
         uint256 round
     ) internal virtual returns (uint256 amount) {
-        bool isMinted;
-        (amount, isMinted) = rewardByAccount(round, msg.sender);
-        if (isMinted) {
+        bool claimed;
+        (amount, claimed) = rewardByAccount(round, msg.sender);
+        if (claimed) {
             revert AlreadyClaimed();
         }
 
