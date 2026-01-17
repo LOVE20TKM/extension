@@ -44,6 +44,48 @@ abstract contract ExtensionBaseReward is
         return _claimReward(round);
     }
 
+    function claimRewards(
+        uint256[] calldata rounds
+    )
+        public
+        virtual
+        nonReentrant
+        returns (
+            uint256[] memory claimedRounds,
+            uint256[] memory rewards,
+            uint256 total
+        )
+    {
+        uint256 len = rounds.length;
+        claimedRounds = new uint256[](len);
+        rewards = new uint256[](len);
+        uint256 count;
+        uint256 currentRound = _verify.currentRound();
+
+        for (uint256 i; i < len; ) {
+            uint256 round = rounds[i];
+            if (round < currentRound && !_claimed[round][msg.sender]) {
+                _prepareRewardIfNeeded(round);
+                uint256 amount = _claimReward(round);
+                claimedRounds[count] = round;
+                rewards[count] = amount;
+                total += amount;
+                unchecked {
+                    ++count;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        assembly {
+            mstore(claimedRounds, count)
+            mstore(rewards, count)
+        }
+        return (claimedRounds, rewards, total);
+    }
+
     function rewardByAccount(
         uint256 round,
         address account

@@ -18,4 +18,13 @@ interface IReward {
     ) external view returns (uint256 reward, bool claimed);
 
     function claimReward(uint256 round) external returns (uint256 reward);
+    function claimRewards(
+        uint256[] calldata rounds
+    )
+        external
+        returns (
+            uint256[] memory claimedRounds,
+            uint256[] memory rewards,
+            uint256 total
+        );
 }

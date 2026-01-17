@@ -542,6 +542,38 @@ contract ExtensionBaseTest is BaseExtensionTest {
         vm.stopPrank();
     }
 
+    function test_ClaimRewards_SkipUnfinishedAndClaimed() public {
+        setUpRewardExtension();
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        mint.setActionReward(address(token), 0, ACTION_ID, 100e18);
+        mint.setActionReward(address(token), 1, ACTION_ID, 100e18);
+        verify.setCurrentRound(2);
+
+        vm.prank(user1);
+        rewardExtension.claimReward(1);
+
+        uint256[] memory rounds = new uint256[](3);
+        rounds[0] = 0;
+        rounds[1] = 1;
+        rounds[2] = 2;
+
+        vm.prank(user1);
+        (
+            uint256[] memory claimedRounds,
+            uint256[] memory rewards,
+            uint256 total
+        ) = rewardExtension.claimRewards(rounds);
+
+        assertEq(claimedRounds.length, 1);
+        assertEq(rewards.length, 1);
+        assertEq(claimedRounds[0], 0);
+        assertEq(rewards[0], 100e18);
+        assertEq(total, 100e18);
+    }
+
     // ============================================
     // RewardByAccount Tests
     // ============================================
