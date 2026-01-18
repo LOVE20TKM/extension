@@ -15,24 +15,16 @@ echo -e "=========================================\n"
 
 # ------ Step 2: Deploy Extension Center ------
 echo -e "\n[Step 2/4] Deploying ExtensionCenter..."
-forge_script_deploy_extension_center
+source 01_deploy_extension_center.sh
 if [ $? -ne 0 ]; then
     echo -e "\033[31mError:\033[0m Deployment failed"
     return 1
 fi
 
-# Load deployed address
-source $network_dir/address.extension.center.params
-if [ -z "$centerAddress" ]; then
-    echo -e "\033[31mError:\033[0m Extension center address not found"
-    return 1
-fi
-echo -e "\033[32m✓\033[0m Extension Center deployed at: $centerAddress"
-
 # ------ Step 3: Verify contract (for thinkium70001 networks) ------
 if [[ "$network" == thinkium70001* ]]; then
     echo -e "\n[Step 3/4] Verifying contract on explorer..."
-    source 03_verify.sh
+    source 02_verify.sh
     if [ $? -ne 0 ]; then
         echo -e "\033[33mWarning:\033[0m Contract verification failed (deployment is still successful)"
     else

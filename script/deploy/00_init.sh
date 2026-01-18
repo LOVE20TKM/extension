@@ -75,9 +75,3 @@ forge_script() {
     $([[ "$network" != "anvil" ]] && [[ "$network" != thinkium* ]] && echo "--verify --etherscan-api-key $ETHERSCAN_API_KEY")
 }
 echo "forge_script() loaded"
-
-forge_script_deploy_extension_center() {
-  forge_script ../DeployExtensionCenter.s.sol:DeployExtensionCenter --sig "run()"
-}
-
-echo "forge_script_deploy_extension_center() loaded"
