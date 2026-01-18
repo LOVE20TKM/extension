@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# ------ Validate network parameter ------
-export network=$1
-if [ -z "$network" ] || [ ! -d "../network/$network" ]; then
-    echo -e "\033[31mError:\033[0m Network parameter is required."
-    echo -e "\nAvailable networks:"
-    for net in $(ls ../network); do
-        echo "  - $net"
-    done
+# ------ Step 1: Initialize environment ------
+echo -e "\n[Step 1/4] Initializing environment..."
+source 00_init.sh $1
+if [ $? -ne 0 ]; then
+    echo -e "\033[31mError:\033[0m Failed to initialize environment"
     return 1
 fi
 
@@ -15,14 +12,6 @@ echo -e "\n========================================="
 echo -e "  One-Click Deploy Extension Center"
 echo -e "  Network: $network"
 echo -e "=========================================\n"
-
-# ------ Step 1: Initialize environment ------
-echo -e "\n[Step 1/4] Initializing environment..."
-source 00_init.sh $network
-if [ $? -ne 0 ]; then
-    echo -e "\033[31mError:\033[0m Failed to initialize environment"
-    return 1
-fi
 
 # ------ Step 2: Deploy Extension Center ------
 echo -e "\n[Step 2/4] Deploying ExtensionCenter..."
