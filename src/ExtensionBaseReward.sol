@@ -21,6 +21,9 @@ abstract contract ExtensionBaseReward is
     // round => reward
     mapping(uint256 => uint256) internal _reward;
 
+    // round => isRewardPrepared
+    mapping(uint256 => bool) internal _rewardPrepared;
+
     // round => account => claimedReward
     mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
 
@@ -111,7 +114,7 @@ abstract contract ExtensionBaseReward is
     }
 
     function _prepareRewardIfNeeded(uint256 round) internal virtual {
-        if (_reward[round] > 0) {
+        if (_rewardPrepared[round]) {
             return;
         }
         uint256 totalActionReward = _mint.mintActionReward(
@@ -120,6 +123,7 @@ abstract contract ExtensionBaseReward is
             actionId
         );
         _reward[round] = totalActionReward;
+        _rewardPrepared[round] = true;
     }
 
     function _claimReward(

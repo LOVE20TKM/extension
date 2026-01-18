@@ -15,9 +15,9 @@ interface IReward {
     function rewardByAccount(
         uint256 round,
         address account
-    ) external view returns (uint256 reward, bool claimed);
+    ) external view returns (uint256 amount, bool claimed);
 
-    function claimReward(uint256 round) external returns (uint256 reward);
+    function claimReward(uint256 round) external returns (uint256 amount);
     function claimRewards(
         uint256[] calldata rounds
     )

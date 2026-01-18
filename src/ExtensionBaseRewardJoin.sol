@@ -5,6 +5,7 @@ import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 import {IJoin} from "./interface/IJoin.sol";
 
 abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
+    // ReentrancyGuard is inherited from ExtensionBaseReward
     // account => joinedRound
     mapping(address => uint256) internal _joinedRound;
 
@@ -19,7 +20,9 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
         return _joinedRound[account];
     }
 
-    function join(string[] memory verificationInfos) public virtual {
+    function join(
+        string[] memory verificationInfos
+    ) public virtual nonReentrant {
         initializeIfNeeded();
 
         if (_joinedRound[msg.sender] != 0) {
@@ -43,7 +46,7 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
         });
     }
 
-    function exit() public virtual {
+    function exit() public virtual nonReentrant {
         if (_joinedRound[msg.sender] == 0) {
             revert NotJoined();
         }

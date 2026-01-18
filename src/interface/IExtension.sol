@@ -2,6 +2,8 @@
 pragma solidity =0.8.17;
 
 interface IExtension {
+    event Initialize(address indexed tokenAddress, uint256 indexed actionId);
+
     error AlreadyInitialized();
     error InvalidTokenAddress();
     error ActionIdNotFound();

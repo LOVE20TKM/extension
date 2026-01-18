@@ -66,6 +66,8 @@ abstract contract ExtensionBase is IExtension {
             new string[](0)
         );
         _center.registerActionIfNeeded(TOKEN_ADDRESS, actionId);
+
+        emit Initialize({tokenAddress: TOKEN_ADDRESS, actionId: actionId});
     }
 
     function _findMatchingActionId() internal view returns (uint256) {

@@ -202,12 +202,15 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) external onlyExtensionOrDelegate(tokenAddress, actionId) {
-        _removeAccount(tokenAddress, actionId, account);
+    ) external onlyExtensionOrDelegate(tokenAddress, actionId) returns (bool) {
+        return _removeAccount(tokenAddress, actionId, account);
     }
 
-    function forceRemove(address tokenAddress, uint256 actionId) external {
-        _removeAccount(tokenAddress, actionId, msg.sender);
+    function forceRemove(
+        address tokenAddress,
+        uint256 actionId
+    ) external returns (bool) {
+        return _removeAccount(tokenAddress, actionId, msg.sender);
     }
 
     function isAccountJoined(
@@ -446,9 +449,9 @@ contract ExtensionCenter is IExtensionCenter {
         address tokenAddress,
         uint256 actionId,
         address account
-    ) internal {
+    ) internal returns (bool) {
         if (!_accountsHistory[tokenAddress][actionId].contains(account)) {
-            return;
+            return false;
         }
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
@@ -458,6 +461,8 @@ contract ExtensionCenter is IExtensionCenter {
         _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
         emit RemoveAccount(tokenAddress, actionId, account);
+
+        return true;
     }
 
     function _isFactoryInArray(
