@@ -77,7 +77,7 @@ contract ExtensionCenter is IExtensionCenter {
     modifier validRound(uint256 round) {
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
         if (round > currentRound) {
-            revert RoundExceedsJoinRound();
+            revert RoundExceedsJoinRound(round, currentRound);
         }
         _;
     }
@@ -195,7 +195,12 @@ contract ExtensionCenter is IExtensionCenter {
             currentRound
         );
 
-        emit AddAccount(tokenAddress, actionId, account);
+        emit AddAccount({
+            tokenAddress: tokenAddress,
+            round: currentRound,
+            actionId: actionId,
+            account: account
+        });
     }
 
     function removeAccount(
@@ -460,7 +465,12 @@ contract ExtensionCenter is IExtensionCenter {
 
         _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
-        emit RemoveAccount(tokenAddress, actionId, account);
+        emit RemoveAccount({
+            tokenAddress: tokenAddress,
+            round: currentRound,
+            actionId: actionId,
+            account: account
+        });
 
         return true;
     }
@@ -499,7 +509,10 @@ contract ExtensionCenter is IExtensionCenter {
         string[] memory verificationKeys = actionInfo.body.verificationKeys;
 
         if (verificationKeys.length != verificationInfos.length) {
-            revert VerificationInfoLengthMismatch();
+            revert VerificationInfoLengthMismatch(
+                verificationKeys.length,
+                verificationInfos.length
+            );
         }
 
         uint256 len = verificationKeys.length;

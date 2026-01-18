@@ -9,11 +9,13 @@ struct TokenActionPair {
 interface IExtensionCenter {
     event AddAccount(
         address indexed tokenAddress,
+        uint256 round,
         uint256 indexed actionId,
         address indexed account
     );
     event RemoveAccount(
         address indexed tokenAddress,
+        uint256 round,
         uint256 indexed actionId,
         address indexed account
     );
@@ -39,12 +41,12 @@ interface IExtensionCenter {
     error OnlyExtensionOrDelegate();
     error OnlyUserOrExtensionOrDelegate();
     error AccountAlreadyJoined();
-    error VerificationInfoLengthMismatch();
+    error VerificationInfoLengthMismatch(uint256 expected, uint256 actual);
     error ActionNotVotedInCurrentRound();
     error ExtensionNotFoundInFactory();
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
-    error RoundExceedsJoinRound();
+    error RoundExceedsJoinRound(uint256 round, uint256 currentRound);
 
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);

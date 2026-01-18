@@ -301,12 +301,20 @@ contract ExampleTokenJoinTest is Test {
     function test_Exit_RevertIfNotEnoughWaitingBlocks() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
+        uint256 joinedBlock = block.number;
+        uint256 exitableBlock = joinedBlock + WAITING_BLOCKS;
 
         // Not enough blocks passed
         vm.roll(block.number + WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                exitableBlock
+            )
+        );
         extension.exit();
     }
 
@@ -335,6 +343,8 @@ contract ExampleTokenJoinTest is Test {
         // User2 joins at block 50
         vm.prank(user2);
         extension.join(200e18, new string[](0));
+        uint256 user2JoinedBlock = block.number;
+        uint256 user2ExitableBlock = user2JoinedBlock + WAITING_BLOCKS;
 
         // Move forward another 50 blocks (total 100 from user1's join)
         vm.roll(block.number + 50);
@@ -348,7 +358,13 @@ contract ExampleTokenJoinTest is Test {
 
         // User2 cannot exit yet (only 50 blocks passed since their join)
         vm.prank(user2);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                user2ExitableBlock
+            )
+        );
         extension.exit();
 
         // Move forward another 50 blocks

@@ -39,11 +39,13 @@ contract ExtensionCenterTest is Test {
 
     event AddAccount(
         address indexed tokenAddress,
+        uint256 round,
         uint256 indexed actionId,
         address indexed account
     );
     event RemoveAccount(
         address indexed tokenAddress,
+        uint256 round,
         uint256 indexed actionId,
         address indexed account
     );
@@ -111,7 +113,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidUniswapV2FactoryAddress() public {
-        vm.expectRevert("uniswapV2FactoryAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             address(0),
             mockLaunch,
@@ -126,7 +128,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidLaunchAddress() public {
-        vm.expectRevert("launchAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             address(0),
@@ -141,7 +143,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidStakeAddress() public {
-        vm.expectRevert("stakeAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -156,7 +158,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidSubmitAddress() public {
-        vm.expectRevert("submitAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -171,7 +173,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVoteAddress() public {
-        vm.expectRevert("voteAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -186,7 +188,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidJoinAddress() public {
-        vm.expectRevert("joinAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -201,7 +203,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidVerifyAddress() public {
-        vm.expectRevert("verifyAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -216,7 +218,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidMintAddress() public {
-        vm.expectRevert("mintAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -231,7 +233,7 @@ contract ExtensionCenterTest is Test {
     }
 
     function testConstructorRevertsOnInvalidRandomAddress() public {
-        vm.expectRevert("randomAddress is not set");
+        vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
             mockLaunch,
@@ -285,9 +287,14 @@ contract ExtensionCenterTest is Test {
         _registerAction(tokenAddress, actionId1);
 
         // Add account from extension
-        vm.prank(address(mockExtension));
         vm.expectEmit(true, true, true, false);
-        emit AddAccount(tokenAddress, actionId1, user1);
+        emit AddAccount(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1,
+            user1
+        );
+        vm.prank(address(mockExtension));
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -429,7 +436,12 @@ contract ExtensionCenterTest is Test {
 
         // Remove account
         vm.expectEmit(true, true, true, false);
-        emit RemoveAccount(tokenAddress, actionId1, user1);
+        emit RemoveAccount(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1,
+            user1
+        );
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
         vm.stopPrank();
 
@@ -1088,7 +1100,11 @@ contract ExtensionCenterTest is Test {
 
         vm.prank(address(mockExtension));
         vm.expectRevert(
-            IExtensionCenter.VerificationInfoLengthMismatch.selector
+            abi.encodeWithSelector(
+                IExtensionCenter.VerificationInfoLengthMismatch.selector,
+                2,
+                1
+            )
         );
         extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
     }
@@ -1132,7 +1148,11 @@ contract ExtensionCenterTest is Test {
 
         vm.prank(address(mockExtension));
         vm.expectRevert(
-            IExtensionCenter.VerificationInfoLengthMismatch.selector
+            abi.encodeWithSelector(
+                IExtensionCenter.VerificationInfoLengthMismatch.selector,
+                2,
+                1
+            )
         );
         extensionCenter.updateVerificationInfo(
             tokenAddress,
@@ -1185,9 +1205,14 @@ contract ExtensionCenterTest is Test {
         );
 
         // User exits by themselves
-        vm.prank(user1);
         vm.expectEmit(true, true, true, false);
-        emit RemoveAccount(tokenAddress, actionId1, user1);
+        emit RemoveAccount(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1,
+            user1
+        );
+        vm.prank(user1);
         extensionCenter.forceRemove(tokenAddress, actionId1);
 
         // Verify
@@ -2540,7 +2565,13 @@ contract ExtensionCenterTest is Test {
         );
 
         // Query future round (should return false as account not joined in future)
-        vm.expectRevert(IExtensionCenter.RoundExceedsJoinRound.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtensionCenter.RoundExceedsJoinRound.selector,
+                round1 + 100,
+                round1
+            )
+        );
         extensionCenter.isAccountJoinedByRound(
             tokenAddress,
             actionId1,

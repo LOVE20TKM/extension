@@ -387,10 +387,17 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
 
+        uint256 joinedBlock = block.number;
         advanceBlocks(WAITING_BLOCKS - 1);
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                joinedBlock + WAITING_BLOCKS
+            )
+        );
         extension.exit();
     }
 
@@ -415,6 +422,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         vm.prank(user2);
         extension.join(200e18, new string[](0));
+        uint256 user2JoinedBlock = block.number;
 
         advanceBlocks(50);
 
@@ -427,7 +435,13 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
         // User2 cannot exit yet
         vm.prank(user2);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                user2JoinedBlock + WAITING_BLOCKS
+            )
+        );
         extension.exit();
 
         advanceBlocks(50);
@@ -797,14 +811,28 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     function test_EdgeCase_ExitBeforeWaitingPeriod() public {
         vm.prank(user1);
         extension.join(100e18, new string[](0));
+        uint256 joinedBlock = block.number;
+        uint256 exitableBlock = joinedBlock + WAITING_BLOCKS;
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                exitableBlock
+            )
+        );
         extension.exit();
 
         advanceBlocks(WAITING_BLOCKS - 1);
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotEnoughWaitingBlocks.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                block.number,
+                exitableBlock
+            )
+        );
         extension.exit();
 
         advanceBlocks(1);

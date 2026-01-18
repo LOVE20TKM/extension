@@ -8,7 +8,7 @@ interface IExtension {
     error InvalidTokenAddress();
     error ActionIdNotFound();
     error MultipleActionIdsFound();
-    error RoundNotFinished();
+    error RoundNotFinished(uint256 currentRound, uint256 requestedRound);
 
     function FACTORY_ADDRESS() external view returns (address);
     function TOKEN_ADDRESS() external view returns (address);

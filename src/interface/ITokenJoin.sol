@@ -5,7 +5,7 @@ interface ITokenJoin {
     error InvalidJoinTokenAddress();
     error JoinAmountZero();
     error NotJoined();
-    error NotEnoughWaitingBlocks();
+    error NotEnoughWaitingBlocks(uint256 currentBlock, uint256 exitableBlock);
 
     event Join(
         address indexed tokenAddress,

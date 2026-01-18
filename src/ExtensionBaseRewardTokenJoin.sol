@@ -104,8 +104,9 @@ abstract contract ExtensionBaseRewardTokenJoin is
         if (joinedBlock == 0) {
             revert NotJoined();
         }
-        if (block.number < joinedBlock + WAITING_BLOCKS) {
-            revert NotEnoughWaitingBlocks();
+        uint256 exitableBlock = joinedBlock + WAITING_BLOCKS;
+        if (block.number < exitableBlock) {
+            revert NotEnoughWaitingBlocks(block.number, exitableBlock);
         }
 
         uint256 amount = _joinedAmountByAccountHistory[msg.sender]

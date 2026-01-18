@@ -433,7 +433,13 @@ contract ExtensionBaseTest is BaseExtensionTest {
         verify.setCurrentRound(0);
 
         vm.prank(user1);
-        vm.expectRevert(IExtension.RoundNotFinished.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtension.RoundNotFinished.selector,
+                0,
+                0
+            )
+        );
         rewardExtension.claimReward(0);
     }
 
@@ -446,7 +452,13 @@ contract ExtensionBaseTest is BaseExtensionTest {
         verify.setCurrentRound(5);
 
         vm.prank(user1);
-        vm.expectRevert(IExtension.RoundNotFinished.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtension.RoundNotFinished.selector,
+                5,
+                5
+            )
+        );
         rewardExtension.claimReward(5);
     }
 
