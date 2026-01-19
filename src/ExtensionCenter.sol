@@ -211,13 +211,6 @@ contract ExtensionCenter is IExtensionCenter {
         return _removeAccount(tokenAddress, actionId, account);
     }
 
-    function forceRemove(
-        address tokenAddress,
-        uint256 actionId
-    ) external returns (bool) {
-        return _removeAccount(tokenAddress, actionId, msg.sender);
-    }
-
     function isAccountJoined(
         address tokenAddress,
         uint256 actionId,

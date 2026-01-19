@@ -77,11 +77,6 @@ interface IExtensionCenter {
         address account
     ) external returns (bool);
 
-    function forceRemove(
-        address tokenAddress,
-        uint256 actionId
-    ) external returns (bool);
-
     function updateVerificationInfo(
         address tokenAddress,
         uint256 actionId,
