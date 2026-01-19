@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
+import {ITokenJoin} from "./interface/ITokenJoin.sol";
 import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 import {ExtensionBase} from "./ExtensionBase.sol";
-import {ITokenJoin} from "./interface/ITokenJoin.sol";
+import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {RoundHistoryUint256} from "./lib/RoundHistoryUint256.sol";
 
 using SafeERC20 for IERC20;
 using RoundHistoryUint256 for RoundHistoryUint256.History;

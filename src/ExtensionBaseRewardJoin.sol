@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 import {IJoin} from "./interface/IJoin.sol";
+import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 
 abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     // ReentrancyGuard is inherited from ExtensionBaseReward
