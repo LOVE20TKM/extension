@@ -7,7 +7,7 @@ import {ExtensionBaseReward} from "./ExtensionBaseReward.sol";
 abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     // ReentrancyGuard is inherited from ExtensionBaseReward
     // account => joinedRound
-    mapping(address => uint256) internal _joinedRound;
+    mapping(address => uint256) internal _joinedRoundByAccount;
 
     constructor(
         address factory_,
@@ -17,7 +17,7 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     function joinInfo(
         address account
     ) public view virtual returns (uint256 joinedRound) {
-        return _joinedRound[account];
+        return _joinedRoundByAccount[account];
     }
 
     function join(
@@ -25,11 +25,11 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     ) public virtual nonReentrant {
         initializeIfNeeded();
 
-        if (_joinedRound[msg.sender] != 0) {
+        if (_joinedRoundByAccount[msg.sender] != 0) {
             revert AlreadyJoined();
         }
 
-        _joinedRound[msg.sender] = _join.currentRound();
+        _joinedRoundByAccount[msg.sender] = _join.currentRound();
 
         _center.addAccount(
             TOKEN_ADDRESS,
@@ -47,11 +47,11 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
     }
 
     function exit() public virtual nonReentrant {
-        if (_joinedRound[msg.sender] == 0) {
+        if (_joinedRoundByAccount[msg.sender] == 0) {
             revert NotJoined();
         }
 
-        _joinedRound[msg.sender] = 0;
+        _joinedRoundByAccount[msg.sender] = 0;
 
         _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 

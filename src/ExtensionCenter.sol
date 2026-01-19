@@ -195,13 +195,13 @@ contract ExtensionCenter is IExtensionCenter {
             currentRound
         );
 
-        uint256 totalAccount = _accountsHistory[tokenAddress][actionId].count();
+        uint256 accountCount = _accountsHistory[tokenAddress][actionId].count();
         emit AddAccount({
             tokenAddress: tokenAddress,
             round: currentRound,
             actionId: actionId,
             account: account,
-            totalAccount: totalAccount
+            accountCount: accountCount
         });
     }
 
@@ -260,14 +260,14 @@ contract ExtensionCenter is IExtensionCenter {
 
         for (uint256 i = 0; i < length; ) {
             uint256 actionId = allActionIds[i];
-            address factory_ = _factoryByActionId[tokenAddress][actionId];
+            address factoryAddr = _factoryByActionId[tokenAddress][actionId];
 
-            if (noFilter || _isFactoryInArray(factory_, factories)) {
+            if (noFilter || _isFactoryInArray(factoryAddr, factories)) {
                 actionIds[count] = actionId;
                 extensions[count] = _extensionByActionId[tokenAddress][
                     actionId
                 ];
-                factories_[count] = factory_;
+                factories_[count] = factoryAddr;
                 unchecked {
                     count++;
                 }
@@ -460,13 +460,13 @@ contract ExtensionCenter is IExtensionCenter {
 
         _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
-        uint256 totalAccount = _accountsHistory[tokenAddress][actionId].count();
+        uint256 accountCount = _accountsHistory[tokenAddress][actionId].count();
         emit RemoveAccount({
             tokenAddress: tokenAddress,
             round: currentRound,
             actionId: actionId,
             account: account,
-            totalAccount: totalAccount
+            accountCount: accountCount
         });
 
         return true;
