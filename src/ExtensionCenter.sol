@@ -210,7 +210,26 @@ contract ExtensionCenter is IExtensionCenter {
         uint256 actionId,
         address account
     ) external onlyExtensionOrDelegate(tokenAddress, actionId) returns (bool) {
-        return _removeAccount(tokenAddress, actionId, account);
+        if (!_accountsHistory[tokenAddress][actionId].contains(account)) {
+            return false;
+        }
+
+        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
+
+        ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
+
+        _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
+
+        uint256 accountCount = _accountsHistory[tokenAddress][actionId].count();
+        emit RemoveAccount({
+            tokenAddress: tokenAddress,
+            round: currentRound,
+            actionId: actionId,
+            account: account,
+            accountCount: accountCount
+        });
+
+        return true;
     }
 
     function isAccountJoined(
@@ -444,34 +463,6 @@ contract ExtensionCenter is IExtensionCenter {
 
         return extensionAddress;
     }
-
-    function _removeAccount(
-        address tokenAddress,
-        uint256 actionId,
-        address account
-    ) internal returns (bool) {
-        if (!_accountsHistory[tokenAddress][actionId].contains(account)) {
-            return false;
-        }
-
-        uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
-
-        ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
-
-        _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
-
-        uint256 accountCount = _accountsHistory[tokenAddress][actionId].count();
-        emit RemoveAccount({
-            tokenAddress: tokenAddress,
-            round: currentRound,
-            actionId: actionId,
-            account: account,
-            accountCount: accountCount
-        });
-
-        return true;
-    }
-
     function _isFactoryInArray(
         address factory_,
         address[] calldata factories

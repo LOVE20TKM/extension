@@ -29,7 +29,8 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
             revert AlreadyJoined();
         }
 
-        _joinedRoundByAccount[msg.sender] = _join.currentRound();
+        uint256 currentRound = _join.currentRound();
+        _joinedRoundByAccount[msg.sender] = currentRound;
 
         _center.addAccount(
             TOKEN_ADDRESS,
@@ -40,7 +41,7 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
 
         emit Join({
             tokenAddress: TOKEN_ADDRESS,
-            round: _join.currentRound(),
+            round: currentRound,
             actionId: actionId,
             account: msg.sender
         });
