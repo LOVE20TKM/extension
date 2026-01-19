@@ -41,13 +41,15 @@ contract ExtensionCenterTest is Test {
         address indexed tokenAddress,
         uint256 round,
         uint256 indexed actionId,
-        address indexed account
+        address indexed account,
+        uint256 totalAccount
     );
     event RemoveAccount(
         address indexed tokenAddress,
         uint256 round,
         uint256 indexed actionId,
-        address indexed account
+        address indexed account,
+        uint256 totalAccount
     );
     event UpdateVerificationInfo(
         address indexed tokenAddress,
@@ -292,7 +294,8 @@ contract ExtensionCenterTest is Test {
             tokenAddress,
             mockJoin.currentRound(),
             actionId1,
-            user1
+            user1,
+            1
         );
         vm.prank(address(mockExtension));
         extensionCenter.addAccount(
@@ -440,7 +443,8 @@ contract ExtensionCenterTest is Test {
             tokenAddress,
             mockJoin.currentRound(),
             actionId1,
-            user1
+            user1,
+            0
         );
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
         vm.stopPrank();

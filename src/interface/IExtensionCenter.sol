@@ -11,13 +11,15 @@ interface IExtensionCenter {
         address indexed tokenAddress,
         uint256 round,
         uint256 indexed actionId,
-        address indexed account
+        address indexed account,
+        uint256 totalAccount
     );
     event RemoveAccount(
         address indexed tokenAddress,
         uint256 round,
         uint256 indexed actionId,
-        address indexed account
+        address indexed account,
+        uint256 totalAccount
     );
     event UpdateVerificationInfo(
         address indexed tokenAddress,

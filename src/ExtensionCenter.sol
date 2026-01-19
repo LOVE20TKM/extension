@@ -195,11 +195,13 @@ contract ExtensionCenter is IExtensionCenter {
             currentRound
         );
 
+        uint256 totalAccount = _accountsHistory[tokenAddress][actionId].count();
         emit AddAccount({
             tokenAddress: tokenAddress,
             round: currentRound,
             actionId: actionId,
-            account: account
+            account: account,
+            totalAccount: totalAccount
         });
     }
 
@@ -458,11 +460,13 @@ contract ExtensionCenter is IExtensionCenter {
 
         _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
+        uint256 totalAccount = _accountsHistory[tokenAddress][actionId].count();
         emit RemoveAccount({
             tokenAddress: tokenAddress,
             round: currentRound,
             actionId: actionId,
-            account: account
+            account: account,
+            totalAccount: totalAccount
         });
 
         return true;
