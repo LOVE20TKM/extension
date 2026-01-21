@@ -6,6 +6,8 @@ import {
     ExtensionBaseRewardTokenJoin
 } from "../src/ExtensionBaseRewardTokenJoin.sol";
 import {ITokenJoin} from "../src/interface/ITokenJoin.sol";
+import {ITokenJoinEvents} from "../src/interface/ITokenJoin.sol";
+import {ITokenJoinErrors} from "../src/interface/ITokenJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
@@ -84,24 +86,9 @@ contract MockExtensionForTokenJoin is ExtensionBaseRewardTokenJoin {
  * @notice Test suite for ExtensionBaseRewardTokenJoin
  * @dev Tests join with tokens, waiting period, exit, and reentrancy
  */
-contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
+contract ExtensionBaseTokenJoinTest is BaseExtensionTest, ITokenJoinEvents {
     MockExtensionFactory public mockFactory;
     MockExtensionForTokenJoin public extension;
-
-    event Join(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
-    event Exit(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
 
     function setUp() public {
         setUpBase();
@@ -143,7 +130,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
     }
 
     function test_Constructor_RevertsOnZeroJoinTokenAddress() public {
-        vm.expectRevert(ITokenJoin.InvalidJoinTokenAddress.selector);
+        vm.expectRevert(ITokenJoinErrors.InvalidJoinTokenAddress.selector);
         new MockExtensionForTokenJoin(
             address(mockFactory),
             address(token),
@@ -225,7 +212,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(ITokenJoinErrors.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -379,7 +366,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotJoined.selector);
+        vm.expectRevert(ITokenJoinErrors.NotJoined.selector);
         extension.exit();
     }
 
@@ -393,7 +380,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 joinedBlock + WAITING_BLOCKS
             )
@@ -437,7 +424,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user2);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 user2JoinedBlock + WAITING_BLOCKS
             )
@@ -607,7 +594,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         extension.exit();
 
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotJoined.selector);
+        vm.expectRevert(ITokenJoinErrors.NotJoined.selector);
         extension.exit();
     }
 
@@ -817,7 +804,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 exitableBlock
             )
@@ -828,7 +815,7 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 exitableBlock
             )

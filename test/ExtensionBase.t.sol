@@ -4,9 +4,12 @@ pragma solidity =0.8.17;
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseRewardJoin} from "../src/ExtensionBaseRewardJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
+import {IRewardEvents} from "../src/interface/IReward.sol";
+import {IRewardErrors} from "../src/interface/IReward.sol";
 import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
 import {IExtension} from "../src/interface/IExtension.sol";
+import {IExtensionErrors} from "../src/interface/IExtension.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {
     EnumerableSet
@@ -159,18 +162,10 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
  * @notice Test suite for ExtensionBaseReward
  * @dev Tests constructor, initialization, view functions, and reward claiming
  */
-contract ExtensionBaseTest is BaseExtensionTest {
+contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     MockExtensionFactory public mockFactory;
     MockExtensionForCore public extension;
     MockExtensionForReward public rewardExtension;
-
-    event ClaimReward(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
 
     function setUp() public {
         setUpBase();
@@ -435,7 +430,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IExtension.RoundNotFinished.selector,
+                IExtensionErrors.RoundNotFinished.selector,
                 0,
                 0
             )
@@ -454,7 +449,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IExtension.RoundNotFinished.selector,
+                IExtensionErrors.RoundNotFinished.selector,
                 5,
                 5
             )
@@ -478,7 +473,7 @@ contract ExtensionBaseTest is BaseExtensionTest {
 
         // Second claim reverts
         vm.prank(user1);
-        vm.expectRevert(IReward.AlreadyClaimed.selector);
+        vm.expectRevert(IRewardErrors.AlreadyClaimed.selector);
         rewardExtension.claimReward(targetRound);
     }
 

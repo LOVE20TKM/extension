@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import {BaseExtensionTest} from "./utils/BaseExtensionTest.sol";
 import {ExtensionBaseRewardJoin} from "../src/ExtensionBaseRewardJoin.sol";
 import {IJoin} from "../src/interface/IJoin.sol";
+import {IJoinEvents} from "../src/interface/IJoin.sol";
+import {IJoinErrors} from "../src/interface/IJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
 import {ExtensionBaseReward} from "../src/ExtensionBaseReward.sol";
 import {ExtensionBase} from "../src/ExtensionBase.sol";
@@ -75,22 +77,9 @@ contract MockExtensionForJoin is ExtensionBaseRewardJoin {
  * @notice Test suite for ExtensionBaseRewardJoin
  * @dev Tests join, exit, and verification info integration
  */
-contract ExtensionBaseJoinTest is BaseExtensionTest {
+contract ExtensionBaseJoinTest is BaseExtensionTest, IJoinEvents {
     MockExtensionFactory public mockFactory;
     MockExtensionForJoin public extension;
-
-    event Join(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account
-    );
-    event Exit(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account
-    );
 
     function setUp() public {
         setUpBase();
@@ -152,7 +141,7 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
         vm.startPrank(user1);
         extension.join(new string[](0));
 
-        vm.expectRevert(IJoin.AlreadyJoined.selector);
+        vm.expectRevert(IJoinErrors.AlreadyJoined.selector);
         extension.join(new string[](0));
         vm.stopPrank();
     }
@@ -218,7 +207,7 @@ contract ExtensionBaseJoinTest is BaseExtensionTest {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(IJoin.NotJoined.selector);
+        vm.expectRevert(IJoinErrors.NotJoined.selector);
         extension.exit();
     }
 

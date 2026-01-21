@@ -3,12 +3,14 @@ pragma solidity =0.8.17;
 
 uint256 constant DEFAULT_JOIN_AMOUNT = 1e18;
 
-interface IExtensionFactory {
+interface IExtensionFactoryEvents {
     event CreateExtension(
         address indexed extension,
         address indexed tokenAddress
     );
+}
 
+interface IExtensionFactory is IExtensionFactoryEvents {
     function CENTER_ADDRESS() external view returns (address);
 
     function exists(address extension) external view returns (bool);

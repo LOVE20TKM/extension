@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import {Test} from "forge-std/Test.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {IExtensionCenter} from "../src/interface/IExtensionCenter.sol";
+import {IExtensionCenterEvents} from "../src/interface/IExtensionCenter.sol";
+import {IExtensionCenterErrors} from "../src/interface/IExtensionCenter.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
 import {MockVote} from "./mocks/MockVote.sol";
@@ -15,7 +17,7 @@ import {MockToken} from "./mocks/MockToken.sol";
  * @title ExtensionCenterTest
  * @dev Test contract for ExtensionCenter
  */
-contract ExtensionCenterTest is Test {
+contract ExtensionCenterTest is Test, IExtensionCenterEvents {
     ExtensionCenter public extensionCenter;
     MockSubmit public mockSubmit;
     MockJoin public mockJoin;
@@ -36,29 +38,6 @@ contract ExtensionCenterTest is Test {
 
     uint256 public actionId1 = 1;
     uint256 public actionId2 = 2;
-
-    event AddAccount(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 accountCount
-    );
-    event RemoveAccount(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 accountCount
-    );
-    event UpdateVerificationInfo(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        string verificationKey,
-        string verificationInfo
-    );
 
     function setUp() public {
         // Deploy mock contracts
@@ -363,7 +342,7 @@ contract ExtensionCenterTest is Test {
 
         // Try to add account from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -400,7 +379,7 @@ contract ExtensionCenterTest is Test {
         );
 
         // Try to add again
-        vm.expectRevert(IExtensionCenter.AccountAlreadyJoined.selector);
+        vm.expectRevert(IExtensionCenterErrors.AccountAlreadyJoined.selector);
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -489,14 +468,14 @@ contract ExtensionCenterTest is Test {
 
         // Try to remove from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
     function testRemoveAccountRevertsIfNotBoundToExtension() public {
         // No registration, should revert
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenter.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
@@ -987,7 +966,7 @@ contract ExtensionCenterTest is Test {
 
         vm.prank(user2);
         vm.expectRevert(
-            IExtensionCenter.OnlyUserOrExtensionOrDelegate.selector
+            IExtensionCenterErrors.OnlyUserOrExtensionOrDelegate.selector
         );
         extensionCenter.updateVerificationInfo(
             tokenAddress,
@@ -1105,7 +1084,7 @@ contract ExtensionCenterTest is Test {
         vm.prank(address(mockExtension));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IExtensionCenter.VerificationInfoLengthMismatch.selector,
+                IExtensionCenterErrors.VerificationInfoLengthMismatch.selector,
                 2,
                 1
             )
@@ -1153,7 +1132,7 @@ contract ExtensionCenterTest is Test {
         vm.prank(address(mockExtension));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IExtensionCenter.VerificationInfoLengthMismatch.selector,
+                IExtensionCenterErrors.VerificationInfoLengthMismatch.selector,
                 2,
                 1
             )
@@ -2150,7 +2129,7 @@ contract ExtensionCenterTest is Test {
         // Query future round (should return false as account not joined in future)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IExtensionCenter.RoundExceedsJoinRound.selector,
+                IExtensionCenterErrors.RoundExceedsJoinRound.selector,
                 round1 + 100,
                 round1
             )

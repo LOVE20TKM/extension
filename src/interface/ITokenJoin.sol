@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-interface ITokenJoin {
-    error InvalidJoinTokenAddress();
-    error JoinAmountZero();
-    error NotJoined();
-    error NotEnoughWaitingBlocks(uint256 currentBlock, uint256 exitableBlock);
-
+interface ITokenJoinEvents {
     event Join(
         address indexed tokenAddress,
         uint256 round,
@@ -22,7 +17,16 @@ interface ITokenJoin {
         address indexed account,
         uint256 amount
     );
+}
 
+interface ITokenJoinErrors {
+    error InvalidJoinTokenAddress();
+    error JoinAmountZero();
+    error NotJoined();
+    error NotEnoughWaitingBlocks(uint256 currentBlock, uint256 exitableBlock);
+}
+
+interface ITokenJoin is ITokenJoinEvents, ITokenJoinErrors {
     function JOIN_TOKEN_ADDRESS() external view returns (address);
 
     function WAITING_BLOCKS() external view returns (uint256);

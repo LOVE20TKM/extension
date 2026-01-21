@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-interface IReward {
+interface IRewardEvents {
     event ClaimReward(
         address indexed tokenAddress,
         uint256 round,
@@ -9,8 +9,13 @@ interface IReward {
         address indexed account,
         uint256 amount
     );
-    error AlreadyClaimed();
+}
 
+interface IRewardErrors {
+    error AlreadyClaimed();
+}
+
+interface IReward is IRewardEvents, IRewardErrors {
     function reward(uint256 round) external view returns (uint256);
     function rewardByAccount(
         uint256 round,

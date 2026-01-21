@@ -7,7 +7,10 @@ import {
     ExampleFactoryTokenJoin
 } from "../src/examples/ExampleFactoryTokenJoin.sol";
 import {ITokenJoin} from "../src/interface/ITokenJoin.sol";
+import {ITokenJoinEvents} from "../src/interface/ITokenJoin.sol";
+import {ITokenJoinErrors} from "../src/interface/ITokenJoin.sol";
 import {IReward} from "../src/interface/IReward.sol";
+import {IRewardEvents} from "../src/interface/IReward.sol";
 import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 
 // Import mock contracts
@@ -26,7 +29,7 @@ import {MockUniswapV2Factory} from "./mocks/MockUniswapV2Factory.sol";
  * @title ExampleTokenJoin Test Suite
  * @notice Comprehensive tests for ExampleTokenJoin implementation
  */
-contract ExampleTokenJoinTest is Test {
+contract ExampleTokenJoinTest is Test, ITokenJoinEvents, IRewardEvents {
     ExampleFactoryTokenJoin public factory;
     ExampleTokenJoin public extension;
     ExtensionCenter public center;
@@ -47,28 +50,6 @@ contract ExampleTokenJoinTest is Test {
 
     uint256 constant ACTION_ID = 1;
     uint256 constant WAITING_BLOCKS = 100;
-
-    event Join(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
-    event Exit(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
-    event ClaimReward(
-        address indexed tokenAddress,
-        uint256 round,
-        uint256 indexed actionId,
-        address indexed account,
-        uint256 amount
-    );
 
     function setUp() public {
         // Deploy mock contracts
@@ -211,7 +192,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Join_RevertIfAmountZero() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.JoinAmountZero.selector);
+        vm.expectRevert(ITokenJoinErrors.JoinAmountZero.selector);
         extension.join(0, new string[](0));
     }
 
@@ -294,7 +275,7 @@ contract ExampleTokenJoinTest is Test {
 
     function test_Exit_RevertIfNotJoined() public {
         vm.prank(user1);
-        vm.expectRevert(ITokenJoin.NotJoined.selector);
+        vm.expectRevert(ITokenJoinErrors.NotJoined.selector);
         extension.exit();
     }
 
@@ -310,7 +291,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 exitableBlock
             )
@@ -360,7 +341,7 @@ contract ExampleTokenJoinTest is Test {
         vm.prank(user2);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITokenJoin.NotEnoughWaitingBlocks.selector,
+                ITokenJoinErrors.NotEnoughWaitingBlocks.selector,
                 block.number,
                 user2ExitableBlock
             )

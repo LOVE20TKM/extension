@@ -6,7 +6,7 @@ struct TokenActionPair {
     uint256 actionId;
 }
 
-interface IExtensionCenter {
+interface IExtensionCenterEvents {
     event AddAccount(
         address indexed tokenAddress,
         uint256 round,
@@ -39,7 +39,9 @@ interface IExtensionCenter {
         address indexed extension,
         address factory
     );
+}
 
+interface IExtensionCenterErrors {
     error OnlyExtensionOrDelegate();
     error OnlyUserOrExtensionOrDelegate();
     error AccountAlreadyJoined();
@@ -49,7 +51,9 @@ interface IExtensionCenter {
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
     error RoundExceedsJoinRound(uint256 round, uint256 currentRound);
+}
 
+interface IExtensionCenter is IExtensionCenterEvents, IExtensionCenterErrors {
     function uniswapV2FactoryAddress() external view returns (address);
     function launchAddress() external view returns (address);
     function stakeAddress() external view returns (address);
