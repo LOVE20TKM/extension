@@ -440,6 +440,13 @@ contract ExtensionCenter is IExtensionCenter {
             revert ExtensionNotFoundInFactory();
         }
 
+        address extensionCreator = IExtensionFactory(factoryAddress)
+            .extensionCreator(extensionAddress);
+        address actionAuthor = actionInfo.head.author;
+        if (extensionCreator != actionAuthor) {
+            revert ExtensionCreatorMismatch(extensionCreator, actionAuthor);
+        }
+
         TokenActionPair memory existingPair = _extensionTokenActionPair[
             extensionAddress
         ];

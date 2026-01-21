@@ -20,6 +20,9 @@ abstract contract ExtensionFactoryBase is IExtensionFactory {
     // extension => isExtension
     mapping(address => bool) internal _isExtension;
 
+    // extension => creator
+    mapping(address => address) internal _extensionCreator;
+
     constructor(address _center) {
         CENTER_ADDRESS = _center;
     }
@@ -48,6 +51,7 @@ abstract contract ExtensionFactoryBase is IExtensionFactory {
     ) internal {
         _extensions.push(extension);
         _isExtension[extension] = true;
+        _extensionCreator[extension] = msg.sender;
         IERC20(tokenAddress).safeTransferFrom(
             msg.sender,
             extension,
@@ -57,5 +61,11 @@ abstract contract ExtensionFactoryBase is IExtensionFactory {
             extension: extension,
             tokenAddress: tokenAddress
         });
+    }
+
+    function extensionCreator(
+        address extension
+    ) external view override returns (address) {
+        return _extensionCreator[extension];
     }
 }

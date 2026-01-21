@@ -105,6 +105,13 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest, ITokenJoinEvents {
         mockFactory.registerExtension(address(extension), address(token));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        // Set action author to match extension creator
+        address extensionCreator = mockFactory.extensionCreator(
+            address(extension)
+        );
+        if (extensionCreator != address(0)) {
+            submit.setActionAuthor(address(token), ACTION_ID, extensionCreator);
+        }
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -560,6 +567,17 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest, ITokenJoinEvents {
             ACTION_ID + 1,
             address(extensionNoWait)
         );
+        // Set action author to match extension creator
+        address extensionCreator = mockFactory.extensionCreator(
+            address(extensionNoWait)
+        );
+        if (extensionCreator != address(0)) {
+            submit.setActionAuthor(
+                address(token),
+                ACTION_ID + 1,
+                extensionCreator
+            );
+        }
         vote.setVotedActionIds(
             address(token),
             join.currentRound(),

@@ -18,4 +18,8 @@ interface IExtensionFactory is IExtensionFactoryEvents {
     function extensions() external view returns (address[] memory);
     function extensionsCount() external view returns (uint256);
     function extensionsAtIndex(uint256 index) external view returns (address);
+
+    function extensionCreator(
+        address extension
+    ) external view returns (address);
 }

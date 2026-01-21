@@ -3,9 +3,7 @@ pragma solidity =0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ExtensionCenter} from "../../src/ExtensionCenter.sol";
-import {
-    IExtensionCenter
-} from "../../src/interface/IExtensionCenter.sol";
+import {IExtensionCenter} from "../../src/interface/IExtensionCenter.sol";
 
 // Import mock contracts
 import {MockERC20} from "../mocks/MockERC20.sol";
@@ -18,6 +16,7 @@ import {MockLaunch} from "../mocks/MockLaunch.sol";
 import {MockVote} from "../mocks/MockVote.sol";
 import {MockRandom} from "../mocks/MockRandom.sol";
 import {MockUniswapV2Factory} from "../mocks/MockUniswapV2Factory.sol";
+import {IExtensionFactory} from "../../src/interface/IExtensionFactory.sol";
 
 /**
  * @title BaseExtensionTest
@@ -166,20 +165,45 @@ abstract contract BaseExtensionTest is Test {
      * @param extensionAddress 扩展地址
      * @param tokenAddr 代币地址
      * @param actionId 动作 ID
+     * @param factory factory 地址（可选，如果提供则设置 actionAuthor）
      */
     function prepareExtensionInit(
         address extensionAddress,
         address tokenAddr,
-        uint256 actionId
+        uint256 actionId,
+        address factory
     ) internal virtual {
         // 设置动作信息（白名单）
         submit.setActionInfo(tokenAddr, actionId, extensionAddress);
+
+        // 设置 action author 以匹配 extension creator
+        if (factory != address(0)) {
+            address extensionCreator = IExtensionFactory(factory)
+                .extensionCreator(extensionAddress);
+            if (extensionCreator != address(0)) {
+                submit.setActionAuthor(tokenAddr, actionId, extensionCreator);
+            }
+        }
 
         // 设置 vote 返回的 actionId 列表
         vote.setVotedActionIds(tokenAddr, join.currentRound(), actionId);
 
         // 给 extension mint token 以便初始化时 join
         token.mint(extensionAddress, 1e18);
+    }
+
+    /**
+     * @notice 准备扩展初始化（不设置 actionAuthor，用于向后兼容）
+     * @param extensionAddress 扩展地址
+     * @param tokenAddr 代币地址
+     * @param actionId 动作 ID
+     */
+    function prepareExtensionInit(
+        address extensionAddress,
+        address tokenAddr,
+        uint256 actionId
+    ) internal virtual {
+        prepareExtensionInit(extensionAddress, tokenAddr, actionId, address(0));
     }
 
     // ============================================

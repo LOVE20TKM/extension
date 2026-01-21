@@ -94,6 +94,13 @@ contract ExtensionBaseJoinTest is BaseExtensionTest, IJoinEvents {
         mockFactory.registerExtension(address(extension), address(token));
 
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        // Set action author to match extension creator
+        address extensionCreator = mockFactory.extensionCreator(
+            address(extension)
+        );
+        if (extensionCreator != address(0)) {
+            submit.setActionAuthor(address(token), ACTION_ID, extensionCreator);
+        }
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
     }

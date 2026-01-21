@@ -96,6 +96,11 @@ contract ExampleTokenJoinTest is Test, ITokenJoinEvents, IRewardEvents {
 
         // Set action info whiteListAddress to extension address
         submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        // Set action author to match extension creator
+        address extensionCreator = factory.extensionCreator(address(extension));
+        if (extensionCreator != address(0)) {
+            submit.setActionAuthor(address(token), ACTION_ID, extensionCreator);
+        }
 
         // Set vote mock to return actionId for auto-initialization
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);

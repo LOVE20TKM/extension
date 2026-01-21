@@ -180,6 +180,20 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mockFactory.registerExtension(address(extension), address(token));
     }
 
+    // Helper function to set action info with author
+    function _setActionInfoWithAuthor(
+        address extensionAddress,
+        uint256 actionId
+    ) internal {
+        submit.setActionInfo(address(token), actionId, extensionAddress);
+        address extensionCreator = mockFactory.extensionCreator(
+            extensionAddress
+        );
+        if (extensionCreator != address(0)) {
+            submit.setActionAuthor(address(token), actionId, extensionCreator);
+        }
+    }
+
     // ============================================
     // Constructor Tests
     // ============================================
@@ -228,7 +242,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     // ============================================
 
     function test_Initialize_Success() public {
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        _setActionInfoWithAuthor(address(extension), ACTION_ID);
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -263,7 +277,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     }
 
     function test_TokenAddress_AfterInit() public {
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        _setActionInfoWithAuthor(address(extension), ACTION_ID);
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -279,7 +293,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     }
 
     function test_ActionId_AfterInit() public {
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        _setActionInfoWithAuthor(address(extension), ACTION_ID);
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -295,7 +309,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     }
 
     function test_Initialized_AfterInit() public {
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        _setActionInfoWithAuthor(address(extension), ACTION_ID);
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
@@ -319,16 +333,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mockFactory.registerExtension(address(extension2), address(token));
 
         // Setup first extension
-        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        _setActionInfoWithAuthor(address(extension), ACTION_ID);
         token.mint(address(extension), 1e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 
         // Setup second extension with different action ID
-        submit.setActionInfo(
-            address(token),
-            ACTION_ID + 1,
-            address(extension2)
-        );
+        _setActionInfoWithAuthor(address(extension2), ACTION_ID + 1);
         token.mint(address(extension2), 1e18);
         vote.setVotedActionIds(
             address(token),
@@ -363,11 +373,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         prepareFactoryRegistration(address(mockFactory), address(token));
         mockFactory.registerExtension(address(rewardExtension), address(token));
 
-        submit.setActionInfo(
-            address(token),
-            ACTION_ID,
-            address(rewardExtension)
-        );
+        _setActionInfoWithAuthor(address(rewardExtension), ACTION_ID);
         token.mint(address(rewardExtension), 1000e18);
         vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
 

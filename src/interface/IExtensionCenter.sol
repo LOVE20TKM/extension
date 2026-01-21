@@ -51,6 +51,7 @@ interface IExtensionCenterErrors {
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
     error RoundExceedsJoinRound(uint256 round, uint256 currentRound);
+    error ExtensionCreatorMismatch(address creator, address author);
 }
 
 interface IExtensionCenter is IExtensionCenterEvents, IExtensionCenterErrors {

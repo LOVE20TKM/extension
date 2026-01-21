@@ -6,6 +6,7 @@ import {ExtensionCenter} from "../src/ExtensionCenter.sol";
 import {IExtensionCenter} from "../src/interface/IExtensionCenter.sol";
 import {IExtensionCenterEvents} from "../src/interface/IExtensionCenter.sol";
 import {IExtensionCenterErrors} from "../src/interface/IExtensionCenter.sol";
+import {ActionInfo} from "@core/interfaces/ILOVE20Submit.sol";
 import {MockSubmit} from "./mocks/MockSubmit.sol";
 import {MockJoin} from "./mocks/MockJoin.sol";
 import {MockVote} from "./mocks/MockVote.sol";
@@ -74,6 +75,27 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         address tokenAddress_,
         uint256 actionId_
     ) internal {
+        // Get extension address from actionInfo
+        ActionInfo memory actionInfo = mockSubmit.actionInfo(
+            tokenAddress_,
+            actionId_
+        );
+        address extensionAddress = actionInfo.body.whiteListAddress;
+
+        // Get extension creator from factory and set action author
+        if (extensionAddress != address(0)) {
+            address extensionCreator = mockFactory.extensionCreator(
+                extensionAddress
+            );
+            if (extensionCreator != address(0)) {
+                mockSubmit.setActionAuthor(
+                    tokenAddress_,
+                    actionId_,
+                    extensionCreator
+                );
+            }
+        }
+
         extensionCenter.registerActionIfNeeded(tokenAddress_, actionId_);
     }
 
@@ -342,7 +364,9 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
 
         // Try to add account from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(
+            IExtensionCenterErrors.OnlyExtensionOrDelegate.selector
+        );
         extensionCenter.addAccount(
             tokenAddress,
             actionId1,
@@ -468,14 +492,18 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
 
         // Try to remove from non-extension address
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(
+            IExtensionCenterErrors.OnlyExtensionOrDelegate.selector
+        );
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
     function testRemoveAccountRevertsIfNotBoundToExtension() public {
         // No registration, should revert
         vm.prank(user1);
-        vm.expectRevert(IExtensionCenterErrors.OnlyExtensionOrDelegate.selector);
+        vm.expectRevert(
+            IExtensionCenterErrors.OnlyExtensionOrDelegate.selector
+        );
         extensionCenter.removeAccount(tokenAddress, actionId1, user1);
     }
 
@@ -596,11 +624,33 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             actionId1,
             address(mockExtension1)
         );
+        // Set action author for extension1
+        address extensionCreator1 = mockFactory.extensionCreator(
+            address(mockExtension1)
+        );
+        if (extensionCreator1 != address(0)) {
+            mockSubmit.setActionAuthor(
+                tokenAddress,
+                actionId1,
+                extensionCreator1
+            );
+        }
         mockSubmit.setActionInfo(
             tokenAddress,
             actionId2,
             address(mockExtension2)
         );
+        // Set action author for extension2
+        address extensionCreator2 = mockFactory2.extensionCreator(
+            address(mockExtension2)
+        );
+        if (extensionCreator2 != address(0)) {
+            mockSubmit.setActionAuthor(
+                tokenAddress,
+                actionId2,
+                extensionCreator2
+            );
+        }
         mockVote.setVotedActionIds(
             tokenAddress,
             mockJoin.currentRound(),
