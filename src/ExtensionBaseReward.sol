@@ -40,7 +40,7 @@ abstract contract ExtensionBaseReward is
     ) public virtual nonReentrant returns (uint256 amount) {
         uint256 currentRound = _verify.currentRound();
         if (round >= currentRound) {
-            revert RoundNotFinished(currentRound, round);
+            revert RoundNotFinished(currentRound);
         }
 
         _prepareRewardIfNeeded(round);

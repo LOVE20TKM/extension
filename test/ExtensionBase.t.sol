@@ -437,7 +437,6 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IExtensionErrors.RoundNotFinished.selector,
-                0,
                 0
             )
         );
@@ -456,7 +455,6 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IExtensionErrors.RoundNotFinished.selector,
-                5,
                 5
             )
         );

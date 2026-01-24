@@ -10,7 +10,7 @@ interface IExtensionErrors {
     error InvalidTokenAddress();
     error ActionIdNotFound();
     error MultipleActionIdsFound();
-    error RoundNotFinished(uint256 currentRound, uint256 requestedRound);
+    error RoundNotFinished(uint256 currentRound);
 }
 
 interface IExtension is IExtensionEvents, IExtensionErrors {

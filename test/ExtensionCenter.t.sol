@@ -1135,8 +1135,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IExtensionCenterErrors.VerificationInfoLengthMismatch.selector,
-                2,
-                1
+                2
             )
         );
         extensionCenter.addAccount(tokenAddress, actionId1, user1, infos);
@@ -1183,8 +1182,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IExtensionCenterErrors.VerificationInfoLengthMismatch.selector,
-                2,
-                1
+                2
             )
         );
         extensionCenter.updateVerificationInfo(
@@ -2180,7 +2178,6 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IExtensionCenterErrors.RoundExceedsJoinRound.selector,
-                round1 + 100,
                 round1
             )
         );

@@ -45,12 +45,12 @@ interface IExtensionCenterErrors {
     error OnlyExtensionOrDelegate();
     error OnlyUserOrExtensionOrDelegate();
     error AccountAlreadyJoined();
-    error VerificationInfoLengthMismatch(uint256 expected, uint256 actual);
+    error VerificationInfoLengthMismatch(uint256 expected);
     error ActionNotVotedInCurrentRound();
     error ExtensionNotFoundInFactory();
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
-    error RoundExceedsJoinRound(uint256 round, uint256 currentRound);
+    error RoundExceedsJoinRound(uint256 currentRound);
     error ExtensionCreatorMismatch(address creator, address author);
 }
 

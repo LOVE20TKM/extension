@@ -77,7 +77,7 @@ contract ExtensionCenter is IExtensionCenter {
     modifier validRound(uint256 round) {
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
         if (round > currentRound) {
-            revert RoundExceedsJoinRound(round, currentRound);
+            revert RoundExceedsJoinRound(currentRound);
         }
         _;
     }
@@ -504,10 +504,7 @@ contract ExtensionCenter is IExtensionCenter {
         string[] memory verificationKeys = actionInfo.body.verificationKeys;
 
         if (verificationKeys.length != verificationInfos.length) {
-            revert VerificationInfoLengthMismatch(
-                verificationKeys.length,
-                verificationInfos.length
-            );
+            revert VerificationInfoLengthMismatch(verificationKeys.length);
         }
 
         uint256 len = verificationKeys.length;
