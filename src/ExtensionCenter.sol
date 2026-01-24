@@ -69,7 +69,7 @@ contract ExtensionCenter is IExtensionCenter {
             msg.sender != account &&
             !_isExtensionOrDelegate(tokenAddress, actionId)
         ) {
-            revert OnlyUserOrExtensionOrDelegate();
+            revert OnlyAccountOrExtensionOrDelegate();
         }
         _;
     }

@@ -1016,7 +1016,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
 
         vm.prank(user2);
         vm.expectRevert(
-            IExtensionCenterErrors.OnlyUserOrExtensionOrDelegate.selector
+            IExtensionCenterErrors.OnlyAccountOrExtensionOrDelegate.selector
         );
         extensionCenter.updateVerificationInfo(
             tokenAddress,

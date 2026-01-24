@@ -43,7 +43,7 @@ interface IExtensionCenterEvents {
 
 interface IExtensionCenterErrors {
     error OnlyExtensionOrDelegate();
-    error OnlyUserOrExtensionOrDelegate();
+    error OnlyAccountOrExtensionOrDelegate();
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch(uint256 expected);
     error ActionNotVotedInCurrentRound();
