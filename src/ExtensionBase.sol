@@ -76,6 +76,9 @@ abstract contract ExtensionBase is IExtension {
         uint256 foundActionId = 0;
         bool found = false;
 
+        address extensionCreator = IExtensionFactory(FACTORY_ADDRESS)
+            .extensionCreator(address(this));
+
         for (uint256 i = 0; i < count; i++) {
             uint256 aid = _vote.votedActionIdsAtIndex(
                 TOKEN_ADDRESS,
@@ -83,7 +86,10 @@ abstract contract ExtensionBase is IExtension {
                 i
             );
             ActionInfo memory info = _submit.actionInfo(TOKEN_ADDRESS, aid);
-            if (info.body.whiteListAddress == address(this)) {
+            if (
+                info.body.whiteListAddress == address(this) &&
+                extensionCreator == info.head.author
+            ) {
                 if (found) revert MultipleActionIdsFound();
                 foundActionId = aid;
                 found = true;

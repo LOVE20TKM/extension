@@ -54,11 +54,7 @@ abstract contract ExtensionBaseReward is
         public
         virtual
         nonReentrant
-        returns (
-            uint256[] memory claimedRounds,
-            uint256[] memory rewards,
-            uint256 total
-        )
+        returns (uint256[] memory claimedRounds, uint256[] memory rewards)
     {
         uint256 len = rounds.length;
         claimedRounds = new uint256[](len);
@@ -73,7 +69,6 @@ abstract contract ExtensionBaseReward is
                 uint256 amount = _claimReward(round);
                 claimedRounds[count] = round;
                 rewards[count] = amount;
-                total += amount;
                 unchecked {
                     ++count;
                 }
@@ -87,7 +82,7 @@ abstract contract ExtensionBaseReward is
             mstore(claimedRounds, count)
             mstore(rewards, count)
         }
-        return (claimedRounds, rewards, total);
+        return (claimedRounds, rewards);
     }
 
     function rewardByAccount(
@@ -102,7 +97,7 @@ abstract contract ExtensionBaseReward is
     }
 
     function reward(uint256 round) public view virtual returns (uint256) {
-        if (_reward[round] > 0) {
+        if (_rewardPrepared[round]) {
             return _reward[round];
         }
         (uint256 expectedReward, ) = _mint.actionRewardByActionIdByAccount(

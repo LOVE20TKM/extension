@@ -289,10 +289,12 @@ contract ExtensionBaseJoinTest is BaseExtensionTest, IJoinEvents {
 
         assertTrue(center.isAccountJoined(address(token), ACTION_ID, user1));
 
+        address[] memory factories = new address[](1);
+        factories[0] = address(extension.FACTORY_ADDRESS());
         (uint256[] memory actionIds, , ) = center.actionIdsByAccount(
             address(token),
             user1,
-            new address[](0)
+            factories
         );
         assertEq(actionIds.length, 1);
         assertEq(actionIds[0], ACTION_ID);

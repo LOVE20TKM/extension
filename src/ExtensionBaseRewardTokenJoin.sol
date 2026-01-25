@@ -10,30 +10,29 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-using SafeERC20 for IERC20;
-using RoundHistoryUint256 for RoundHistoryUint256.History;
-
 abstract contract ExtensionBaseRewardTokenJoin is
     ExtensionBaseReward,
     ITokenJoin
 {
+    using SafeERC20 for IERC20;
+    using RoundHistoryUint256 for RoundHistoryUint256.History;
     address public immutable JOIN_TOKEN_ADDRESS;
 
     uint256 public immutable WAITING_BLOCKS;
+
+    IERC20 internal immutable _joinToken;
 
     // account => joinedRound
     mapping(address => uint256) internal _joinedRoundByAccount;
 
     // account => joinedBlock
-    mapping(address => uint256) internal _joinedBlockByAccount;
+    mapping(address => uint256) internal _lastJoinedBlockByAccount;
 
     // account => amount
     mapping(address => RoundHistoryUint256.History)
         internal _joinedAmountByAccountHistory;
 
     RoundHistoryUint256.History internal _joinedAmountHistory;
-
-    IERC20 internal _joinToken;
 
     constructor(
         address factory_,
@@ -60,7 +59,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         }
 
         uint256 currentRound = _join.currentRound();
-        bool isFirstJoin = _joinedBlockByAccount[msg.sender] == 0;
+        bool isFirstJoin = _lastJoinedBlockByAccount[msg.sender] == 0;
 
         _joinedAmountByAccountHistory[msg.sender].increase(
             currentRound,
@@ -69,7 +68,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
 
         _joinedAmountHistory.increase(currentRound, amount);
 
-        _joinedBlockByAccount[msg.sender] = block.number;
+        _lastJoinedBlockByAccount[msg.sender] = block.number;
 
         if (isFirstJoin) {
             _joinedRoundByAccount[msg.sender] = currentRound;
@@ -100,7 +99,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
     }
 
     function exit() public virtual nonReentrant {
-        uint256 joinedBlock = _joinedBlockByAccount[msg.sender];
+        uint256 joinedBlock = _lastJoinedBlockByAccount[msg.sender];
         if (joinedBlock == 0) {
             revert NotJoined();
         }
@@ -116,7 +115,7 @@ abstract contract ExtensionBaseRewardTokenJoin is
         _joinedAmountByAccountHistory[msg.sender].record(currentRound, 0);
         _joinedAmountHistory.decrease(currentRound, amount);
         delete _joinedRoundByAccount[msg.sender];
-        delete _joinedBlockByAccount[msg.sender];
+        delete _lastJoinedBlockByAccount[msg.sender];
 
         _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 
@@ -140,16 +139,16 @@ abstract contract ExtensionBaseRewardTokenJoin is
         returns (
             uint256 joinedRound,
             uint256 amount,
-            uint256 joinedBlock,
+            uint256 lastJoinedBlock,
             uint256 exitableBlock
         )
     {
-        joinedBlock = _joinedBlockByAccount[account];
+        lastJoinedBlock = _lastJoinedBlockByAccount[account];
         return (
             _joinedRoundByAccount[account],
             _joinedAmountByAccountHistory[account].latestValue(),
-            joinedBlock,
-            joinedBlock == 0 ? 0 : joinedBlock + WAITING_BLOCKS
+            lastJoinedBlock,
+            lastJoinedBlock == 0 ? 0 : lastJoinedBlock + WAITING_BLOCKS
         );
     }
 

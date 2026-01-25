@@ -49,10 +49,11 @@ library RoundHistoryString {
     function latestValue(
         History storage self
     ) internal view returns (string memory) {
-        if (self.changeRounds.length == 0) {
+        uint256 len = self.changeRounds.length;
+        if (len == 0) {
             return "";
         }
-        uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
+        uint256 latestRound = self.changeRounds[len - 1];
         return self.valueByRound[latestRound];
     }
 }

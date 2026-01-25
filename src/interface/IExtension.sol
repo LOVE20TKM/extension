@@ -6,7 +6,6 @@ interface IExtensionEvents {
 }
 
 interface IExtensionErrors {
-    error AlreadyInitialized();
     error InvalidTokenAddress();
     error ActionIdNotFound();
     error MultipleActionIdsFound();

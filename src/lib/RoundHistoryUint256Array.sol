@@ -28,10 +28,7 @@ library RoundHistoryUint256Array {
         } else if (round < self.changeRounds[len - 1]) {
             revert InvalidRound();
         }
-        delete self.valueByRound[round];
-        for (uint256 i = 0; i < newValues.length; i++) {
-            self.valueByRound[round].push(newValues[i]);
-        }
+        self.valueByRound[round] = newValues;
     }
 
     function values(
@@ -52,29 +49,31 @@ library RoundHistoryUint256Array {
     function latestValues(
         History storage self
     ) internal view returns (uint256[] memory) {
-        if (self.changeRounds.length == 0) {
+        uint256 len = self.changeRounds.length;
+        if (len == 0) {
             return new uint256[](0);
         }
-        uint256 latestRound = self.changeRounds[self.changeRounds.length - 1];
+        uint256 latestRound = self.changeRounds[len - 1];
         return self.valueByRound[latestRound];
     }
 
     function add(History storage self, uint256 round, uint256 value) internal {
         uint256[] memory arr = values(self, round);
-        for (uint256 i; i < arr.length; ) {
+        uint256 arrLen = arr.length;
+        for (uint256 i; i < arrLen; ) {
             if (arr[i] == value) return;
             unchecked {
                 ++i;
             }
         }
-        uint256[] memory updated = new uint256[](arr.length + 1);
-        for (uint256 i; i < arr.length; ) {
+        uint256[] memory updated = new uint256[](arrLen + 1);
+        for (uint256 i; i < arrLen; ) {
             updated[i] = arr[i];
             unchecked {
                 ++i;
             }
         }
-        updated[arr.length] = value;
+        updated[arrLen] = value;
         record(self, round, updated);
     }
 
@@ -84,16 +83,18 @@ library RoundHistoryUint256Array {
         uint256 value
     ) internal returns (bool) {
         uint256[] memory arr = values(self, round);
-        for (uint256 i; i < arr.length; ) {
+        uint256 arrLen = arr.length;
+        for (uint256 i; i < arrLen; ) {
             if (arr[i] == value) {
-                uint256[] memory updated = new uint256[](arr.length - 1);
+                uint256 newLen = arrLen - 1;
+                uint256[] memory updated = new uint256[](newLen);
                 for (uint256 j; j < i; ) {
                     updated[j] = arr[j];
                     unchecked {
                         ++j;
                     }
                 }
-                for (uint256 j = i + 1; j < arr.length; ) {
+                for (uint256 j = i + 1; j < arrLen; ) {
                     updated[j - 1] = arr[j];
                     unchecked {
                         ++j;

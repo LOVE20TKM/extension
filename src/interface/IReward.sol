@@ -29,7 +29,6 @@ interface IReward is IRewardEvents, IRewardErrors {
         external
         returns (
             uint256[] memory claimedRounds,
-            uint256[] memory rewards,
-            uint256 total
+            uint256[] memory rewards
         );
 }

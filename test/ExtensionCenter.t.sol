@@ -321,7 +321,9 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             address(mockFactory)
         );
 
-        // Verify actionIdsByAccount with empty factories (returns all)
+        // Verify actionIdsByAccount with factory array
+        address[] memory allFactories = new address[](1);
+        allFactories[0] = address(mockFactory);
         (
             uint256[] memory actionIds,
             address[] memory extensions,
@@ -329,7 +331,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         ) = extensionCenter.actionIdsByAccount(
                 tokenAddress,
                 user1,
-                new address[](0)
+                allFactories
             );
         assertEq(actionIds.length, 1);
         assertEq(actionIds[0], actionId1);
@@ -411,6 +413,35 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             new string[](0)
         );
         vm.stopPrank();
+    }
+
+    function testAddAccountRevertsOnZeroAddress() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        // Register action before calling write function
+        _registerAction(tokenAddress, actionId1);
+
+        // Try to add account with zero address
+        vm.prank(address(mockExtension));
+        vm.expectRevert(IExtensionCenterErrors.InvalidAccountAddress.selector);
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            address(0),
+            new string[](0)
+        );
     }
 
     function testRemoveAccount() public {
@@ -568,6 +599,8 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         );
 
         // Verify user1 is in both actions
+        address[] memory allFactories = new address[](1);
+        allFactories[0] = address(mockFactory);
         (
             uint256[] memory user1ActionIds,
             address[] memory user1Extensions,
@@ -575,7 +608,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         ) = extensionCenter.actionIdsByAccount(
                 tokenAddress,
                 user1,
-                new address[](0)
+                allFactories
             );
         assertEq(user1ActionIds.length, 2);
         assertEq(user1Extensions.length, 2);
@@ -589,7 +622,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         ) = extensionCenter.actionIdsByAccount(
                 tokenAddress,
                 user2,
-                new address[](0)
+                allFactories
             );
         assertEq(user2ActionIds.length, 1);
         assertEq(user2ActionIds[0], actionId1);
@@ -683,7 +716,10 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             new string[](0)
         );
 
-        // Test with empty factories array (should return all)
+        // Test with both factories array (should return all)
+        address[] memory allFactories = new address[](2);
+        allFactories[0] = address(mockFactory);
+        allFactories[1] = address(mockFactory2);
         (
             uint256[] memory actionIds,
             address[] memory extensions,
@@ -691,7 +727,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         ) = extensionCenter.actionIdsByAccount(
                 tokenAddress,
                 user1,
-                new address[](0)
+                allFactories
             );
         assertEq(actionIds.length, 2);
         assertEq(extensions.length, 2);

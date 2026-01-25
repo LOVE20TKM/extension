@@ -52,7 +52,7 @@ abstract contract ExtensionBaseRewardJoin is ExtensionBaseReward, IJoin {
             revert NotJoined();
         }
 
-        _joinedRoundByAccount[msg.sender] = 0;
+        delete _joinedRoundByAccount[msg.sender];
 
         _center.removeAccount(TOKEN_ADDRESS, actionId, msg.sender);
 

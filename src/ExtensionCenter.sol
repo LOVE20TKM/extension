@@ -28,8 +28,8 @@ contract ExtensionCenter is IExtensionCenter {
     address public immutable mintAddress;
     address public immutable randomAddress;
 
-    // tokenAddress => account => actionIds
-    mapping(address => mapping(address => uint256[]))
+    // tokenAddress => account => factory => actionIds
+    mapping(address => mapping(address => mapping(address => uint256[])))
         internal _actionIdsByAccount;
 
     // tokenAddress => actionId => RoundHistoryAddressSet.Storage
@@ -52,6 +52,41 @@ contract ExtensionCenter is IExtensionCenter {
 
     // extension => TokenActionPair
     mapping(address => TokenActionPair) internal _extensionTokenActionPair;
+
+    constructor(
+        address uniswapV2FactoryAddress_,
+        address launchAddress_,
+        address stakeAddress_,
+        address submitAddress_,
+        address voteAddress_,
+        address joinAddress_,
+        address verifyAddress_,
+        address mintAddress_,
+        address randomAddress_
+    ) {
+        require(
+            uniswapV2FactoryAddress_ != address(0),
+            "uniswapV2FactoryAddress is not set"
+        );
+        require(launchAddress_ != address(0), "launchAddress is not set");
+        require(stakeAddress_ != address(0), "stakeAddress is not set");
+        require(submitAddress_ != address(0), "submitAddress is not set");
+        require(voteAddress_ != address(0), "voteAddress is not set");
+        require(joinAddress_ != address(0), "joinAddress is not set");
+        require(verifyAddress_ != address(0), "verifyAddress is not set");
+        require(mintAddress_ != address(0), "mintAddress is not set");
+        require(randomAddress_ != address(0), "randomAddress is not set");
+
+        uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
+        launchAddress = launchAddress_;
+        stakeAddress = stakeAddress_;
+        submitAddress = submitAddress_;
+        voteAddress = voteAddress_;
+        joinAddress = joinAddress_;
+        verifyAddress = verifyAddress_;
+        mintAddress = mintAddress_;
+        randomAddress = randomAddress_;
+    }
 
     modifier onlyExtensionOrDelegate(address tokenAddress, uint256 actionId) {
         if (!_isExtensionOrDelegate(tokenAddress, actionId)) {
@@ -90,41 +125,6 @@ contract ExtensionCenter is IExtensionCenter {
         return
             msg.sender == extensionAddress ||
             msg.sender == _extensionDelegate[extensionAddress];
-    }
-
-    constructor(
-        address uniswapV2FactoryAddress_,
-        address launchAddress_,
-        address stakeAddress_,
-        address submitAddress_,
-        address voteAddress_,
-        address joinAddress_,
-        address verifyAddress_,
-        address mintAddress_,
-        address randomAddress_
-    ) {
-        require(
-            uniswapV2FactoryAddress_ != address(0),
-            "uniswapV2FactoryAddress is not set"
-        );
-        require(launchAddress_ != address(0), "launchAddress is not set");
-        require(stakeAddress_ != address(0), "stakeAddress is not set");
-        require(submitAddress_ != address(0), "submitAddress is not set");
-        require(voteAddress_ != address(0), "voteAddress is not set");
-        require(joinAddress_ != address(0), "joinAddress is not set");
-        require(verifyAddress_ != address(0), "verifyAddress is not set");
-        require(mintAddress_ != address(0), "mintAddress is not set");
-        require(randomAddress_ != address(0), "randomAddress is not set");
-
-        uniswapV2FactoryAddress = uniswapV2FactoryAddress_;
-        launchAddress = launchAddress_;
-        stakeAddress = stakeAddress_;
-        submitAddress = submitAddress_;
-        voteAddress = voteAddress_;
-        joinAddress = joinAddress_;
-        verifyAddress = verifyAddress_;
-        mintAddress = mintAddress_;
-        randomAddress = randomAddress_;
     }
 
     function extension(
@@ -168,6 +168,10 @@ contract ExtensionCenter is IExtensionCenter {
         address account,
         string[] calldata verificationInfos
     ) external onlyExtensionOrDelegate(tokenAddress, actionId) {
+        if (account == address(0)) {
+            revert InvalidAccountAddress();
+        }
+
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
         if (
@@ -184,7 +188,14 @@ contract ExtensionCenter is IExtensionCenter {
             revert AccountAlreadyJoined();
         }
 
-        _actionIdsByAccount[tokenAddress][account].push(actionId);
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress == address(0)) {
+            revert InvalidExtensionFactory();
+        }
+
+        _actionIdsByAccount[tokenAddress][account][factoryAddress].push(
+            actionId
+        );
 
         _accountsHistory[tokenAddress][actionId].add(currentRound, account);
         _updateVerificationInfo(
@@ -216,7 +227,13 @@ contract ExtensionCenter is IExtensionCenter {
 
         uint256 currentRound = ILOVE20Join(joinAddress).currentRound();
 
-        ArrayUtils.remove(_actionIdsByAccount[tokenAddress][account], actionId);
+        address factoryAddress = _factoryByActionId[tokenAddress][actionId];
+        if (factoryAddress != address(0)) {
+            ArrayUtils.remove(
+                _actionIdsByAccount[tokenAddress][account][factoryAddress],
+                actionId
+            );
+        }
 
         _accountsHistory[tokenAddress][actionId].remove(currentRound, account);
 
@@ -266,22 +283,29 @@ contract ExtensionCenter is IExtensionCenter {
             address[] memory factories_
         )
     {
-        uint256[] memory allActionIds = _actionIdsByAccount[tokenAddress][
-            account
-        ];
-        uint256 length = allActionIds.length;
+        uint256 totalLength = 0;
+        for (uint256 i = 0; i < factories.length; ) {
+            totalLength += _actionIdsByAccount[tokenAddress][account][
+                factories[i]
+            ].length;
+            unchecked {
+                i++;
+            }
+        }
 
-        actionIds = new uint256[](length);
-        extensions = new address[](length);
-        factories_ = new address[](length);
+        actionIds = new uint256[](totalLength);
+        extensions = new address[](totalLength);
+        factories_ = new address[](totalLength);
         uint256 count = 0;
-        bool noFilter = factories.length == 0;
 
-        for (uint256 i = 0; i < length; ) {
-            uint256 actionId = allActionIds[i];
-            address factoryAddr = _factoryByActionId[tokenAddress][actionId];
+        for (uint256 i = 0; i < factories.length; ) {
+            address factoryAddr = factories[i];
+            uint256[] memory factoryActionIds = _actionIdsByAccount[
+                tokenAddress
+            ][account][factoryAddr];
 
-            if (noFilter || _isFactoryInArray(factoryAddr, factories)) {
+            for (uint256 j = 0; j < factoryActionIds.length; ) {
+                uint256 actionId = factoryActionIds[j];
                 actionIds[count] = actionId;
                 extensions[count] = _extensionByActionId[tokenAddress][
                     actionId
@@ -289,19 +313,12 @@ contract ExtensionCenter is IExtensionCenter {
                 factories_[count] = factoryAddr;
                 unchecked {
                     count++;
+                    j++;
                 }
             }
 
             unchecked {
                 i++;
-            }
-        }
-
-        if (count != length) {
-            assembly {
-                mstore(actionIds, count)
-                mstore(extensions, count)
-                mstore(factories_, count)
             }
         }
     }
@@ -437,7 +454,7 @@ contract ExtensionCenter is IExtensionCenter {
 
         address factoryAddress = _getValidFactory(extensionAddress);
         if (factoryAddress == address(0)) {
-            revert ExtensionNotFoundInFactory();
+            revert InvalidExtensionFactory();
         }
 
         address extensionCreator = IExtensionFactory(factoryAddress)

@@ -46,7 +46,7 @@ interface ITokenJoin is ITokenJoinEvents, ITokenJoinErrors {
         returns (
             uint256 joinedRound,
             uint256 amount,
-            uint256 joinedBlock,
+            uint256 lastJoinedBlock,
             uint256 exitableBlock
         );
 

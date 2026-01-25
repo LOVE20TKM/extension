@@ -34,13 +34,13 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
             address(this)
         );
 
-        uint256 totalJoinedAmount = _joinedAmountHistory.latestValue();
+        uint256 totalJoinedAmount = _joinedAmountHistory.value(round);
         if (totalJoinedAmount == 0) {
             return 0;
         }
         reward =
             (totalActionReward *
-                _joinedAmountByAccountHistory[account].latestValue()) /
+                _joinedAmountByAccountHistory[account].value(round)) /
             totalJoinedAmount;
         return reward;
     }

@@ -259,6 +259,71 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         assertEq(extension.actionId(), ACTION_ID, "Action ID should be set");
     }
 
+    function test_Initialize_RevertIfExtensionCreatorMismatch() public {
+        submit.setActionInfo(address(token), ACTION_ID, address(extension));
+        address differentAuthor = address(0x999);
+        submit.setActionAuthor(address(token), ACTION_ID, differentAuthor);
+        token.mint(address(extension), 1e18);
+        vote.setVotedActionIds(address(token), join.currentRound(), ACTION_ID);
+
+        vm.prank(user1);
+        vm.expectRevert(IExtensionErrors.ActionIdNotFound.selector);
+        extension.join(new string[](0));
+    }
+
+    function test_Initialize_MultipleActionIds_OnlyOneMatches() public {
+        uint256 actionId1 = ACTION_ID;
+        uint256 actionId2 = ACTION_ID + 1;
+        uint256 actionId3 = ACTION_ID + 2;
+
+        address extensionCreator = mockFactory.extensionCreator(
+            address(extension)
+        );
+
+        // Action 1: matches whiteListAddress but not author
+        submit.setActionInfo(address(token), actionId1, address(extension));
+        submit.setActionAuthor(address(token), actionId1, address(0x999));
+
+        // Action 2: matches both whiteListAddress and author
+        submit.setActionInfo(address(token), actionId2, address(extension));
+        submit.setActionAuthor(address(token), actionId2, extensionCreator);
+
+        // Action 3: matches whiteListAddress but not author
+        submit.setActionInfo(address(token), actionId3, address(extension));
+        submit.setActionAuthor(address(token), actionId3, address(0x888));
+
+        token.mint(address(extension), 1e18);
+        vote.setVotedActionIds(address(token), join.currentRound(), actionId1);
+        vote.setVotedActionIds(address(token), join.currentRound(), actionId2);
+        vote.setVotedActionIds(address(token), join.currentRound(), actionId3);
+
+        vm.prank(user1);
+        extension.join(new string[](0));
+
+        assertTrue(extension.initialized());
+        assertEq(extension.actionId(), actionId2);
+    }
+
+    function test_Initialize_MultipleActionIds_NoneMatches() public {
+        uint256 actionId1 = ACTION_ID;
+        uint256 actionId2 = ACTION_ID + 1;
+
+        // Both actions match whiteListAddress but not author
+        submit.setActionInfo(address(token), actionId1, address(extension));
+        submit.setActionAuthor(address(token), actionId1, address(0x999));
+
+        submit.setActionInfo(address(token), actionId2, address(extension));
+        submit.setActionAuthor(address(token), actionId2, address(0x888));
+
+        token.mint(address(extension), 1e18);
+        vote.setVotedActionIds(address(token), join.currentRound(), actionId1);
+        vote.setVotedActionIds(address(token), join.currentRound(), actionId2);
+
+        vm.prank(user1);
+        vm.expectRevert(IExtensionErrors.ActionIdNotFound.selector);
+        extension.join(new string[](0));
+    }
+
     // ============================================
     // View Functions Tests
     // ============================================
@@ -574,15 +639,13 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         vm.prank(user1);
         (
             uint256[] memory claimedRounds,
-            uint256[] memory rewards,
-            uint256 total
+            uint256[] memory rewards
         ) = rewardExtension.claimRewards(rounds);
 
         assertEq(claimedRounds.length, 1);
         assertEq(rewards.length, 1);
         assertEq(claimedRounds[0], 0);
         assertEq(rewards[0], 100e18);
-        assertEq(total, 100e18);
     }
 
     // ============================================

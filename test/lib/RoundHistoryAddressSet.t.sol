@@ -287,6 +287,14 @@ contract RoundHistoryAddressSetTest is Test {
         assertEq(round2Accounts[1], account3);
     }
 
+    function test_RemoveAccount_FromEmptySet() public {
+        // Try to remove from empty set - should not revert
+        consumer.remove(tokenAddress, actionId, account1, 1);
+
+        assertEq(consumer.count(tokenAddress, actionId), 0);
+        assertFalse(consumer.contains(tokenAddress, actionId, account1));
+    }
+
     // ============================================
     // Query Tests
     // ============================================

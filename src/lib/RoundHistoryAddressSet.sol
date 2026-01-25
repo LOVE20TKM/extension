@@ -36,14 +36,11 @@ library RoundHistoryAddressSet {
         uint256 round,
         address account
     ) internal {
-        uint256 totalCount = self.accountsCountHistory.latestValue();
-        if (totalCount == 0) {
-            return;
-        }
-
         if (!self.isAccountAdded[account]) {
             return;
         }
+
+        uint256 totalCount = self.accountsCountHistory.latestValue();
 
         uint256 index = self.accountsIndexHistory[account].latestValue();
         uint256 lastIndex = totalCount - 1;
@@ -85,8 +82,11 @@ library RoundHistoryAddressSet {
     ) internal view returns (address[] memory) {
         uint256 totalCount = self.accountsCountHistory.latestValue();
         address[] memory result = new address[](totalCount);
-        for (uint256 i = 0; i < totalCount; i++) {
+        for (uint256 i; i < totalCount; ) {
             result[i] = self.accountsAtIndexHistory[i].latestValue();
+            unchecked {
+                ++i;
+            }
         }
         return result;
     }
@@ -108,8 +108,11 @@ library RoundHistoryAddressSet {
     ) internal view returns (address[] memory) {
         uint256 totalCount = self.accountsCountHistory.value(round);
         address[] memory result = new address[](totalCount);
-        for (uint256 i = 0; i < totalCount; i++) {
+        for (uint256 i; i < totalCount; ) {
             result[i] = self.accountsAtIndexHistory[i].value(round);
+            unchecked {
+                ++i;
+            }
         }
         return result;
     }

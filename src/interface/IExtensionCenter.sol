@@ -47,9 +47,10 @@ interface IExtensionCenterErrors {
     error AccountAlreadyJoined();
     error VerificationInfoLengthMismatch(uint256 expected);
     error ActionNotVotedInCurrentRound();
-    error ExtensionNotFoundInFactory();
+    error InvalidExtensionFactory();
     error ActionAlreadyRegisteredToOtherAction();
     error InvalidExtensionAddress();
+    error InvalidAccountAddress();
     error RoundExceedsJoinRound(uint256 currentRound);
     error ExtensionCreatorMismatch(address creator, address author);
 }
