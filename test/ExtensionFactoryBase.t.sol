@@ -85,6 +85,9 @@ contract ExtensionFactoryBaseTest is Test {
 
         factory = new MockExtensionFactoryForBaseTest(address(center));
         token = new MockERC20();
+        
+        // Mark token as LOVE20Token for ExtensionBase validation
+        launch.setLOVE20Token(address(token), true);
     }
 
     // ============================================

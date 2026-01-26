@@ -28,6 +28,7 @@ abstract contract ExtensionBase is IExtension {
     uint256 public actionId;
 
     IExtensionCenter internal immutable _center;
+    ILOVE20Launch internal immutable _launch;
     ILOVE20Submit internal immutable _submit;
     ILOVE20Vote internal immutable _vote;
     ILOVE20Join internal immutable _join;
@@ -41,8 +42,8 @@ abstract contract ExtensionBase is IExtension {
         TOKEN_ADDRESS = tokenAddress_;
         address centerAddress = IExtensionFactory(factory_).CENTER_ADDRESS();
         _center = IExtensionCenter(centerAddress);
-        ILOVE20Launch launch = ILOVE20Launch(_center.launchAddress());
-        if (!launch.isLOVE20Token(tokenAddress_)) {
+        _launch = ILOVE20Launch(_center.launchAddress());
+        if (!_launch.isLOVE20Token(tokenAddress_)) {
             revert InvalidTokenAddress();
         }
         _submit = ILOVE20Submit(_center.submitAddress());

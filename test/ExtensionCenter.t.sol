@@ -13,6 +13,7 @@ import {MockVote} from "./mocks/MockVote.sol";
 import {MockExtensionFactory} from "./mocks/MockExtensionFactory.sol";
 import {MockExtension} from "./mocks/MockExtension.sol";
 import {MockToken} from "./mocks/MockToken.sol";
+import {MockLaunch} from "./mocks/MockLaunch.sol";
 
 /**
  * @title ExtensionCenterTest
@@ -24,9 +25,9 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
     MockJoin public mockJoin;
     MockVote public mockVote;
     MockExtensionFactory public mockFactory;
+    MockLaunch public mockLaunch;
 
     address public mockUniswapV2Factory = address(0x2000);
-    address public mockLaunch = address(0x2001);
     address public mockStake = address(0x2002);
     address public mockVerify = address(0x2004);
     address public mockMint = address(0x2005);
@@ -45,11 +46,12 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         mockSubmit = new MockSubmit();
         mockJoin = new MockJoin();
         mockVote = new MockVote();
+        mockLaunch = new MockLaunch();
 
         // Deploy extension center with all required addresses
         extensionCenter = new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -65,6 +67,9 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         // Deploy mock token used by base initialize approve
         MockToken token = new MockToken();
         tokenAddress = address(token);
+
+        // Mark token as LOVE20Token for ExtensionBase validation
+        mockLaunch.setLOVE20Token(tokenAddress, true);
 
         // Prepare tokens for factory registration
         token.mint(address(this), 1000e18);
@@ -108,7 +113,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             extensionCenter.uniswapV2FactoryAddress(),
             mockUniswapV2Factory
         );
-        assertEq(extensionCenter.launchAddress(), mockLaunch);
+        assertEq(extensionCenter.launchAddress(), address(mockLaunch));
         assertEq(extensionCenter.stakeAddress(), mockStake);
         assertEq(extensionCenter.submitAddress(), address(mockSubmit));
         assertEq(extensionCenter.voteAddress(), address(mockVote));
@@ -122,7 +127,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             address(0),
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -148,11 +153,12 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         );
     }
 
+
     function testConstructorRevertsOnInvalidStakeAddress() public {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             address(0),
             address(mockSubmit),
             address(mockVote),
@@ -167,7 +173,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(0),
             address(mockVote),
@@ -182,7 +188,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(0),
@@ -197,7 +203,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -212,7 +218,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -227,7 +233,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -242,7 +248,7 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         vm.expectRevert();
         new ExtensionCenter(
             mockUniswapV2Factory,
-            mockLaunch,
+            address(mockLaunch),
             mockStake,
             address(mockSubmit),
             address(mockVote),
@@ -310,6 +316,8 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
     function testRegisterActionIfNeeded_RevertsOnTokenAddressMismatch() public {
         // Create a different token
         MockToken differentToken = new MockToken();
+        // Mark different token as LOVE20Token for ExtensionBase validation
+        mockLaunch.setLOVE20Token(address(differentToken), true);
         differentToken.mint(address(this), 1000e18);
         differentToken.approve(address(mockFactory), type(uint256).max);
         

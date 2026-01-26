@@ -237,6 +237,10 @@ contract ExampleFactoryTokenJoinTest is BaseExtensionTest {
         MockERC20 token2 = new MockERC20();
         MockERC20 joinToken2 = new MockERC20();
 
+        // Mark tokens as LOVE20Token for ExtensionBase validation
+        launch.setLOVE20Token(address(token2), true);
+        launch.setLOVE20Token(address(joinToken2), true);
+
         token2.mint(address(this), 1e18);
         token2.approve(address(factory), type(uint256).max);
 
