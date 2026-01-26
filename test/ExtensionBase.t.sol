@@ -153,7 +153,7 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
         uint256 round,
         address account
     ) external view returns (uint256) {
-        return _claimedReward[round][account];
+        return _claimedRewardByAccount[round][account];
     }
 }
 

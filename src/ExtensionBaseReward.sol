@@ -26,10 +26,10 @@ abstract contract ExtensionBaseReward is
     mapping(uint256 => bool) internal _rewardPrepared;
 
     // round => account => claimedReward
-    mapping(uint256 => mapping(address => uint256)) internal _claimedReward;
+    mapping(uint256 => mapping(address => uint256)) internal _claimedRewardByAccount;
 
     // round => account => isClaimed
-    mapping(uint256 => mapping(address => bool)) internal _claimed;
+    mapping(uint256 => mapping(address => bool)) internal _claimedByAccount;
 
     // round => burned amount
     mapping(uint256 => uint256) internal _burnedReward;
@@ -71,7 +71,7 @@ abstract contract ExtensionBaseReward is
 
         for (uint256 i; i < len; ) {
             uint256 round = rounds[i];
-            if (round < currentRound && !_claimed[round][msg.sender]) {
+            if (round < currentRound && !_claimedByAccount[round][msg.sender]) {
                 _prepareRewardIfNeeded(round);
                 uint256 amount = _claimReward(round);
                 claimedRounds[count] = round;
@@ -96,8 +96,8 @@ abstract contract ExtensionBaseReward is
         uint256 round,
         address account
     ) public view virtual returns (uint256 amount, bool claimed) {
-        if (_claimed[round][account]) {
-            return (_claimedReward[round][account], true);
+        if (_claimedByAccount[round][account]) {
+            return (_claimedRewardByAccount[round][account], true);
         }
 
         return (_calculateReward(round, account), false);
@@ -138,8 +138,8 @@ abstract contract ExtensionBaseReward is
             revert AlreadyClaimed();
         }
 
-        _claimed[round][msg.sender] = true;
-        _claimedReward[round][msg.sender] = amount;
+        _claimedByAccount[round][msg.sender] = true;
+        _claimedRewardByAccount[round][msg.sender] = amount;
 
         if (amount == 0) {
             return 0;
