@@ -434,6 +434,46 @@ contract ExtensionCenter is IExtensionCenter {
         return factoryAddress;
     }
 
+    function _getValidExtension(
+        address tokenAddress,
+        uint256 actionId,
+        ActionInfo memory actionInfo
+    ) internal view returns (address extensionAddress) {
+        extensionAddress = actionInfo.body.whiteListAddress;
+        if (extensionAddress == address(0)) {
+            revert InvalidExtensionAddress();
+        }
+
+        address extensionTokenAddress;
+        uint256 extensionActionId;
+        try IExtension(extensionAddress).TOKEN_ADDRESS() returns (
+            address token_
+        ) {
+            extensionTokenAddress = token_;
+        } catch {
+            revert InvalidExtensionAddress();
+        }
+
+        try IExtension(extensionAddress).actionId() returns (uint256 actionId_) {
+            extensionActionId = actionId_;
+        } catch {
+            revert InvalidExtensionAddress();
+        }
+
+        if (extensionTokenAddress != tokenAddress) {
+            revert ExtensionTokenAddressMismatch(
+                tokenAddress,
+                extensionTokenAddress
+            );
+        }
+
+        if (extensionActionId != actionId) {
+            revert ExtensionActionIdMismatch(actionId, extensionActionId);
+        }
+
+        return extensionAddress;
+    }
+
     function registerActionIfNeeded(
         address tokenAddress,
         uint256 actionId
@@ -447,10 +487,7 @@ contract ExtensionCenter is IExtensionCenter {
             tokenAddress,
             actionId
         );
-        extensionAddress = actionInfo.body.whiteListAddress;
-        if (extensionAddress == address(0)) {
-            revert InvalidExtensionAddress();
-        }
+        extensionAddress = _getValidExtension(tokenAddress, actionId, actionInfo);
 
         address factoryAddress = _getValidFactory(extensionAddress);
         if (factoryAddress == address(0)) {

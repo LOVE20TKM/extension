@@ -53,6 +53,8 @@ interface IExtensionCenterErrors {
     error InvalidAccountAddress();
     error RoundExceedsJoinRound(uint256 currentRound);
     error ExtensionCreatorMismatch(address creator, address author);
+    error ExtensionTokenAddressMismatch(address expected, address actual);
+    error ExtensionActionIdMismatch(uint256 expected, uint256 actual);
 }
 
 interface IExtensionCenter is IExtensionCenterEvents, IExtensionCenterErrors {

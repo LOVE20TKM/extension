@@ -94,6 +94,9 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
                     extensionCreator
                 );
             }
+            
+            // Set extension's actionId to match for validation
+            try MockExtension(extensionAddress).mockInitialize(actionId_) {} catch {}
         }
 
         extensionCenter.registerActionIfNeeded(tokenAddress_, actionId_);
@@ -267,6 +270,148 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
             extensionCenter.extension(tokenAddress, actionId1),
             address(0)
         );
+    }
+
+    // ------ registerActionIfNeeded validation tests ------
+    function testRegisterActionIfNeeded_Success() public {
+        // Setup extension as whitelist
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        
+        // Set extension's actionId to match
+        mockExtension.mockInitialize(actionId1);
+        
+        // Set action author
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        if (extensionCreator != address(0)) {
+            mockSubmit.setActionAuthor(
+                tokenAddress,
+                actionId1,
+                extensionCreator
+            );
+        }
+
+        // Register action should succeed
+        address registeredExtension = extensionCenter.registerActionIfNeeded(
+            tokenAddress,
+            actionId1
+        );
+        assertEq(registeredExtension, address(mockExtension));
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnTokenAddressMismatch() public {
+        // Create a different token
+        MockToken differentToken = new MockToken();
+        differentToken.mint(address(this), 1000e18);
+        differentToken.approve(address(mockFactory), type(uint256).max);
+        
+        // Create extension with different token address
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(address(differentToken))
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        
+        // Set extension's actionId to match
+        mockExtension.mockInitialize(actionId1);
+        
+        // Set action author
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        if (extensionCreator != address(0)) {
+            mockSubmit.setActionAuthor(
+                tokenAddress,
+                actionId1,
+                extensionCreator
+            );
+        }
+
+        // Register action should revert with ExtensionTokenAddressMismatch
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtensionCenterErrors.ExtensionTokenAddressMismatch.selector,
+                tokenAddress,
+                address(differentToken)
+            )
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnActionIdMismatch() public {
+        // Setup extension as whitelist
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        
+        // Set extension's actionId to different value
+        uint256 differentActionId = 999;
+        mockExtension.mockInitialize(differentActionId);
+        
+        // Set action author
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        if (extensionCreator != address(0)) {
+            mockSubmit.setActionAuthor(
+                tokenAddress,
+                actionId1,
+                extensionCreator
+            );
+        }
+
+        // Register action should revert with ExtensionActionIdMismatch
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtensionCenterErrors.ExtensionActionIdMismatch.selector,
+                actionId1,
+                differentActionId
+            )
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnZeroExtensionAddress() public {
+        // Set actionInfo with zero extension address
+        mockSubmit.setActionInfo(tokenAddress, actionId1, address(0));
+
+        // Register action should revert with InvalidExtensionAddress
+        vm.expectRevert(
+            IExtensionCenterErrors.InvalidExtensionAddress.selector
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnExtensionCallFailure() public {
+        // Create a contract that will revert when calling TOKEN_ADDRESS()
+        InvalidExtension invalidExtension = new InvalidExtension();
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(invalidExtension)
+        );
+
+        // Register action should revert with InvalidExtensionAddress
+        vm.expectRevert(
+            IExtensionCenterErrors.InvalidExtensionAddress.selector
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
     }
 
     // ------ Account management tests ------
@@ -2474,5 +2619,23 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
                 newRound
             )
         );
+    }
+}
+
+/**
+ * @title InvalidExtension
+ * @dev Mock contract that reverts when calling TOKEN_ADDRESS() to test error handling
+ */
+contract InvalidExtension {
+    function TOKEN_ADDRESS() external pure returns (address) {
+        revert("Invalid extension");
+    }
+
+    function actionId() external pure returns (uint256) {
+        revert("Invalid extension");
+    }
+
+    function FACTORY_ADDRESS() external pure returns (address) {
+        revert("Invalid extension");
     }
 }
