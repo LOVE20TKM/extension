@@ -872,4 +872,238 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
             assertTrue(isMinted, "Round should be claimed");
         }
     }
+
+    // ============================================
+    // BurnRewardIfNeeded Tests
+    // ============================================
+
+    function test_BurnRewardIfNeeded_AllAccountsZeroReward() public {
+        setUpRewardExtension();
+
+        // Setup: users join but have zero reward
+        rewardExtension.setRewardPerAccount(0);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+        vm.prank(user2);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Mint tokens to contract for burning
+        token.mint(address(rewardExtension), totalReward);
+
+        uint256 tokenBalanceBefore = token.balanceOf(address(rewardExtension));
+
+        // Burn should succeed and burn all reward (all accounts have 0 reward)
+        rewardExtension.burnRewardIfNeeded(targetRound);
+
+        // Verify tokens were burned
+        uint256 tokenBalanceAfter = token.balanceOf(address(rewardExtension));
+        assertEq(
+            tokenBalanceAfter,
+            tokenBalanceBefore - totalReward,
+            "Token should be burned when all accounts have zero reward"
+        );
+
+        // Verify burn info
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, totalReward, "Burn amount should match total reward");
+        assertTrue(burned, "Should be burned");
+    }
+
+    function test_BurnRewardIfNeeded_SomeAccountsHaveReward() public {
+        setUpRewardExtension();
+
+        // Setup: user1 has reward, user2 has zero reward
+        rewardExtension.setCustomRewardByAccount(user1, 50e18);
+        rewardExtension.setCustomRewardByAccount(user2, 0);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+        vm.prank(user2);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Mint tokens to contract for burning
+        token.mint(address(rewardExtension), totalReward);
+
+        uint256 tokenBalanceBefore = token.balanceOf(address(rewardExtension));
+
+        // Burn should not happen (some accounts have reward > 0)
+        rewardExtension.burnRewardIfNeeded(targetRound);
+
+        // Verify no tokens were burned
+        uint256 tokenBalanceAfter = token.balanceOf(address(rewardExtension));
+        assertEq(
+            tokenBalanceAfter,
+            tokenBalanceBefore,
+            "Token should not be burned when some accounts have reward"
+        );
+
+        // Verify burn info
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, 0, "Burn amount should be 0");
+        assertFalse(burned, "Should not be burned");
+    }
+
+    function test_BurnRewardIfNeeded_RevertRoundNotFinished() public {
+        setUpRewardExtension();
+
+        uint256 currentRound = verify.currentRound();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtensionErrors.RoundNotFinished.selector,
+                currentRound
+            )
+        );
+        rewardExtension.burnRewardIfNeeded(currentRound);
+    }
+
+    function test_BurnRewardIfNeeded_AlreadyBurned() public {
+        setUpRewardExtension();
+
+        // Setup: all accounts have zero reward
+        rewardExtension.setRewardPerAccount(0);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Mint tokens to contract for burning
+        token.mint(address(rewardExtension), totalReward);
+
+        // Burn first time
+        rewardExtension.burnRewardIfNeeded(targetRound);
+
+        // Try to burn again (should return early)
+        uint256 tokenBalanceBefore = token.balanceOf(address(rewardExtension));
+        rewardExtension.burnRewardIfNeeded(targetRound);
+        uint256 tokenBalanceAfter = token.balanceOf(address(rewardExtension));
+
+        // Verify no additional burn
+        assertEq(
+            tokenBalanceAfter,
+            tokenBalanceBefore,
+            "No additional burn on second call"
+        );
+    }
+
+    function test_BurnRewardIfNeeded_ZeroTotalReward() public {
+        setUpRewardExtension();
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 0);
+
+        uint256 tokenBalanceBefore = token.balanceOf(address(rewardExtension));
+
+        // Burn should return early (total reward is 0)
+        rewardExtension.burnRewardIfNeeded(targetRound);
+
+        // Verify no tokens were burned
+        uint256 tokenBalanceAfter = token.balanceOf(address(rewardExtension));
+        assertEq(
+            tokenBalanceAfter,
+            tokenBalanceBefore,
+            "Token should not be burned when total reward is 0"
+        );
+    }
+
+    // ============================================
+    // BurnInfo Tests
+    // ============================================
+
+    function test_BurnInfo_NoReward() public view {
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(verify.currentRound());
+        assertEq(burnAmount, 0);
+        assertFalse(burned);
+    }
+
+    function test_BurnInfo_RoundNotFinished() public view {
+        uint256 currentRound = verify.currentRound();
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(currentRound);
+        assertEq(burnAmount, 0);
+        assertFalse(burned);
+    }
+
+    function test_BurnInfo_AlreadyBurned() public {
+        setUpRewardExtension();
+
+        // Setup: all accounts have zero reward
+        rewardExtension.setRewardPerAccount(0);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Mint tokens to contract for burning
+        token.mint(address(rewardExtension), totalReward);
+
+        // Burn the reward
+        rewardExtension.burnRewardIfNeeded(targetRound);
+
+        // Verify burn info shows burned
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, totalReward, "Burn amount should match");
+        assertTrue(burned, "Should be burned");
+    }
+
+    function test_BurnInfo_NotBurnedYet_AllZeroReward() public {
+        setUpRewardExtension();
+
+        // Setup: all accounts have zero reward
+        rewardExtension.setRewardPerAccount(0);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Verify burn info before burning
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, totalReward, "Burn amount should equal total reward");
+        assertFalse(burned, "Should not be burned yet");
+    }
+
+    function test_BurnInfo_NotBurnedYet_SomeHaveReward() public {
+        setUpRewardExtension();
+
+        // Setup: user1 has reward
+        rewardExtension.setCustomRewardByAccount(user1, 50e18);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        // Verify burn info before burning
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, 0, "Burn amount should be 0 when some accounts have reward");
+        assertFalse(burned, "Should not be burned yet");
+    }
 }
