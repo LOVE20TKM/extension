@@ -9,6 +9,12 @@ interface IRewardEvents {
         address indexed account,
         uint256 amount
     );
+    event BurnReward(
+        address indexed tokenAddress,
+        uint256 round,
+        uint256 indexed actionId,
+        uint256 amount
+    );
 }
 
 interface IRewardErrors {
@@ -31,4 +37,9 @@ interface IReward is IRewardEvents, IRewardErrors {
             uint256[] memory claimedRounds,
             uint256[] memory rewards
         );
+
+    function burnRewardIfNeeded(uint256 round) external;
+    function burnInfo(
+        uint256 round
+    ) external view returns (uint256 burnAmount, bool burned);
 }

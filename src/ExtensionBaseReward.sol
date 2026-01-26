@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 
 import {IReward} from "./interface/IReward.sol";
 import {ExtensionBase} from "./ExtensionBase.sol";
+import {ILOVE20Token} from "@core/interfaces/ILOVE20Token.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
@@ -29,6 +30,12 @@ abstract contract ExtensionBaseReward is
 
     // round => account => isClaimed
     mapping(uint256 => mapping(address => bool)) internal _claimed;
+
+    // round => burned amount
+    mapping(uint256 => uint256) internal _burnedReward;
+
+    // round => burned
+    mapping(uint256 => bool) internal _burned;
 
     constructor(
         address factory_,
@@ -153,4 +160,73 @@ abstract contract ExtensionBaseReward is
         uint256 round,
         address account
     ) internal view virtual returns (uint256);
+
+    function burnRewardIfNeeded(uint256 round) public virtual {
+        uint256 currentRound = _verify.currentRound();
+        if (round >= currentRound) {
+            revert RoundNotFinished(currentRound);
+        }
+        if (_burned[round]) return;
+
+        _prepareRewardIfNeeded(round);
+
+        uint256 totalReward = _reward[round];
+        uint256 burnAmount = _calculateBurnAmount(round, totalReward);
+        if (burnAmount == 0) return;
+
+        _burned[round] = true;
+        _burnedReward[round] = burnAmount;
+        ILOVE20Token(TOKEN_ADDRESS).burn(burnAmount);
+        emit BurnReward({
+            tokenAddress: TOKEN_ADDRESS,
+            round: round,
+            actionId: actionId,
+            amount: burnAmount
+        });
+    }
+
+    function burnInfo(
+        uint256 round
+    ) public view virtual returns (uint256 burnAmount, bool burned) {
+        uint256 currentRound = _verify.currentRound();
+        if (round >= currentRound) {
+            return (0, false);
+        }
+
+        burned = _burned[round];
+        if (burned) {
+            burnAmount = _burnedReward[round];
+            return (burnAmount, burned);
+        }
+
+        uint256 totalReward = reward(round);
+        burnAmount = _calculateBurnAmount(round, totalReward);
+    }
+
+    function _calculateBurnAmount(
+        uint256 round,
+        uint256 totalReward
+    ) internal view virtual returns (uint256) {
+        if (totalReward == 0) return 0;
+
+        address[] memory accounts = _center.accountsByRound(
+            TOKEN_ADDRESS,
+            actionId,
+            round
+        );
+
+        uint256 totalAccountReward;
+        for (uint256 i; i < accounts.length; ) {
+            (uint256 accountReward, ) = rewardByAccount(round, accounts[i]);
+            totalAccountReward += accountReward;
+            unchecked {
+                ++i;
+            }
+        }
+
+        if (totalAccountReward == 0) {
+            return totalReward;
+        }
+        return 0;
+    }
 }
