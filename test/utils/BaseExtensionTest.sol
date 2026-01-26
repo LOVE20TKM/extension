@@ -98,6 +98,10 @@ abstract contract BaseExtensionTest is Test {
             address(random)
         );
 
+        // 将 token 标记为 LOVE20 代币
+        launch.setLOVE20Token(address(token), true);
+        launch.setLOVE20Token(address(joinToken), true);
+
         // 初始化当前轮次为 0
         verify.setCurrentRound(0);
     }

@@ -12,6 +12,7 @@ import {ILOVE20Vote} from "@core/interfaces/ILOVE20Vote.sol";
 import {ILOVE20Join} from "@core/interfaces/ILOVE20Join.sol";
 import {ILOVE20Verify} from "@core/interfaces/ILOVE20Verify.sol";
 import {ILOVE20Mint} from "@core/interfaces/ILOVE20Mint.sol";
+import {ILOVE20Launch} from "@core/interfaces/ILOVE20Launch.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     SafeERC20
@@ -40,6 +41,10 @@ abstract contract ExtensionBase is IExtension {
         TOKEN_ADDRESS = tokenAddress_;
         address centerAddress = IExtensionFactory(factory_).CENTER_ADDRESS();
         _center = IExtensionCenter(centerAddress);
+        ILOVE20Launch launch = ILOVE20Launch(_center.launchAddress());
+        if (!launch.isLOVE20Token(tokenAddress_)) {
+            revert InvalidTokenAddress();
+        }
         _submit = ILOVE20Submit(_center.submitAddress());
         _vote = ILOVE20Vote(_center.voteAddress());
         _join = ILOVE20Join(_center.joinAddress());
