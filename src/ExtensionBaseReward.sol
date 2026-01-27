@@ -26,7 +26,8 @@ abstract contract ExtensionBaseReward is
     mapping(uint256 => bool) internal _rewardPrepared;
 
     // round => account => claimedReward
-    mapping(uint256 => mapping(address => uint256)) internal _claimedRewardByAccount;
+    mapping(uint256 => mapping(address => uint256))
+        internal _claimedRewardByAccount;
 
     // round => account => isClaimed
     mapping(uint256 => mapping(address => bool)) internal _claimedByAccount;
@@ -215,18 +216,14 @@ abstract contract ExtensionBaseReward is
             round
         );
 
-        uint256 totalAccountReward;
         for (uint256 i; i < accounts.length; ) {
             (uint256 accountReward, ) = rewardByAccount(round, accounts[i]);
-            totalAccountReward += accountReward;
+            if (accountReward > 0) return 0;
             unchecked {
                 ++i;
             }
         }
 
-        if (totalAccountReward == 0) {
-            return totalReward;
-        }
-        return 0;
+        return totalReward;
     }
 }
