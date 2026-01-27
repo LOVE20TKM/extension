@@ -169,13 +169,14 @@ abstract contract ExtensionBaseReward is
         }
         if (_burned[round]) return;
 
+        _burned[round] = true;
+
         _prepareRewardIfNeeded(round);
 
         uint256 totalReward = _reward[round];
         uint256 burnAmount = _calculateBurnAmount(round, totalReward);
         if (burnAmount == 0) return;
 
-        _burned[round] = true;
         _burnedReward[round] = burnAmount;
         ILOVE20Token(TOKEN_ADDRESS).burn(burnAmount);
         emit BurnReward({

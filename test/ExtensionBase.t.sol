@@ -890,6 +890,11 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 balanceBefore = token.balanceOf(address(rewardExtension));
         rewardExtension.burnRewardIfNeeded(targetRound);
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
+
+        // _burned[round] is set to true even when totalReward == 0
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        assertEq(burnAmount, 0);
+        assertTrue(burned);
     }
 
     function test_BurnRewardIfNeeded_NoAccountsInRound() public {
@@ -982,9 +987,10 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         rewardExtension.burnRewardIfNeeded(targetRound);
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
 
+        // _burned[round] is set to true even when burnAmount == 0
         (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
         assertEq(burnAmount, 0);
-        assertFalse(burned);
+        assertTrue(burned);
     }
 
     function test_BurnRewardIfNeeded_AnyAccountHasReward_Claimed() public {
@@ -1009,9 +1015,10 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         rewardExtension.burnRewardIfNeeded(targetRound);
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
 
+        // _burned[round] is set to true even when burnAmount == 0
         (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
         assertEq(burnAmount, 0);
-        assertFalse(burned);
+        assertTrue(burned);
     }
 
     function test_BurnRewardIfNeeded_RevertRoundNotFinished() public {
