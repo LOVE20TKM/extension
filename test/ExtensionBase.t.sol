@@ -892,7 +892,9 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
 
         // _burned[round] is set to true even when totalReward == 0
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, 0);
         assertTrue(burned);
     }
@@ -905,14 +907,24 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(2);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
 
         uint256 balanceBefore = token.balanceOf(address(rewardExtension));
         rewardExtension.burnRewardIfNeeded(targetRound);
-        assertEq(token.balanceOf(address(rewardExtension)), balanceBefore - totalReward);
+        assertEq(
+            token.balanceOf(address(rewardExtension)),
+            balanceBefore - totalReward
+        );
 
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, totalReward);
         assertTrue(burned);
     }
@@ -928,14 +940,24 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
 
         uint256 balanceBefore = token.balanceOf(address(rewardExtension));
         rewardExtension.burnRewardIfNeeded(targetRound);
-        assertEq(token.balanceOf(address(rewardExtension)), balanceBefore - totalReward);
+        assertEq(
+            token.balanceOf(address(rewardExtension)),
+            balanceBefore - totalReward
+        );
 
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, totalReward);
         assertTrue(burned);
     }
@@ -951,7 +973,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
         vm.prank(user1);
         rewardExtension.claimReward(targetRound);
@@ -961,9 +988,14 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
         uint256 balanceBefore = token.balanceOf(address(rewardExtension));
         rewardExtension.burnRewardIfNeeded(targetRound);
-        assertEq(token.balanceOf(address(rewardExtension)), balanceBefore - totalReward);
+        assertEq(
+            token.balanceOf(address(rewardExtension)),
+            balanceBefore - totalReward
+        );
 
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, totalReward);
         assertTrue(burned);
     }
@@ -980,7 +1012,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
 
         uint256 balanceBefore = token.balanceOf(address(rewardExtension));
@@ -988,7 +1025,9 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
 
         // _burned[round] is set to true even when burnAmount == 0
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, 0);
         assertTrue(burned);
     }
@@ -1005,7 +1044,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
         vm.prank(user1);
         rewardExtension.claimReward(targetRound);
@@ -1016,7 +1060,9 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         assertEq(token.balanceOf(address(rewardExtension)), balanceBefore);
 
         // _burned[round] is set to true even when burnAmount == 0
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, 0);
         assertTrue(burned);
     }
@@ -1042,7 +1088,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
 
         rewardExtension.burnRewardIfNeeded(targetRound);
@@ -1057,7 +1108,9 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
     function test_BurnInfo_NoReward() public {
         setUpRewardExtension();
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(verify.currentRound());
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            verify.currentRound()
+        );
         assertEq(burnAmount, 0);
         assertFalse(burned);
     }
@@ -1065,7 +1118,9 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
     function test_BurnInfo_RoundNotFinished() public {
         setUpRewardExtension();
         uint256 currentRound = verify.currentRound();
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(currentRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            currentRound
+        );
         assertEq(burnAmount, 0);
         assertFalse(burned);
     }
@@ -1079,11 +1134,18 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
         token.mint(address(rewardExtension), totalReward);
 
         rewardExtension.burnRewardIfNeeded(targetRound);
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, totalReward);
         assertTrue(burned);
     }
@@ -1097,9 +1159,16 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
 
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, totalReward);
         assertFalse(burned);
     }
@@ -1113,9 +1182,16 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         verify.setCurrentRound(1);
         uint256 totalReward = 100e18;
-        mint.setActionReward(address(token), targetRound, ACTION_ID, totalReward);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
 
-        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(targetRound);
+        (uint256 burnAmount, bool burned) = rewardExtension.burnInfo(
+            targetRound
+        );
         assertEq(burnAmount, 0);
         assertFalse(burned);
     }
