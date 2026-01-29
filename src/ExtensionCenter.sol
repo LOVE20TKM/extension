@@ -453,13 +453,13 @@ contract ExtensionCenter is IExtensionCenter {
         } catch {
             revert InvalidExtensionAddress();
         }
-
-        try IExtension(extensionAddress).actionId() returns (uint256 actionId_) {
+        try IExtension(extensionAddress).actionId() returns (
+            uint256 actionId_
+        ) {
             extensionActionId = actionId_;
         } catch {
             revert InvalidExtensionAddress();
         }
-
         if (extensionTokenAddress != tokenAddress) {
             revert ExtensionTokenAddressMismatch(
                 tokenAddress,
@@ -487,7 +487,11 @@ contract ExtensionCenter is IExtensionCenter {
             tokenAddress,
             actionId
         );
-        extensionAddress = _getValidExtension(tokenAddress, actionId, actionInfo);
+        extensionAddress = _getValidExtension(
+            tokenAddress,
+            actionId,
+            actionInfo
+        );
 
         address factoryAddress = _getValidFactory(extensionAddress);
         if (factoryAddress == address(0)) {
@@ -523,21 +527,6 @@ contract ExtensionCenter is IExtensionCenter {
         });
 
         return extensionAddress;
-    }
-    function _isFactoryInArray(
-        address factory_,
-        address[] calldata factories
-    ) private pure returns (bool) {
-        uint256 len = factories.length;
-        for (uint256 i = 0; i < len; ) {
-            if (factories[i] == factory_) {
-                return true;
-            }
-            unchecked {
-                i++;
-            }
-        }
-        return false;
     }
 
     function _updateVerificationInfo(
