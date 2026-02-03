@@ -27,7 +27,7 @@ abstract contract ExtensionBaseReward is
 
     // round => account => claimedReward
     mapping(uint256 => mapping(address => uint256))
-        internal _claimedRewardByAccount;
+        internal _mintedRewardByAccount;
 
     // round => account => isClaimed
     mapping(uint256 => mapping(address => bool)) internal _claimedByAccount;
@@ -120,7 +120,7 @@ abstract contract ExtensionBaseReward is
     {
         if (_claimedByAccount[round][account]) {
             return (
-                _claimedRewardByAccount[round][account],
+                _mintedRewardByAccount[round][account],
                 _burnedRewardByAccount[round][account],
                 true
             );
@@ -166,7 +166,7 @@ abstract contract ExtensionBaseReward is
         (mintReward, burnReward) = _calculateReward(round, msg.sender);
 
         _claimedByAccount[round][msg.sender] = true;
-        _claimedRewardByAccount[round][msg.sender] = mintReward;
+        _mintedRewardByAccount[round][msg.sender] = mintReward;
         _burnedRewardByAccount[round][msg.sender] = burnReward;
 
         if (burnReward > 0) {
