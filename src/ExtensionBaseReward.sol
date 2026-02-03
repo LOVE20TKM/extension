@@ -49,7 +49,12 @@ abstract contract ExtensionBaseReward is
 
     function claimReward(
         uint256 round
-    ) public virtual nonReentrant returns (uint256 mintReward, uint256 burnReward) {
+    )
+        public
+        virtual
+        nonReentrant
+        returns (uint256 mintReward, uint256 burnReward)
+    {
         uint256 currentRound = _verify.currentRound();
         if (round >= currentRound) {
             revert RoundNotFinished(currentRound);

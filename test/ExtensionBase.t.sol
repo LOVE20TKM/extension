@@ -58,16 +58,16 @@ contract MockExtensionForCore is ExtensionBaseRewardJoin {
         public
         pure
         override(ExtensionBaseReward)
-        returns (uint256 reward, bool isMinted)
+        returns (uint256 mintReward, uint256 burnReward, bool claimed)
     {
-        return (0, false);
+        return (0, 0, false);
     }
 
     function _calculateReward(
         uint256,
         address
-    ) internal pure override returns (uint256) {
-        return 0;
+    ) internal pure override returns (uint256 mintReward, uint256 burnReward) {
+        return (0, 0);
     }
 }
 
@@ -130,18 +130,18 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
     function _calculateReward(
         uint256,
         address account
-    ) internal view override returns (uint256) {
+    ) internal view override returns (uint256 mintReward, uint256 burnReward) {
         if (useCustomReward) {
-            return customRewardByAccount[account];
+            return (customRewardByAccount[account], 0);
         }
         // Default: equal distribution if account has joined
         if (
             _center.isAccountJoined(TOKEN_ADDRESS, actionId, account) &&
             _center.accountsCount(TOKEN_ADDRESS, actionId) > 0
         ) {
-            return rewardPerAccount;
+            return (rewardPerAccount, 0);
         }
-        return 0;
+        return (0, 0);
     }
 
     // Expose internal reward storage for testing
@@ -462,7 +462,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 balanceBefore = token.balanceOf(user1);
 
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(targetRound);
+        (uint256 claimed, ) = rewardExtension.claimReward(targetRound);
 
         assertEq(claimed, rewardAmount, "Claimed amount should match");
         assertEq(
@@ -483,7 +483,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimReward(address(token), targetRound, ACTION_ID, user1, 100e18);
+        emit ClaimReward(address(token), targetRound, ACTION_ID, user1, 100e18, 0);
 
         vm.prank(user1);
         rewardExtension.claimReward(targetRound);
@@ -561,7 +561,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 balanceBefore = token.balanceOf(user1);
 
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(targetRound);
+        (uint256 claimed, ) = rewardExtension.claimReward(targetRound);
 
         assertEq(claimed, 0, "Claimed amount should be zero");
         assertEq(token.balanceOf(user1), balanceBefore, "Balance unchanged");
@@ -588,13 +588,16 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
         // Each user claims their reward
         vm.prank(user1);
-        assertEq(rewardExtension.claimReward(targetRound), 100e18);
+        (uint256 claimed1, ) = rewardExtension.claimReward(targetRound);
+        assertEq(claimed1, 100e18);
 
         vm.prank(user2);
-        assertEq(rewardExtension.claimReward(targetRound), 200e18);
+        (uint256 claimed2, ) = rewardExtension.claimReward(targetRound);
+        assertEq(claimed2, 200e18);
 
         vm.prank(user3);
-        assertEq(rewardExtension.claimReward(targetRound), 300e18);
+        (uint256 claimed3, ) = rewardExtension.claimReward(targetRound);
+        assertEq(claimed3, 300e18);
     }
 
     function test_ClaimReward_MultipleRounds() public {
@@ -612,9 +615,12 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
         // Claim all rounds
         vm.startPrank(user1);
-        assertEq(rewardExtension.claimReward(0), 100e18);
-        assertEq(rewardExtension.claimReward(1), 100e18); // rewardPerAccount is 100e18
-        assertEq(rewardExtension.claimReward(2), 100e18);
+        (uint256 r0, ) = rewardExtension.claimReward(0);
+        assertEq(r0, 100e18);
+        (uint256 r1, ) = rewardExtension.claimReward(1);
+        assertEq(r1, 100e18); // rewardPerAccount is 100e18
+        (uint256 r2, ) = rewardExtension.claimReward(2);
+        assertEq(r2, 100e18);
         vm.stopPrank();
     }
 
@@ -639,13 +645,13 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         vm.prank(user1);
         (
             uint256[] memory claimedRounds,
-            uint256[] memory rewards
+            uint256[] memory mintRewards,
         ) = rewardExtension.claimRewards(rounds);
 
         assertEq(claimedRounds.length, 1);
-        assertEq(rewards.length, 1);
+        assertEq(mintRewards.length, 1);
         assertEq(claimedRounds[0], 0);
-        assertEq(rewards[0], 100e18);
+        assertEq(mintRewards[0], 100e18);
     }
 
     // ============================================
@@ -661,13 +667,13 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
-        (uint256 reward, bool isMinted) = rewardExtension.rewardByAccount(
+        (uint256 reward, , bool isClaimed) = rewardExtension.rewardByAccount(
             targetRound,
             user1
         );
 
         assertEq(reward, 100e18, "Reward should match");
-        assertFalse(isMinted, "Should not be minted yet");
+        assertFalse(isClaimed, "Should not be claimed yet");
     }
 
     function test_RewardByAccount_AlreadyClaimed() public {
@@ -685,13 +691,13 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         rewardExtension.claimReward(targetRound);
 
         // Check reward status
-        (uint256 reward, bool isMinted) = rewardExtension.rewardByAccount(
+        (uint256 reward, , bool isClaimed) = rewardExtension.rewardByAccount(
             targetRound,
             user1
         );
 
         assertEq(reward, 100e18, "Reward amount should be recorded");
-        assertTrue(isMinted, "Should be marked as minted");
+        assertTrue(isClaimed, "Should be marked as claimed");
     }
 
     function test_RewardByAccount_NotJoined() public {
@@ -700,13 +706,13 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 targetRound = 0;
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
-        (uint256 reward, bool isMinted) = rewardExtension.rewardByAccount(
+        (uint256 reward, , bool isClaimed) = rewardExtension.rewardByAccount(
             targetRound,
             user1
         );
 
         assertEq(reward, 0, "Reward should be zero for non-joined user");
-        assertFalse(isMinted, "Should not be minted");
+        assertFalse(isClaimed, "Should not be claimed");
     }
 
     function test_RewardByAccount_DifferentRounds() public {
@@ -718,8 +724,8 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mint.setActionReward(address(token), 0, ACTION_ID, 100e18);
         mint.setActionReward(address(token), 1, ACTION_ID, 200e18);
 
-        (uint256 reward0, ) = rewardExtension.rewardByAccount(0, user1);
-        (uint256 reward1, ) = rewardExtension.rewardByAccount(1, user1);
+        (uint256 reward0, , ) = rewardExtension.rewardByAccount(0, user1);
+        (uint256 reward1, , ) = rewardExtension.rewardByAccount(1, user1);
 
         assertEq(reward0, 100e18);
         assertEq(reward1, 100e18); // rewardPerAccount is always 100e18
@@ -777,7 +783,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mint.setActionReward(address(token), 0, ACTION_ID, 100e18);
 
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(0);
+        (uint256 claimed, ) = rewardExtension.claimReward(0);
         assertEq(claimed, 100e18);
     }
 
@@ -789,7 +795,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(targetRound);
+        (uint256 claimed, ) = rewardExtension.claimReward(targetRound);
 
         // User not joined, reward should be 0
         assertEq(claimed, 0, "Non-joined user should get 0 reward");
@@ -811,7 +817,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
         // User has exited, should get 0 reward
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(targetRound);
+        (uint256 claimed, ) = rewardExtension.claimReward(targetRound);
         assertEq(claimed, 0, "Exited user should get 0 reward");
     }
 
@@ -840,7 +846,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         uint256 balanceBefore = token.balanceOf(user1);
 
         vm.prank(user1);
-        uint256 claimed = rewardExtension.claimReward(targetRound);
+        (uint256 claimed, ) = rewardExtension.claimReward(targetRound);
 
         assertEq(claimed, rewardAmount);
         assertEq(token.balanceOf(user1), balanceBefore + rewardAmount);
@@ -868,8 +874,8 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
 
         // Verify all rounds are claimed
         for (uint256 i = 0; i < numRounds; i++) {
-            (, bool isMinted) = rewardExtension.rewardByAccount(i, user1);
-            assertTrue(isMinted, "Round should be claimed");
+            (, , bool isClaimed) = rewardExtension.rewardByAccount(i, user1);
+            assertTrue(isClaimed, "Round should be claimed");
         }
     }
 
