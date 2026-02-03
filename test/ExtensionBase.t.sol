@@ -483,7 +483,14 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimReward(address(token), targetRound, ACTION_ID, user1, 100e18, 0);
+        emit ClaimReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            user1,
+            100e18,
+            0
+        );
 
         vm.prank(user1);
         rewardExtension.claimReward(targetRound);
@@ -646,6 +653,7 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         (
             uint256[] memory claimedRounds,
             uint256[] memory mintRewards,
+
         ) = rewardExtension.claimRewards(rounds);
 
         assertEq(claimedRounds.length, 1);

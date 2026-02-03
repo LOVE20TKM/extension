@@ -26,7 +26,13 @@ contract ExampleTokenJoin is ExtensionBaseRewardTokenJoin {
     function _calculateReward(
         uint256 round,
         address account
-    ) internal view virtual override returns (uint256 mintReward, uint256 burnReward) {
+    )
+        internal
+        view
+        virtual
+        override
+        returns (uint256 mintReward, uint256 burnReward)
+    {
         (uint256 totalActionReward, ) = _mint.actionRewardByActionIdByAccount(
             TOKEN_ADDRESS,
             round,
