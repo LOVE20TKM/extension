@@ -32,6 +32,10 @@ abstract contract ExtensionBaseReward is
     // round => account => isClaimed
     mapping(uint256 => mapping(address => bool)) internal _claimedByAccount;
 
+    // round => account => burnedReward
+    mapping(uint256 => mapping(address => uint256))
+        internal _burnedRewardByAccount;
+
     // round => burned amount
     mapping(uint256 => uint256) internal _burnedReward;
 
@@ -96,12 +100,17 @@ abstract contract ExtensionBaseReward is
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 amount, bool claimed) {
+    ) public view virtual returns (uint256 mintReward, uint256 burnReward, bool claimed) {
         if (_claimedByAccount[round][account]) {
-            return (_claimedRewardByAccount[round][account], true);
+            return (
+                _claimedRewardByAccount[round][account],
+                _burnedRewardByAccount[round][account],
+                true
+            );
         }
 
-        return (_calculateReward(round, account), false);
+        (mintReward, burnReward) = _calculateReward(round, account);
+        return (mintReward, burnReward, false);
     }
 
     function reward(uint256 round) public view virtual returns (uint256) {
@@ -133,26 +142,35 @@ abstract contract ExtensionBaseReward is
     function _claimReward(
         uint256 round
     ) internal virtual returns (uint256 amount) {
-        bool claimed;
-        (amount, claimed) = rewardByAccount(round, msg.sender);
-        if (claimed) {
+        if (_claimedByAccount[round][msg.sender]) {
             revert AlreadyClaimed();
         }
 
-        _claimedByAccount[round][msg.sender] = true;
-        _claimedRewardByAccount[round][msg.sender] = amount;
+        (uint256 mintReward, uint256 burnReward) = _calculateReward(
+            round,
+            msg.sender
+        );
+        amount = mintReward;
 
-        if (amount == 0) {
-            return 0;
+        _claimedByAccount[round][msg.sender] = true;
+        _claimedRewardByAccount[round][msg.sender] = mintReward;
+        _burnedRewardByAccount[round][msg.sender] = burnReward;
+
+        if (burnReward > 0) {
+            ILOVE20Token(TOKEN_ADDRESS).burn(burnReward);
         }
 
-        IERC20(TOKEN_ADDRESS).safeTransfer({to: msg.sender, value: amount});
+        if (mintReward > 0) {
+            IERC20(TOKEN_ADDRESS).safeTransfer({to: msg.sender, value: mintReward});
+        }
+
         emit ClaimReward({
             tokenAddress: TOKEN_ADDRESS,
             round: round,
             actionId: actionId,
             account: msg.sender,
-            amount: amount
+            mintAmount: mintReward,
+            burnAmount: burnReward
         });
         return amount;
     }
@@ -160,7 +178,7 @@ abstract contract ExtensionBaseReward is
     function _calculateReward(
         uint256 round,
         address account
-    ) internal view virtual returns (uint256);
+    ) internal view virtual returns (uint256 mintReward, uint256 burnReward);
 
     function burnRewardIfNeeded(uint256 round) public virtual {
         uint256 currentRound = _verify.currentRound();
@@ -218,8 +236,11 @@ abstract contract ExtensionBaseReward is
         );
 
         for (uint256 i; i < accounts.length; ) {
-            (uint256 accountReward, ) = rewardByAccount(round, accounts[i]);
-            if (accountReward > 0) return 0;
+            (uint256 mintReward, uint256 burnReward, ) = rewardByAccount(
+                round,
+                accounts[i]
+            );
+            if (mintReward > 0 || burnReward > 0) return 0;
             unchecked {
                 ++i;
             }

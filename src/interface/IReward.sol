@@ -7,7 +7,8 @@ interface IRewardEvents {
         uint256 round,
         uint256 indexed actionId,
         address indexed account,
-        uint256 amount
+        uint256 mintAmount,
+        uint256 burnAmount
     );
     event BurnReward(
         address indexed tokenAddress,
@@ -26,7 +27,7 @@ interface IReward is IRewardEvents, IRewardErrors {
     function rewardByAccount(
         uint256 round,
         address account
-    ) external view returns (uint256 amount, bool claimed);
+    ) external view returns (uint256 mintReward, uint256 burnReward, bool claimed);
 
     function claimReward(uint256 round) external returns (uint256 amount);
     function claimRewards(
