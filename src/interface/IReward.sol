@@ -27,16 +27,22 @@ interface IReward is IRewardEvents, IRewardErrors {
     function rewardByAccount(
         uint256 round,
         address account
-    ) external view returns (uint256 mintReward, uint256 burnReward, bool claimed);
+    )
+        external
+        view
+        returns (uint256 mintReward, uint256 burnReward, bool claimed);
 
-    function claimReward(uint256 round) external returns (uint256 amount);
+    function claimReward(
+        uint256 round
+    ) external returns (uint256 mintReward, uint256 burnReward);
     function claimRewards(
         uint256[] calldata rounds
     )
         external
         returns (
             uint256[] memory claimedRounds,
-            uint256[] memory rewards
+            uint256[] memory mintRewards,
+            uint256[] memory burnRewards
         );
 
     function burnRewardIfNeeded(uint256 round) external;

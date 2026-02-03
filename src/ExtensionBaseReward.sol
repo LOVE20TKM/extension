@@ -49,7 +49,7 @@ abstract contract ExtensionBaseReward is
 
     function claimReward(
         uint256 round
-    ) public virtual nonReentrant returns (uint256 amount) {
+    ) public virtual nonReentrant returns (uint256 mintReward, uint256 burnReward) {
         uint256 currentRound = _verify.currentRound();
         if (round >= currentRound) {
             revert RoundNotFinished(currentRound);
@@ -66,11 +66,16 @@ abstract contract ExtensionBaseReward is
         public
         virtual
         nonReentrant
-        returns (uint256[] memory claimedRounds, uint256[] memory rewards)
+        returns (
+            uint256[] memory claimedRounds,
+            uint256[] memory mintRewards,
+            uint256[] memory burnRewards
+        )
     {
         uint256 len = rounds.length;
         claimedRounds = new uint256[](len);
-        rewards = new uint256[](len);
+        mintRewards = new uint256[](len);
+        burnRewards = new uint256[](len);
         uint256 count;
         uint256 currentRound = _verify.currentRound();
 
@@ -78,9 +83,10 @@ abstract contract ExtensionBaseReward is
             uint256 round = rounds[i];
             if (round < currentRound && !_claimedByAccount[round][msg.sender]) {
                 _prepareRewardIfNeeded(round);
-                uint256 amount = _claimReward(round);
+                (uint256 mintReward, uint256 burnReward) = _claimReward(round);
                 claimedRounds[count] = round;
-                rewards[count] = amount;
+                mintRewards[count] = mintReward;
+                burnRewards[count] = burnReward;
                 unchecked {
                     ++count;
                 }
@@ -92,15 +98,21 @@ abstract contract ExtensionBaseReward is
 
         assembly {
             mstore(claimedRounds, count)
-            mstore(rewards, count)
+            mstore(mintRewards, count)
+            mstore(burnRewards, count)
         }
-        return (claimedRounds, rewards);
+        return (claimedRounds, mintRewards, burnRewards);
     }
 
     function rewardByAccount(
         uint256 round,
         address account
-    ) public view virtual returns (uint256 mintReward, uint256 burnReward, bool claimed) {
+    )
+        public
+        view
+        virtual
+        returns (uint256 mintReward, uint256 burnReward, bool claimed)
+    {
         if (_claimedByAccount[round][account]) {
             return (
                 _claimedRewardByAccount[round][account],
@@ -141,16 +153,12 @@ abstract contract ExtensionBaseReward is
 
     function _claimReward(
         uint256 round
-    ) internal virtual returns (uint256 amount) {
+    ) internal virtual returns (uint256 mintReward, uint256 burnReward) {
         if (_claimedByAccount[round][msg.sender]) {
             revert AlreadyClaimed();
         }
 
-        (uint256 mintReward, uint256 burnReward) = _calculateReward(
-            round,
-            msg.sender
-        );
-        amount = mintReward;
+        (mintReward, burnReward) = _calculateReward(round, msg.sender);
 
         _claimedByAccount[round][msg.sender] = true;
         _claimedRewardByAccount[round][msg.sender] = mintReward;
@@ -161,7 +169,10 @@ abstract contract ExtensionBaseReward is
         }
 
         if (mintReward > 0) {
-            IERC20(TOKEN_ADDRESS).safeTransfer({to: msg.sender, value: mintReward});
+            IERC20(TOKEN_ADDRESS).safeTransfer({
+                to: msg.sender,
+                value: mintReward
+            });
         }
 
         emit ClaimReward({
@@ -172,7 +183,7 @@ abstract contract ExtensionBaseReward is
             mintAmount: mintReward,
             burnAmount: burnReward
         });
-        return amount;
+        return (mintReward, burnReward);
     }
 
     function _calculateReward(
