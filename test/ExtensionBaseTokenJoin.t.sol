@@ -1232,4 +1232,84 @@ contract ExtensionBaseTokenJoinTest is BaseExtensionTest, ITokenJoinEvents {
             extension.joinedAmountByAccountByRound(user1, join.currentRound())
         );
     }
+
+    // ============================================
+    // joinedAmountByRound (Total) Tests
+    // ============================================
+
+    function test_JoinedAmountByRound_Empty() public view {
+        assertEq(extension.joinedAmountByRound(join.currentRound()), 0);
+    }
+
+    function test_JoinedAmountByRound_AfterJoin() public {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        assertEq(extension.joinedAmountByRound(round1), 100e18);
+    }
+
+    function test_JoinedAmountByRound_MultipleUsersMultipleRounds() public {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        assertEq(extension.joinedAmountByRound(round1), 300e18);
+
+        // Advance to round 2
+        join.setCurrentRound(round1 + 1);
+        vote.setVotedActionIds(
+            address(token),
+            round1 + 1,
+            ACTION_ID
+        );
+
+        vm.prank(user3);
+        extension.join(50e18, new string[](0));
+
+        assertEq(extension.joinedAmountByRound(round1), 300e18);
+        assertEq(extension.joinedAmountByRound(round1 + 1), 350e18);
+    }
+
+    function test_JoinedAmountByRound_AfterExit() public {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        vm.prank(user2);
+        extension.join(200e18, new string[](0));
+
+        assertEq(extension.joinedAmountByRound(round1), 300e18);
+
+        // Advance to next round and exit
+        join.setCurrentRound(round1 + 1);
+        vote.setVotedActionIds(address(token), round1 + 1, ACTION_ID);
+        vm.roll(block.number + WAITING_BLOCKS);
+
+        vm.prank(user1);
+        extension.exit();
+
+        // Round1 historical data preserved
+        assertEq(extension.joinedAmountByRound(round1), 300e18);
+        // Round2 reflects exit
+        assertEq(extension.joinedAmountByRound(round1 + 1), 200e18);
+        assertEq(extension.joinedAmount(), 200e18);
+    }
+
+    function test_JoinedAmountByRound_ConsistencyWithJoinedAmount() public {
+        uint256 round1 = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(100e18, new string[](0));
+
+        assertEq(
+            extension.joinedAmount(),
+            extension.joinedAmountByRound(round1)
+        );
+    }
 }

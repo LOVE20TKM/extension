@@ -2547,6 +2547,423 @@ contract ExtensionCenterTest is Test, IExtensionCenterEvents {
         );
     }
 
+    // ============================================
+    // Delegate Tests
+    // ============================================
+
+    function testSetExtensionDelegate() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        address delegate = address(0x9999);
+
+        // Set delegate from the extension's address
+        vm.prank(address(mockExtension));
+        extensionCenter.setExtensionDelegate(delegate);
+
+        assertEq(
+            extensionCenter.extensionDelegate(address(mockExtension)),
+            delegate
+        );
+    }
+
+    function testSetExtensionDelegate_EmitEvent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        address delegate = address(0x9999);
+
+        vm.prank(address(mockExtension));
+        vm.expectEmit(true, true, true, true);
+        emit SetExtensionDelegate(address(mockExtension), delegate);
+        extensionCenter.setExtensionDelegate(delegate);
+    }
+
+    function testDelegateCanAddAccount() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        address delegate = address(0x9999);
+        vm.prank(address(mockExtension));
+        extensionCenter.setExtensionDelegate(delegate);
+
+        // Delegate calls addAccount
+        vm.prank(delegate);
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testDelegateCanRemoveAccount() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        address delegate = address(0x9999);
+        vm.prank(address(mockExtension));
+        extensionCenter.setExtensionDelegate(delegate);
+
+        // Delegate adds account
+        vm.startPrank(delegate);
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+        assertTrue(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+
+        // Delegate removes account
+        bool result = extensionCenter.removeAccount(
+            tokenAddress,
+            actionId1,
+            user1
+        );
+        vm.stopPrank();
+
+        assertTrue(result);
+        assertFalse(
+            extensionCenter.isAccountJoined(tokenAddress, actionId1, user1)
+        );
+    }
+
+    function testDelegateCanUpdateVerificationInfo() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        string[] memory keys = new string[](1);
+        keys[0] = "email";
+        mockSubmit.setVerificationKeys(tokenAddress, actionId1, keys);
+
+        _registerAction(tokenAddress, actionId1);
+
+        address delegate = address(0x9999);
+        vm.prank(address(mockExtension));
+        extensionCenter.setExtensionDelegate(delegate);
+
+        // Delegate adds account
+        vm.prank(delegate);
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        // Delegate updates verification info
+        string[] memory infos = new string[](1);
+        infos[0] = "delegate@example.com";
+        vm.prank(delegate);
+        extensionCenter.updateVerificationInfo(
+            tokenAddress,
+            actionId1,
+            user1,
+            infos
+        );
+
+        assertEq(
+            extensionCenter.verificationInfo(
+                tokenAddress,
+                actionId1,
+                user1,
+                "email"
+            ),
+            "delegate@example.com"
+        );
+    }
+
+    // ============================================
+    // RegisterAction Additional Tests
+    // ============================================
+
+    function testRegisterActionIfNeeded_EmitEvent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockExtension.mockInitialize(actionId1);
+
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        mockSubmit.setActionAuthor(tokenAddress, actionId1, extensionCreator);
+
+        vm.expectEmit(true, true, true, true);
+        emit RegisterAction(
+            tokenAddress,
+            actionId1,
+            address(mockExtension),
+            address(mockFactory)
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
+    }
+
+    function testRegisterActionIfNeeded_Idempotent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        // Second call should not revert, just return the same extension
+        address result = extensionCenter.registerActionIfNeeded(
+            tokenAddress,
+            actionId1
+        );
+        assertEq(result, address(mockExtension));
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnCreatorMismatch() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockExtension.mockInitialize(actionId1);
+
+        // Set a different author than the extension creator
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        address differentAuthor = address(0xDEAD);
+        mockSubmit.setActionAuthor(
+            tokenAddress,
+            actionId1,
+            differentAuthor
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IExtensionCenterErrors.ExtensionCreatorMismatch.selector,
+                extensionCreator,
+                differentAuthor
+            )
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId1);
+    }
+
+    function testRegisterActionIfNeeded_RevertsOnAlreadyRegisteredToOtherAction()
+        public
+    {
+        // Register extension to actionId1 first
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        _registerAction(tokenAddress, actionId1);
+
+        // Now try to register the same extension to actionId2
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId2,
+            address(mockExtension)
+        );
+        mockExtension.mockInitialize(actionId2);
+        address extensionCreator = mockFactory.extensionCreator(
+            address(mockExtension)
+        );
+        mockSubmit.setActionAuthor(tokenAddress, actionId2, extensionCreator);
+
+        vm.expectRevert(
+            IExtensionCenterErrors.ActionAlreadyRegisteredToOtherAction.selector
+        );
+        extensionCenter.registerActionIfNeeded(tokenAddress, actionId2);
+    }
+
+    // ============================================
+    // ActionNotVotedInCurrentRound Tests
+    // ============================================
+
+    function testAddAccount_RevertsOnActionNotVotedInCurrentRound() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        // Note: NOT setting votedActionIds for the current round
+
+        _registerAction(tokenAddress, actionId1);
+
+        vm.prank(address(mockExtension));
+        vm.expectRevert(
+            IExtensionCenterErrors.ActionNotVotedInCurrentRound.selector
+        );
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+    }
+
+    // ============================================
+    // extensionTokenActionPair Tests
+    // ============================================
+
+    function testExtensionTokenActionPair() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        (address token_, uint256 actionId_) = extensionCenter
+            .extensionTokenActionPair(address(mockExtension));
+        assertEq(token_, tokenAddress);
+        assertEq(actionId_, actionId1);
+    }
+
+    function testExtensionTokenActionPair_NonExistent() public view {
+        (address token_, uint256 actionId_) = extensionCenter
+            .extensionTokenActionPair(address(0x1234));
+        assertEq(token_, address(0));
+        assertEq(actionId_, 0);
+    }
+
+    // ============================================
+    // removeAccount return value Tests
+    // ============================================
+
+    function testRemoveAccount_ReturnsFalseForNonExistent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        // Remove account that was never added
+        vm.prank(address(mockExtension));
+        bool result = extensionCenter.removeAccount(
+            tokenAddress,
+            actionId1,
+            user1
+        );
+
+        assertFalse(result);
+    }
+
+    function testRemoveAccount_ReturnsTrueForExistent() public {
+        MockExtension mockExtension = MockExtension(
+            mockFactory.createExtension(tokenAddress)
+        );
+        mockSubmit.setActionInfo(
+            tokenAddress,
+            actionId1,
+            address(mockExtension)
+        );
+        mockVote.setVotedActionIds(
+            tokenAddress,
+            mockJoin.currentRound(),
+            actionId1
+        );
+
+        _registerAction(tokenAddress, actionId1);
+
+        vm.startPrank(address(mockExtension));
+        extensionCenter.addAccount(
+            tokenAddress,
+            actionId1,
+            user1,
+            new string[](0)
+        );
+
+        bool result = extensionCenter.removeAccount(
+            tokenAddress,
+            actionId1,
+            user1
+        );
+        vm.stopPrank();
+
+        assertTrue(result);
+    }
+
     function testIsAccountJoinedByRound_ConsistencyWithIsAccountJoined()
         public
     {

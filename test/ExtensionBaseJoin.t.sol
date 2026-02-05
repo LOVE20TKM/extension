@@ -358,6 +358,39 @@ contract ExtensionBaseJoinTest is BaseExtensionTest, IJoinEvents {
     }
 
     // ============================================
+    // JoinInfo JoinedRound Tests
+    // ============================================
+
+    function test_JoinInfo_ReturnsJoinedRound() public {
+        uint256 expectedRound = join.currentRound();
+
+        vm.prank(user1);
+        extension.join(new string[](0));
+
+        uint256 joinedRound = extension.joinInfo(user1);
+        assertEq(joinedRound, expectedRound);
+    }
+
+    function test_JoinInfo_ResetsAfterExit() public {
+        vm.prank(user1);
+        extension.join(new string[](0));
+
+        uint256 joinedRound = extension.joinInfo(user1);
+        assertTrue(joinedRound > 0 || joinedRound == join.currentRound());
+
+        vm.prank(user1);
+        extension.exit();
+
+        joinedRound = extension.joinInfo(user1);
+        assertEq(joinedRound, 0);
+    }
+
+    function test_JoinInfo_ZeroForNonJoinedUser() public view {
+        uint256 joinedRound = extension.joinInfo(user1);
+        assertEq(joinedRound, 0);
+    }
+
+    // ============================================
     // Fuzz Tests
     // ============================================
 

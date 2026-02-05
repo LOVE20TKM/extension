@@ -82,6 +82,7 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
     uint256 public rewardPerAccount;
     mapping(address => uint256) public customRewardByAccount;
     bool public useCustomReward;
+    mapping(address => uint256) public customBurnRewardByAccount;
 
     constructor(
         address factory_,
@@ -126,13 +127,24 @@ contract MockExtensionForReward is ExtensionBaseRewardJoin {
         useCustomReward = true;
     }
 
+    function setCustomBurnRewardByAccount(
+        address account,
+        uint256 reward
+    ) external {
+        customBurnRewardByAccount[account] = reward;
+        useCustomReward = true;
+    }
+
     // Override _calculateReward to return configurable values
     function _calculateReward(
         uint256,
         address account
     ) internal view override returns (uint256 mintReward, uint256 burnReward) {
         if (useCustomReward) {
-            return (customRewardByAccount[account], 0);
+            return (
+                customRewardByAccount[account],
+                customBurnRewardByAccount[account]
+            );
         }
         // Default: equal distribution if account has joined
         if (
@@ -1208,5 +1220,211 @@ contract ExtensionBaseTest is BaseExtensionTest, IRewardEvents {
         );
         assertEq(burnAmount, 0);
         assertFalse(burned);
+    }
+
+    // ============================================
+    // ClaimReward with BurnReward > 0 Tests
+    // ============================================
+
+    function test_ClaimReward_WithBurnReward() public {
+        setUpRewardExtension();
+
+        uint256 mintAmount = 60e18;
+        uint256 burnAmount = 40e18;
+        rewardExtension.setCustomRewardByAccount(user1, mintAmount);
+        rewardExtension.setCustomBurnRewardByAccount(user1, burnAmount);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
+
+        uint256 userBalanceBefore = token.balanceOf(user1);
+        uint256 extensionBalanceBefore = token.balanceOf(
+            address(rewardExtension)
+        );
+
+        vm.prank(user1);
+        (uint256 claimedMint, uint256 claimedBurn) = rewardExtension
+            .claimReward(targetRound);
+
+        assertEq(claimedMint, mintAmount);
+        assertEq(claimedBurn, burnAmount);
+        assertEq(token.balanceOf(user1), userBalanceBefore + mintAmount);
+        assertEq(
+            token.balanceOf(address(rewardExtension)),
+            extensionBalanceBefore - mintAmount - burnAmount
+        );
+    }
+
+    function test_ClaimReward_WithBurnReward_EmitEvent() public {
+        setUpRewardExtension();
+
+        uint256 mintAmount = 60e18;
+        uint256 burnAmount = 40e18;
+        rewardExtension.setCustomRewardByAccount(user1, mintAmount);
+        rewardExtension.setCustomBurnRewardByAccount(user1, burnAmount);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
+
+        vm.expectEmit(true, true, true, true);
+        emit ClaimReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            user1,
+            mintAmount,
+            burnAmount
+        );
+
+        vm.prank(user1);
+        rewardExtension.claimReward(targetRound);
+    }
+
+    function test_ClaimReward_OnlyBurnNoMint() public {
+        setUpRewardExtension();
+
+        rewardExtension.setCustomRewardByAccount(user1, 0);
+        rewardExtension.setCustomBurnRewardByAccount(user1, 100e18);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 100e18);
+
+        uint256 userBalanceBefore = token.balanceOf(user1);
+
+        vm.prank(user1);
+        (uint256 claimedMint, uint256 claimedBurn) = rewardExtension
+            .claimReward(targetRound);
+
+        assertEq(claimedMint, 0);
+        assertEq(claimedBurn, 100e18);
+        assertEq(token.balanceOf(user1), userBalanceBefore);
+    }
+
+    function test_ClaimReward_WithBurnReward_MultipleUsers() public {
+        setUpRewardExtension();
+
+        rewardExtension.setCustomRewardByAccount(user1, 50e18);
+        rewardExtension.setCustomBurnRewardByAccount(user1, 10e18);
+        rewardExtension.setCustomRewardByAccount(user2, 30e18);
+        rewardExtension.setCustomBurnRewardByAccount(user2, 20e18);
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+        vm.prank(user2);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 200e18);
+
+        vm.prank(user1);
+        (uint256 mint1, uint256 burn1) = rewardExtension.claimReward(
+            targetRound
+        );
+        assertEq(mint1, 50e18);
+        assertEq(burn1, 10e18);
+
+        vm.prank(user2);
+        (uint256 mint2, uint256 burn2) = rewardExtension.claimReward(
+            targetRound
+        );
+        assertEq(mint2, 30e18);
+        assertEq(burn2, 20e18);
+    }
+
+    // ============================================
+    // BurnReward Event Tests
+    // ============================================
+
+    function test_BurnRewardIfNeeded_EmitEvent() public {
+        join.setCurrentRound(0);
+        setUpRewardExtension();
+        rewardExtension.setRewardPerAccount(0);
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+        uint256 targetRound = 0;
+        verify.setCurrentRound(1);
+        uint256 totalReward = 100e18;
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            totalReward
+        );
+        token.mint(address(rewardExtension), totalReward);
+
+        vm.expectEmit(true, true, true, true);
+        emit BurnReward(address(token), targetRound, ACTION_ID, totalReward);
+
+        rewardExtension.burnRewardIfNeeded(targetRound);
+    }
+
+    // ============================================
+    // Reward View Tests
+    // ============================================
+
+    function test_Reward_ViewBeforePrepare() public {
+        setUpRewardExtension();
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        uint256 expectedReward = 100e18;
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            expectedReward
+        );
+
+        uint256 reward = rewardExtension.reward(targetRound);
+        assertEq(reward, expectedReward);
+    }
+
+    function test_Reward_ViewAfterPrepare() public {
+        setUpRewardExtension();
+
+        vm.prank(user1);
+        rewardExtension.join(new string[](0));
+
+        uint256 targetRound = 0;
+        uint256 expectedReward = 100e18;
+        verify.setCurrentRound(1);
+        mint.setActionReward(
+            address(token),
+            targetRound,
+            ACTION_ID,
+            expectedReward
+        );
+
+        // Claim triggers _prepareRewardIfNeeded
+        vm.prank(user1);
+        rewardExtension.claimReward(targetRound);
+
+        uint256 reward = rewardExtension.reward(targetRound);
+        assertEq(reward, expectedReward);
+    }
+
+    function test_Reward_ViewZero() public {
+        setUpRewardExtension();
+
+        uint256 targetRound = 0;
+        mint.setActionReward(address(token), targetRound, ACTION_ID, 0);
+
+        uint256 reward = rewardExtension.reward(targetRound);
+        assertEq(reward, 0);
     }
 }
